@@ -25,14 +25,14 @@
 html,body{height:100%;overflow:hidden;background:var(--dark)}
 body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);overscroll-behavior:none}
 
-#app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;position:relative;background:var(--dark);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;background:var(--dark);overflow:hidden;position:relative}
 .status-bar{height:env(safe-area-inset-top,0px);background:var(--dark2);flex-shrink:0}
 
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .38s}
 .screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
 .screen.slide-left{transform:translateX(-100%);opacity:0;pointer-events:none}
 
-/* ONBOARDING */
+/* ── ONBOARDING ── */
 #screen-onboard{background:var(--dark);justify-content:center;align-items:center;padding:32px 28px;text-align:center;overflow-y:auto}
 .ob-logo-icon{width:88px;height:88px;margin:0 auto 14px;display:block}
 .ob-title{font-size:2.6rem;font-weight:800;color:var(--amber);line-height:1}
@@ -46,31 +46,32 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .ob-btn:active{transform:scale(.97);opacity:.9}
 .ob-skip{font-size:.82rem;color:var(--muted);margin-top:12px;cursor:pointer;text-decoration:underline}
 
-/* TOP BAR */
+/* ── TOP BAR ── */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0}
 .tb-left{display:flex;align-items:center;gap:10px}
-.tb-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;border:2px solid rgba(245,158,11,.3)}
+.tb-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;border:2px solid rgba(245,158,11,.3);transition:box-shadow .3s}
+.tb-avatar.speaking{box-shadow:0 0 0 6px rgba(245,158,11,.3),0 0 0 12px rgba(245,158,11,.1)}
 .tb-name{font-size:1rem;font-weight:700;color:var(--text);line-height:1.1}
 .tb-status{font-size:.7rem;color:#4ade80;font-weight:500;display:flex;align-items:center;gap:4px}
-.tb-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tb-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 .tb-right{display:flex;gap:8px}
 .tb-icon-btn{width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;transition:all .2s}
 .tb-icon-btn:active{background:rgba(245,158,11,.25)}
 .tb-icon-btn.muted{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4)}
-@keyframes speakPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 8px rgba(245,158,11,0)}}
-.tb-avatar.speaking{animation:speakPulse 1s ease-in-out infinite}
 
-/* QUICK ACTIONS — ✅ Song removed */
+/* ── QUICK STRIP ── */
 .quick-strip{display:flex;gap:8px;padding:10px 14px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
 .quick-strip::-webkit-scrollbar{display:none}
-.qa-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:40px;padding:7px 14px;font-family:'Baloo 2',sans-serif;font-size:.8rem;color:var(--text);cursor:pointer;white-space:nowrap;transition:all .2s}
+.qa-btn{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:40px;padding:7px 14px;font-family:'Baloo 2',sans-serif;font-size:.8rem;color:var(--text);cursor:pointer;white-space:nowrap;transition:all .2s}
 .qa-btn:active{background:rgba(245,158,11,.2);border-color:var(--amber);color:var(--amber-l)}
 
-/* CHAT */
+/* ── CHAT ── */
 .chat-wrap{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;overscroll-behavior:contain}
 .date-div{text-align:center;margin:4px 0}
 .date-div span{background:rgba(245,158,11,.1);color:var(--muted);font-size:.68rem;padding:3px 12px;border-radius:20px}
+
+/* bubbles */
 .bubble-wrap{display:flex;gap:8px;max-width:88%}
 .bubble-wrap.user{align-self:flex-end;flex-direction:row-reverse}
 .bubble-wrap.ai{align-self:flex-start}
@@ -81,10 +82,21 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .bubble-time{font-size:.65rem;color:var(--muted);margin-top:4px}
 .bubble-wrap.user .bubble-time{text-align:right}
 
-/* app link bubble */
+/* reminder fire bubble — special style, NOT a badge */
+.bubble.reminder-fire{
+  background:linear-gradient(135deg,rgba(245,158,11,.22),rgba(234,88,12,.15));
+  border:1.5px solid rgba(245,158,11,.5);
+  border-radius:18px 18px 18px 4px;
+  color:var(--amber-l);
+  font-size:1rem;
+  font-weight:600;
+}
+
+/* app open link */
 .app-link{display:inline-flex;align-items:center;gap:7px;margin-top:10px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);padding:8px 14px;border-radius:20px;color:var(--amber-l);font-size:.85rem;text-decoration:none;cursor:pointer}
 .app-link:active{background:rgba(245,158,11,.3)}
 
+/* typing dots */
 .typing-wrap{display:flex;gap:8px;align-items:center;align-self:flex-start}
 .typing-dots{background:var(--card);border:1px solid var(--border);border-radius:18px 18px 18px 4px;padding:12px 16px;display:flex;gap:5px;align-items:center}
 .typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--amber);opacity:.4;animation:td 1.2s infinite}
@@ -92,7 +104,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .typing-dots span:nth-child(3){animation-delay:.4s}
 @keyframes td{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
 
-/* INPUT */
+/* ── INPUT ── */
 .input-bar{padding:10px 14px;padding-bottom:calc(10px + var(--safe-b));background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0}
 .input-row{display:flex;gap:10px;align-items:flex-end}
 .input-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:11px 16px;font-family:'Baloo 2',sans-serif;font-size:.95rem;color:var(--text);outline:none;resize:none;max-height:120px;line-height:1.4;transition:border-color .2s}
@@ -105,7 +117,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .mic-btn.recording{background:rgba(239,68,68,.2);border-color:#ef4444;animation:recPulse 1s infinite}
 @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
 
-/* SOS */
+/* ── SOS ── */
 #sos-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:32px;text-align:center;backdrop-filter:blur(10px)}
 #sos-overlay.show{display:flex}
 .sos-circle{width:120px;height:120px;border-radius:50%;background:rgba(239,68,68,.2);border:3px solid #ef4444;display:flex;align-items:center;justify-content:center;font-size:3rem;animation:sosPulse 1s infinite}
@@ -116,7 +128,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .sos-contact-btn{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fff;padding:13px 20px;border-radius:12px;font-family:'Baloo 2',sans-serif;font-size:.95rem;cursor:pointer;display:flex;align-items:center;gap:10px;width:100%;text-align:left}
 .sos-cancel{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:10px 28px;border-radius:24px;font-family:'Baloo 2',sans-serif;font-size:.9rem;cursor:pointer;margin-top:4px}
 
-/* INSTALL BANNER */
+/* ── INSTALL BANNER ── */
 #install-banner{position:fixed;bottom:0;left:0;right:0;z-index:500;transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1)}
 #install-banner.show{transform:translateY(0)}
 .install-inner{background:var(--dark2);border-top:1px solid var(--border);padding:15px 18px;padding-bottom:calc(15px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px;max-width:430px;margin:0 auto}
@@ -127,7 +139,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .install-btn{background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;padding:9px 18px;border-radius:24px;font-family:'Baloo 2',sans-serif;font-size:.85rem;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap}
 .install-x{background:transparent;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px}
 
-/* SETTINGS */
+/* ── SETTINGS ── */
 #screen-settings{background:var(--dark)}
 .settings-head{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--dark2);flex-shrink:0}
 .back-btn{background:transparent;border:none;color:var(--amber);font-size:1.2rem;cursor:pointer;padding:4px}
@@ -182,7 +194,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 <div id="app">
   <div class="status-bar"></div>
 
-  <!-- ONBOARDING -->
+  <!-- ── ONBOARDING ── -->
   <div class="screen" id="screen-onboard">
     <svg class="ob-logo-icon" viewBox="0 0 90 90" fill="none">
       <defs>
@@ -214,24 +226,25 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
     <div class="ob-skip" onclick="skipOnboard()">अभी छोड़ें — Skip</div>
   </div>
 
-  <!-- MAIN CHAT -->
+  <!-- ── MAIN CHAT ── -->
   <div class="screen hidden" id="screen-main">
     <div class="topbar">
       <div class="tb-left">
         <div class="tb-avatar" id="tbAvatar">🙏</div>
         <div>
           <div class="tb-name">साथी AI</div>
-          <div class="tb-status" id="tbStatus"><div class="tb-dot"></div>हमेशा साथ हूं</div>
+          <div class="tb-status" id="tbStatus">
+            <div class="tb-dot"></div>हमेशा साथ हूं
+          </div>
         </div>
       </div>
       <div class="tb-right">
-        <div class="tb-icon-btn" id="muteBtn" onclick="toggleMute()" title="आवाज़ बंद/चालू">🔊</div>
+        <div class="tb-icon-btn" id="muteBtn" onclick="toggleMute()">🔊</div>
         <div class="tb-icon-btn" onclick="showSOS()">🆘</div>
         <div class="tb-icon-btn" onclick="goSettings()">⚙️</div>
       </div>
     </div>
 
-    <!-- ✅ SONG REMOVED. Added: joke, story, youtube -->
     <div class="quick-strip">
       <button class="qa-btn" onclick="quickSend('medicine')">💊 दवाई</button>
       <button class="qa-btn" onclick="quickSend('date')">📅 तारीख</button>
@@ -261,7 +274,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
     </div>
   </div>
 
-  <!-- SETTINGS -->
+  <!-- ── SETTINGS ── -->
   <div class="screen hidden" id="screen-settings">
     <div class="settings-head">
       <button class="back-btn" onclick="goMain()">←</button>
@@ -289,7 +302,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div class="sec-title">Voice Settings</div>
         <div class="settings-card">
           <div class="settings-row">
-            <div><label>साथी की आवाज़ speed</label></div>
+            <div><label>Speaking speed</label></div>
             <select class="s-input" id="s-speed">
               <option value="0.75">Slow (धीरे)</option>
               <option value="0.9" selected>Normal</option>
@@ -303,11 +316,11 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         </div>
       </div>
       <div>
-        <div class="sec-title">Medicine Reminders</div>
+        <div class="sec-title">Daily Medicine Reminders</div>
         <div class="med-list" id="medList"></div>
         <div class="add-med-row">
           <input class="add-med-input" id="newMedName" placeholder="Medicine name">
-          <input class="add-med-input" id="newMedTime" type="time" style="width:88px">
+          <input class="add-med-input" id="newMedTime" type="time" style="width:90px">
           <button class="add-med-btn" onclick="addMed()">+ Add</button>
         </div>
       </div>
@@ -324,32 +337,15 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
           </div>
         </div>
       </div>
-      <div>
-        <div class="sec-title">Notifications</div>
-        <div class="settings-card">
-          <div class="settings-row">
-            <div><label>Morning greeting</label><small>8 baje Namaste</small></div>
-            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-          </div>
-          <div class="settings-row">
-            <div><label>Medicine reminders</label><small>Time pe yaad dilana</small></div>
-            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-          </div>
-          <div class="settings-row">
-            <div><label>Evening check-in</label><small>7 baje kaisa feel hai</small></div>
-            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-          </div>
-        </div>
-      </div>
       <button class="ob-btn" onclick="saveSettings()">💾 Save Settings</button>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  STATE
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 let S = {
   name:'Dadi ji', family:'Beta/Beti', phone:'',
   lang:'hinglish', voiceOn:true, voiceSpeed:0.9,
@@ -358,96 +354,166 @@ let S = {
 try{ const sv=localStorage.getItem('saathi_v1'); if(sv) S={...S,...JSON.parse(sv)}; }catch(e){}
 function save(){ try{ localStorage.setItem('saathi_v1',JSON.stringify(S)); }catch(e){} }
 
-// ══════════════════════════════════════════
+// Active one-time reminder timers (in memory only, cleared on refresh — by design)
+const activeTimers = [];
+
+// ══════════════════════════════════════════════════════
+//  ONE-TIME REMINDER ENGINE
+//  Parses time from AI reply JSON tag, sets setTimeout
+// ══════════════════════════════════════════════════════
+
+/*
+  How it works:
+  1. System prompt tells AI: if user asks for a one-time reminder,
+     include a special JSON tag at the END of your reply:
+     [REMINDER:{"time":"17:00","task":"किसी को phone karna hai"}]
+  2. We parse this tag from the reply
+  3. We calculate ms until that time today
+  4. We set a setTimeout — fires ONCE at that exact time
+  5. No badge shown. Just a warm reminder bubble + voice when it fires.
+*/
+
+function parseReminderTag(text) {
+  const match = text.match(/\[REMINDER:(\{[^}]+\})\]/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch(e) {
+    return null;
+  }
+}
+
+function stripReminderTag(text) {
+  return text.replace(/\[REMINDER:\{[^}]+\}\]/g, '').trim();
+}
+
+function msUntilTime(timeStr) {
+  // timeStr = "HH:MM" in 24h format
+  const [h, m] = timeStr.split(':').map(Number);
+  const now = new Date();
+  const target = new Date();
+  target.setHours(h, m, 0, 0);
+  // If time already passed today, fire tomorrow
+  if (target <= now) target.setDate(target.getDate() + 1);
+  return target - now;
+}
+
+function scheduleOneTimeReminder(timeStr, task) {
+  const ms = msUntilTime(timeStr);
+  if (ms < 0 || ms > 24 * 60 * 60 * 1000) return; // sanity check
+
+  // Format time for display
+  const [h, m] = timeStr.split(':').map(Number);
+  const displayTime = `${h > 12 ? h - 12 : h || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+
+  const tid = setTimeout(() => {
+    const msg = `${S.name}, yaad dila doon! ${task}`;
+    const displayMsg = `⏰ ${S.name}, yaad dila doon!\n\n${task}`;
+    addBubble('ai', displayMsg, '', true); // true = reminder style
+    speakText(msg);
+  }, ms);
+
+  activeTimers.push(tid);
+
+  // Confirm to user (plain text, no badge)
+  return `Bilkul, ${S.name}! Main aapko ${displayTime} pe yaad dila dunga — "${task}". ✓`;
+}
+
+// ══════════════════════════════════════════════════════
 //  TEXT-TO-SPEECH
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 let isMuted = !S.voiceOn;
 
-function cleanTextForSpeech(text){
+function cleanForSpeech(text) {
   return text
-    .replace(/[\u{1F300}-\u{1FFFF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{FE00}-\u{FEFF}]|[\u{1F900}-\u{1F9FF}]/gu,'')
+    .replace(/[\u{1F300}-\u{1FFFF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]/gu,'')
     .replace(/<[^>]*>/g,' ')
-    .replace(/https?:\/\/\S+/g,'') // remove URLs from speech
+    .replace(/https?:\/\/\S+/g,'')
+    .replace(/\[REMINDER:[^\]]+\]/g,'')
     .replace(/\s+/g,' ').trim();
 }
 
-function speakText(text){
-  if(isMuted || !window.speechSynthesis) return;
+function speakText(text) {
+  if (isMuted || !window.speechSynthesis) return;
   window.speechSynthesis.cancel();
-  const clean = cleanTextForSpeech(text);
-  if(!clean) return;
+  const clean = cleanForSpeech(text);
+  if (!clean) return;
   const utter = new SpeechSynthesisUtterance(clean);
-  utter.lang   = S.lang==='english' ? 'en-IN' : 'hi-IN';
+  utter.lang   = S.lang === 'english' ? 'en-IN' : 'hi-IN';
   utter.rate   = parseFloat(S.voiceSpeed) || 0.9;
   utter.pitch  = 1.0;
   utter.volume = 1.0;
   const voices = window.speechSynthesis.getVoices();
-  const hindiV = voices.find(v=>v.lang==='hi-IN'||v.lang.startsWith('hi'));
-  const engV   = voices.find(v=>v.lang==='en-IN');
-  if(S.lang==='english' && engV) utter.voice=engV;
-  else if(hindiV) utter.voice=hindiV;
-  utter.onstart = ()=>{ document.getElementById('tbAvatar')?.classList.add('speaking'); document.getElementById('tbStatus').innerHTML='<div class="tb-dot" style="background:var(--amber)"></div>बोल रहा हूं...'; };
-  utter.onend   = ()=>{ document.getElementById('tbAvatar')?.classList.remove('speaking'); document.getElementById('tbStatus').innerHTML='<div class="tb-dot"></div>हमेशा साथ हूं'; };
-  utter.onerror = ()=>{ document.getElementById('tbAvatar')?.classList.remove('speaking'); document.getElementById('tbStatus').innerHTML='<div class="tb-dot"></div>हमेशा साथ हूं'; };
-  setTimeout(()=>window.speechSynthesis.speak(utter), 100);
+  const hv = voices.find(v => v.lang==='hi-IN' || v.lang.startsWith('hi'));
+  const ev = voices.find(v => v.lang==='en-IN');
+  if (S.lang==='english' && ev) utter.voice=ev;
+  else if (hv) utter.voice=hv;
+  utter.onstart = () => {
+    document.getElementById('tbAvatar')?.classList.add('speaking');
+    document.getElementById('tbStatus').innerHTML='<div class="tb-dot" style="background:var(--amber)"></div>बोल रहा हूं...';
+  };
+  utter.onend = utter.onerror = () => {
+    document.getElementById('tbAvatar')?.classList.remove('speaking');
+    document.getElementById('tbStatus').innerHTML='<div class="tb-dot"></div>हमेशा साथ हूं';
+  };
+  setTimeout(() => window.speechSynthesis.speak(utter), 100);
 }
 
-function toggleMute(){
-  isMuted=!isMuted; S.voiceOn=!isMuted; save();
-  const btn=document.getElementById('muteBtn');
-  if(isMuted){ btn.textContent='🔇'; btn.classList.add('muted'); window.speechSynthesis.cancel(); }
-  else{ btn.textContent='🔊'; btn.classList.remove('muted'); speakText('Awaaz chalu ho gayi'); }
+function toggleMute() {
+  isMuted = !isMuted; S.voiceOn = !isMuted; save();
+  const btn = document.getElementById('muteBtn');
+  if (isMuted) { btn.textContent='🔇'; btn.classList.add('muted'); window.speechSynthesis.cancel(); }
+  else { btn.textContent='🔊'; btn.classList.remove('muted'); speakText('Awaaz chalu ho gayi'); }
 }
-function toggleVoiceSetting(el){
+function toggleVoiceSetting(el) {
   el.classList.toggle('on'); isMuted=!el.classList.contains('on'); S.voiceOn=!isMuted; save();
   const btn=document.getElementById('muteBtn');
   if(btn){ btn.textContent=isMuted?'🔇':'🔊'; isMuted?btn.classList.add('muted'):btn.classList.remove('muted'); }
 }
 if(window.speechSynthesis){ window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices(); }
 
-// ══════════════════════════════════════════
-//  APP OPENER — opens apps via deep links / URLs
-// ══════════════════════════════════════════
-function openApp(type, query=''){
+// ══════════════════════════════════════════════════════
+//  APP OPENER
+// ══════════════════════════════════════════════════════
+function openApp(type, query='') {
   const q = encodeURIComponent(query);
-  const links = {
-    youtube:  `https://www.youtube.com/results?search_query=${q}`,
-    whatsapp: `https://wa.me/`,
-    maps:     `https://maps.google.com/maps?q=${q}`,
-    news:     `https://news.google.com/search?q=${q}&hl=hi`,
-    call:     `tel:${query}`
+  const map = {
+    youtube: `https://www.youtube.com/results?search_query=${q}`,
+    maps:    `https://maps.google.com/maps?q=${q}`,
+    news:    `https://news.google.com/search?q=${q}&hl=hi`,
+    call:    `tel:${query}`
   };
-  if(links[type]) window.open(links[type], '_blank');
+  if(map[type]) window.open(map[type], '_blank');
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  ONBOARDING
-// ══════════════════════════════════════════
-function finishOnboard(){
+// ══════════════════════════════════════════════════════
+function finishOnboard() {
   S.name   = document.getElementById('ob-name').value.trim()   || 'Dadi ji';
   S.family = document.getElementById('ob-family').value.trim() || 'Beta ji';
   S.phone  = document.getElementById('ob-phone').value.trim();
-  S.onboarded=true; save();
+  S.onboarded = true; save();
   if(window.speechSynthesis){ const u=new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(u); }
   startMain();
 }
-function skipOnboard(){
+function skipOnboard() {
   S.onboarded=true; save();
   if(window.speechSynthesis){ const u=new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(u); }
   startMain();
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  SCREEN ROUTING
-// ══════════════════════════════════════════
-function showScreen(id){
+// ══════════════════════════════════════════════════════
+function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>{
     s.classList.remove('hidden','slide-left');
     if(s.id!==id) s.classList.add(s.id==='screen-main'?'slide-left':'hidden');
   });
 }
-function goMain(){ showScreen('screen-main'); }
-function goSettings(){
+function goMain() { showScreen('screen-main'); }
+function goSettings() {
   document.getElementById('s-name').value  = S.name;
   document.getElementById('s-lang').value  = S.lang;
   document.getElementById('s-fam').value   = S.family;
@@ -457,20 +523,20 @@ function goSettings(){
   if(tv){ isMuted?tv.classList.remove('on'):tv.classList.add('on'); }
   renderMedList(); showScreen('screen-settings');
 }
-function saveSettings(){
+function saveSettings() {
   S.name       = document.getElementById('s-name').value.trim()  || S.name;
   S.lang       = document.getElementById('s-lang').value;
   S.family     = document.getElementById('s-fam').value.trim()   || S.family;
   S.phone      = document.getElementById('s-phone').value.trim();
   S.voiceSpeed = parseFloat(document.getElementById('s-speed').value)||0.9;
   save(); goMain();
-  setTimeout(()=>{ const m=`Settings save ho gayi! Main ab aapko ${S.name} bulaunga`; addBubble('ai',`✓ Settings save ho gayi! Main ab aapko "${S.name}" bulaunga 😊`); speakText(m); },300);
+  setTimeout(()=>{ const m=`Settings save ho gayi, ab aapko ${S.name} bulaunga`; addBubble('ai',`✓ Settings save ho gayi! 😊`); speakText(m); },300);
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  START MAIN
-// ══════════════════════════════════════════
-function startMain(){
+// ══════════════════════════════════════════════════════
+function startMain() {
   showScreen('screen-main');
   const btn=document.getElementById('muteBtn');
   if(btn){ btn.textContent=isMuted?'🔇':'🔊'; isMuted?btn.classList.add('muted'):btn.classList.remove('muted'); }
@@ -479,41 +545,43 @@ function startMain(){
   document.getElementById('dateLabel').textContent =
     now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   setTimeout(()=>{
-    const txt=`${greet}, ${S.name}! Main aapka saathi hoon — hamesha yahan hoon. Aaj kaisa feel kar rahe hain aap?`;
-    addBubble('ai',`${greet}, ${S.name}! 🙏\n\nMain aapka saathi hoon — hamesha yahan hoon.\nAaj kaisa feel kar rahe hain aap?`);
+    const txt=`${greet}, ${S.name}! Main aapka saathi hoon, hamesha yahan hoon. Aaj kaisa feel kar rahe hain aap?`;
+    addBubble('ai',`${greet}, ${S.name}! 🙏\nMain aapka saathi hoon — hamesha yahan hoon.\nAaj kaisa feel kar rahe hain aap?`);
     speakText(txt);
-    scheduleMedCheck();
+    scheduleDailyMedCheck();
   },600);
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  BUBBLES
-// ══════════════════════════════════════════
-function addBubble(role, text, extraHtml=''){
+// ══════════════════════════════════════════════════════
+function addBubble(role, text, extraHtml='', isReminder=false) {
   const wrap=document.getElementById('chatWrap');
   const time=new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
   const div=document.createElement('div');
   div.className=`bubble-wrap ${role}`;
   const safe=text.replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  const bubbleClass = isReminder ? 'bubble reminder-fire' : `bubble ${role}`;
   div.innerHTML = role==='ai'
-    ? `<div class="bubble-av">🙏</div><div><div class="bubble ai">${safe}${extraHtml}</div><div class="bubble-time">${time}</div></div>`
-    : `<div><div class="bubble user">${safe}</div><div class="bubble-time">${time}</div></div>`;
+    ? `<div class="bubble-av">🙏</div><div><div class="${bubbleClass}">${safe}${extraHtml}</div><div class="bubble-time">${time}</div></div>`
+    : `<div><div class="${bubbleClass}">${safe}</div><div class="bubble-time">${time}</div></div>`;
   wrap.appendChild(div); wrap.scrollTop=wrap.scrollHeight;
-  S.msgs.push({role,text,time});
+  S.msgs.push({role, text: text.replace(/<br>/g,'\n'), time});
   if(S.msgs.length>20) S.msgs.shift();
 }
-function showTyping(){
+
+function showTyping() {
   const wrap=document.getElementById('chatWrap');
   const t=document.createElement('div'); t.id='typing'; t.className='typing-wrap';
   t.innerHTML=`<div class="bubble-av">🙏</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
   wrap.appendChild(t); wrap.scrollTop=wrap.scrollHeight;
 }
-function hideTyping(){ const t=document.getElementById('typing'); if(t) t.remove(); }
+function hideTyping() { const t=document.getElementById('typing'); if(t) t.remove(); }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  SEND
-// ══════════════════════════════════════════
-async function sendMsg(){
+// ══════════════════════════════════════════════════════
+async function sendMsg() {
   const inp=document.getElementById('msgInput');
   const text=inp.value.trim(); if(!text) return;
   inp.value=''; inp.style.height='';
@@ -524,28 +592,26 @@ async function sendMsg(){
 function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
 function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  QUICK ACTIONS
-// ══════════════════════════════════════════
-const QA={
-  medicine: ()=>`Aaj maine apni medicines li hain kya? ${S.medicines.map(m=>m.name).join(', ')||'Medicines ke baare mein batao.'}`,
-  date:     ()=>'Aaj ki date, din aur time kya hai? Aur kal kya hai?',
-  news:     ()=>'Aaj ki 2-3 interesting khabren sunao — achhi wali, dil khush karne wali.',
-  joke:     ()=>'Ek mast Hinglish chutakula sunao — halka phulka, hasane wala!',
-  story:    ()=>'Ek choti si prerak kahani sunao — 5-6 lines mein. Koi achi seekh ho.',
-  quote:    ()=>'Ek sundar suvichar ya doha sunao aaj ke liye. Hindi mein.',
-  youtube:  ()=>'Mujhe YouTube pe kuch dekhna hai — koi accha suggestion do aur link kholo.',
-  weather:  ()=>'Aaj ka mausam kaisa hai? Ghar se bahar jaana chahiye kya?',
-  family:   ()=>`${S.family} ki bahut yaad aa rahi hai aaj...`
+// ══════════════════════════════════════════════════════
+const QA = {
+  medicine: ()=>`Aaj maine apni medicines li hain kya? ${S.medicines.map(m=>m.name).join(', ')||''}`,
+  date:     ()=>'Aaj ki date, din aur time kya hai?',
+  news:     ()=>'Aaj ki 2-3 interesting khabren sunao — achhi wali.',
+  joke:     ()=>'Ek mast Hinglish chutakula sunao!',
+  story:    ()=>'Ek choti prerak kahani sunao — 5-6 lines mein.',
+  quote:    ()=>'Ek sundar suvichar ya doha sunao aaj ke liye.',
+  youtube:  ()=>'YouTube pe kuch dekhna hai — suggestion do.',
+  weather:  ()=>'Aaj ka mausam kaisa hai?',
+  family:   ()=>`${S.family} ki bahut yaad aa rahi hai...`
 };
 
-function quickSend(type){
-  // YouTube is special — handle app opening directly
+function quickSend(type) {
   if(type==='youtube'){
-    const msg='YouTube pe aaj kya dekhna chahte hain? Koi topic batayein — bhajan, comedy, news, yoga...';
-    addBubble('ai', msg);
+    const msg='YouTube pe aaj kya dekhna chahte hain?';
+    addBubble('ai',msg);
     speakText(msg);
-    // Show a YouTube open button
     const wrap=document.getElementById('chatWrap');
     const div=document.createElement('div');
     div.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 4px 38px';
@@ -553,8 +619,7 @@ function quickSend(type){
       <a class="app-link" onclick="openApp('youtube','bhajan hindi old')">▶️ Bhajan</a>
       <a class="app-link" onclick="openApp('youtube','hindi comedy')">😄 Comedy</a>
       <a class="app-link" onclick="openApp('youtube','yoga for elderly hindi')">🧘 Yoga</a>
-      <a class="app-link" onclick="openApp('youtube','aaj ki khabar')">📰 News</a>
-    `;
+      <a class="app-link" onclick="openApp('youtube','aaj ki khabar')">📰 News</a>`;
     wrap.appendChild(div); wrap.scrollTop=wrap.scrollHeight;
     return;
   }
@@ -562,45 +627,34 @@ function quickSend(type){
   sendMsg();
 }
 
-// ══════════════════════════════════════════
-//  DETECT if AI response wants to open something
-// ══════════════════════════════════════════
-function detectAndOpenApp(text){
-  const lower = text.toLowerCase();
-  // If AI mentions YouTube search
-  if(lower.includes('youtube') && lower.includes('search')){
-    const match = text.match(/search[:\s]+["']?([^"'\n]+)["']?/i);
-    if(match) openApp('youtube', match[1]);
-  }
-  // If AI mentions maps
-  if(lower.includes('google maps') || lower.includes('maps pe')){
-    const match = text.match(/maps[:\s]+["']?([^"'\n]+)["']?/i);
-    if(match) openApp('maps', match[1]);
-  }
-}
+// ══════════════════════════════════════════════════════
+//  API CALL — with reminder tag parsing
+// ══════════════════════════════════════════════════════
+async function callAPI(userMsg) {
+  const now = new Date();
+  const currentTime = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-// ══════════════════════════════════════════
-//  API CALL
-// ══════════════════════════════════════════
-async function callAPI(userMsg){
-  const medList = S.medicines.map(m=>m.name).join(', ')||'none';
-
-  const sys=`Tu "Saathi AI" hai — ek warm, caring, entertaining AI companion for elderly people in India.
+  const sys=`Tu "Saathi AI" hai — ek warm, caring, entertaining AI companion for elderly people.
 User ka naam: ${S.name}. Family member: ${S.family}.
 Language: ${S.lang==='hindi'?'Pure simple Hindi':'Friendly Hinglish — warm Hindi-English mix'}.
-Medicines: ${medList}.
+Current time: ${currentTime}.
+Daily medicines in settings: ${S.medicines.map(m=>`${m.name} at ${m.time}`).join(', ')||'none'}.
 
-IMPORTANT RULES:
-1. Responses 3-5 lines max. Short, clear, warm.
-2. NEVER promise to remind after X minutes. Tu timer set nahi kar sakta. Reminder sirf Settings mein set hoti hai.
-3. NEVER say "main yaad dilaaunga baad mein" — tu real-time mein yaad nahi dila sakta.
-4. If user asks for medicine reminder — say "Settings mein medicine time set karein, main automatically yaad dilaaunga".
-5. Be entertaining! Jokes, stories, riddles, fun facts — elderly log bore nahi hone chahiye.
-6. Use only 1-2 emojis per message.
-7. For YouTube — suggest a search term clearly like: "YouTube pe search karein: [topic]"
-8. For calls — say "📞 [number] pe call karein" 
-9. Never cold or robotic. Always like a caring family member.
-10. Fun things to do randomly: ek paheli poochho, cricket score batao, koi interesting fact batao, birthdays yaad dilao, seasonal tips do.`;
+REMINDER RULES — very important:
+- Agar user koi ek baar ka (one-time) reminder maange — jaise "5 baje yaad dilao", "1 ghante baad yaad karna", "kal subah 9 baje" — toh apne reply ke BILKUL END mein yeh special tag lagao:
+  [REMINDER:{"time":"HH:MM","task":"user ka kaam yahan likho"}]
+- Time hamesha 24-hour format mein likho. Example: 5 PM = 17:00, 9 AM = 09:00.
+- Agar user "1 ghante baad" ya "30 minute baad" bole — current time ${currentTime} se calculate karo.
+- Tag ke baad kuch mat likho. Tag reply ka last part hona chahiye.
+- Agar reminder nahi maanga toh tag bilkul mat lagao.
+- Koi bhi recurring / daily reminder sirf Settings mein set hoti hai — uske liye Settings jaane ko kaho.
+
+GENERAL RULES:
+- Responses 3-5 lines max. Short, warm, clear.
+- 1-2 emojis max per message.
+- Be entertaining: jokes, riddles, fun facts, stories — elderly log bore nahi hone chahiye.
+- For YouTube — suggest a topic clearly.
+- Never cold or robotic. Always like a caring family member.`;
 
   const history=S.msgs.slice(-8).map(m=>({
     role:m.role==='ai'?'assistant':'user', content:m.text
@@ -615,55 +669,66 @@ IMPORTANT RULES:
     const data=await res.json();
     hideTyping();
     if(data.error){ addBubble('ai',`Error: ${data.error}`); return; }
-    const reply=data.reply||'Maafi, kuch gadbad ho gayi. Dobara try karein. 🙏';
-    
-    // Check if reply mentions YouTube — show open button
-    let extraHtml='';
-    const lower=reply.toLowerCase();
-    if(lower.includes('youtube')){
-      const searchMatch=reply.match(/search[:\s]+[""']?([^""'\n.]+)/i) ||
-                        reply.match(/dekh[iye|en|o]*[:\s]+[""']?([^""'\n.]+)/i);
-      const searchQ = searchMatch ? searchMatch[1].trim() : 'hindi songs old';
-      extraHtml=`<br><a class="app-link" onclick="openApp('youtube','${searchQ.replace(/'/g,'')}')">▶️ YouTube खोलें</a>`;
+
+    let reply = data.reply || 'Maafi, kuch gadbad ho gayi. Dobara try karein. 🙏';
+
+    // ── PARSE REMINDER TAG ──
+    const reminderData = parseReminderTag(reply);
+    if(reminderData && reminderData.time && reminderData.task){
+      const confirmMsg = scheduleOneTimeReminder(reminderData.time, reminderData.task);
+      // Strip the tag from displayed reply, show clean confirmation
+      const cleanReply = stripReminderTag(reply);
+      // Show AI reply without the tag
+      const displayReply = cleanReply || `Bilkul, ${S.name}!`;
+      addBubble('ai', displayReply);
+      speakText(displayReply);
+      // If we got a confirmation string, show it as a follow-up line
+      if(confirmMsg){
+        setTimeout(()=>{ addBubble('ai', confirmMsg); speakText(confirmMsg); }, 400);
+      }
+      return;
     }
-    if(lower.includes('google maps') || lower.includes('maps')){
-      const locMatch=reply.match(/maps[:\s]+[""']?([^""'\n.]+)/i);
-      const loc=locMatch?locMatch[1].trim():'hospital near me';
-      extraHtml+=`<br><a class="app-link" onclick="openApp('maps','${loc.replace(/'/g,'')}')">📍 Maps खोलें</a>`;
+
+    // ── YOUTUBE LINK ──
+    let extraHtml='';
+    if(reply.toLowerCase().includes('youtube')){
+      const sq=reply.match(/search[:\s]+["']?([^"'\n.]+)/i)||reply.match(/dekh[a-z]*[:\s]+["']?([^"'\n.]+)/i);
+      const q=sq?sq[1].trim():'hindi songs old';
+      extraHtml=`<br><a class="app-link" onclick="openApp('youtube','${q.replace(/'/g,'')}')">▶️ YouTube खोलें</a>`;
     }
 
     addBubble('ai', reply, extraHtml);
     speakText(reply);
-    detectAndOpenApp(reply);
 
   }catch(err){
     hideTyping();
-    const errMsg='Network mein thodi problem aa gayi. Dobara try karein?';
-    addBubble('ai',errMsg+' 🙏'); speakText(errMsg);
+    const e='Network mein thodi problem aa gayi. Dobara try karein?';
+    addBubble('ai',e+' 🙏'); speakText(e);
   }
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  MIC
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 let recog=null,isRec=false;
-function toggleMic(){
+function toggleMic() {
   const btn=document.getElementById('micBtn');
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ addBubble('ai','Voice support is browser mein nahi hai. Chrome use karein 🙏'); return; }
+  if(!SR){ addBubble('ai','Voice is browser mein nahi hai. Chrome use karein 🙏'); return; }
   if(isRec){ recog?.stop(); return; }
   window.speechSynthesis?.cancel();
-  recog=new SR(); recog.lang=S.lang==='english'?'en-IN':'hi-IN'; recog.interimResults=false; recog.maxAlternatives=1;
+  recog=new SR(); recog.lang=S.lang==='english'?'en-IN':'hi-IN';
+  recog.interimResults=false; recog.maxAlternatives=1;
   recog.onresult=e=>{ document.getElementById('msgInput').value=e.results[0][0].transcript; sendMsg(); };
   recog.onend=()=>{ isRec=false; btn.classList.remove('recording'); };
   recog.onerror=()=>{ isRec=false; btn.classList.remove('recording'); };
   recog.start(); isRec=true; btn.classList.add('recording');
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  SOS
-// ══════════════════════════════════════════
-function showSOS(){
+// ══════════════════════════════════════════════════════
+function showSOS() {
   window.speechSynthesis?.cancel();
   const c=document.getElementById('sosContacts'); c.innerHTML='';
   if(S.family&&S.phone){
@@ -681,42 +746,32 @@ function showSOS(){
 }
 function closeSOS(){ document.getElementById('sos-overlay').classList.remove('show'); }
 
-// ══════════════════════════════════════════
-//  MEDICINE REMINDERS — FIXED
-//  ✅ Only fires from Settings-set times
-//  ✅ Will NOT fire twice in same minute window
-//  ✅ Resets at midnight
-// ══════════════════════════════════════════
-function scheduleMedCheck(){
-  checkMeds();
-  setInterval(checkMeds, 60000); // check every 60 seconds
+// ══════════════════════════════════════════════════════
+//  DAILY MEDICINE REMINDERS (from Settings only)
+// ══════════════════════════════════════════════════════
+function scheduleDailyMedCheck(){
+  checkDailyMeds();
+  setInterval(checkDailyMeds, 60000);
 }
-
-function checkMeds(){
+function checkDailyMeds(){
   if(!S.medicines.length) return;
   const now=new Date(), hr=now.getHours(), min=now.getMinutes();
   let changed=false;
   S.medicines.forEach((m,i)=>{
     if(!m.time) return;
     const [mh,mm]=m.time.split(':').map(Number);
-    // Fire only once — within a 1-minute window of set time, and only if not already reminded today
     if(mh===hr && mm===min && !m.reminded){
-      S.medicines[i].reminded=true;
-      changed=true;
-      const reminderMsg=`${S.name}, yaad dila doon — ${m.name} lene ka waqt ho gaya hai! Paani zaroor pijiye.`;
-      addBubble('ai',`💊 ${S.name}, yaad dila doon!\n\n${m.name} lene ka waqt ho gaya hai.\nPaani zaroor pijiye. 🌿`);
-      speakText(reminderMsg);
+      S.medicines[i].reminded=true; changed=true;
+      const msg=`${S.name}, ${m.name} lene ka waqt ho gaya hai! Paani zaroor pijiye.`;
+      addBubble('ai',`💊 ${S.name}, ${m.name} lene ka waqt ho gaya!\nPaani zaroor pijiye. 🌿`);
+      speakText(msg);
     }
   });
   if(changed) save();
 }
-
-// Reset reminded flags at midnight
 setInterval(()=>{
   const n=new Date();
-  if(n.getHours()===0&&n.getMinutes()===0){
-    S.medicines.forEach(m=>m.reminded=false); save();
-  }
+  if(n.getHours()===0&&n.getMinutes()===0){ S.medicines.forEach(m=>m.reminded=false); save(); }
 },60000);
 
 function renderMedList(){
@@ -739,23 +794,35 @@ function addMed(){
 }
 function delMed(i){ S.medicines.splice(i,1); save(); renderMedList(); }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  PWA INSTALL
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredPrompt=e; setTimeout(()=>document.getElementById('install-banner').classList.add('show'),4000); });
-document.getElementById('installBtn').addEventListener('click',async()=>{
-  if(!deferredPrompt){ addBubble('ai','iOS pe install:\n1. Safari mein open karein\n2. Share button dabayen\n3. "Add to Home Screen" select karein\n\nDone! 🎉'); document.getElementById('install-banner').classList.remove('show'); return; }
-  deferredPrompt.prompt(); const{outcome}=await deferredPrompt.userChoice; deferredPrompt=null;
-  document.getElementById('install-banner').classList.remove('show');
-  if(outcome==='accepted'){ addBubble('ai','🎉 साथी AI install ho gaya!'); speakText('Saathi AI install ho gaya! Ab home screen pe icon aa gaya!'); }
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  setTimeout(()=>document.getElementById('install-banner').classList.add('show'),4000);
 });
-document.getElementById('installClose').addEventListener('click',()=>document.getElementById('install-banner').classList.remove('show'));
+document.getElementById('installBtn').addEventListener('click',async()=>{
+  if(!deferredPrompt){
+    addBubble('ai','iOS pe install:\n1. Safari mein open karein\n2. Share button dabayen\n3. "Add to Home Screen"\n\nDone! 🎉');
+    document.getElementById('install-banner').classList.remove('show'); return;
+  }
+  deferredPrompt.prompt();
+  const{outcome}=await deferredPrompt.userChoice; deferredPrompt=null;
+  document.getElementById('install-banner').classList.remove('show');
+  if(outcome==='accepted'){ addBubble('ai','🎉 App install ho gaya!'); speakText('Saathi AI install ho gaya!'); }
+});
+document.getElementById('installClose').addEventListener('click',()=>{
+  document.getElementById('install-banner').classList.remove('show');
+});
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  INIT
-// ══════════════════════════════════════════
-window.addEventListener('load',()=>{ isMuted=!S.voiceOn; if(S.onboarded) startMain(); });
+// ══════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  isMuted=!S.voiceOn;
+  if(S.onboarded) startMain();
+});
 </script>
 </body>
 </html>
