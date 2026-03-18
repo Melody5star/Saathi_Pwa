@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D0A07">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="साथी AI">
+<meta name="description" content="Your elderly companion — Hindi & English AI assistant">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>साथी AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --amber:#F59E0B;--amber-d:#D97706;--amber-l:#FDE68A;
+  --saffron:#EA580C;--dark:#0D0A07;--dark2:#18100A;
+  --card:#1E1408;--border:rgba(245,158,11,0.18);
+  --text:#FEF3C7;--muted:rgba(254,243,199,0.5);
+  --r:16px;--safe-b:env(safe-area-inset-bottom,16px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--dark)}
+body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);overscroll-behavior:none}
+
+#app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;position:relative;background:var(--dark);overflow:hidden}
+.status-bar{height:env(safe-area-inset-top,0px);background:var(--dark2);flex-shrink:0}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .38s}
+.screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
+.screen.slide-left{transform:translateX(-100%);opacity:0;pointer-events:none}
+
+/* ONBOARDING */
+#screen-onboard{background:var(--dark);justify-content:center;align-items:center;padding:32px 28px;text-align:center;overflow-y:auto}
+.ob-logo-icon{width:88px;height:88px;margin:0 auto 14px;display:block}
+.ob-title{font-size:2.6rem;font-weight:800;color:var(--amber);line-height:1}
+.ob-sub{font-size:1rem;color:var(--muted);margin-top:5px}
+.ob-form{width:100%;max-width:320px;margin-top:32px;display:flex;flex-direction:column;gap:12px}
+.ob-label{font-size:.75rem;color:var(--muted);letter-spacing:1px;text-align:left;margin-bottom:-4px}
+.ob-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;font-family:'Baloo 2',sans-serif;font-size:1rem;color:var(--text);outline:none;transition:border-color .2s}
+.ob-input:focus{border-color:var(--amber)}
+.ob-input::placeholder{color:var(--muted)}
+.ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:var(--r);font-family:'Baloo 2',sans-serif;font-size:1.05rem;font-weight:800;color:#fff;cursor:pointer;margin-top:6px;transition:opacity .2s,transform .15s}
+.ob-btn:active{transform:scale(.97);opacity:.9}
+.ob-skip{font-size:.82rem;color:var(--muted);margin-top:12px;cursor:pointer;text-decoration:underline}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;border:2px solid rgba(245,158,11,.3)}
+.tb-name{font-size:1rem;font-weight:700;color:var(--text);line-height:1.1}
+.tb-status{font-size:.7rem;color:#4ade80;font-weight:500;display:flex;align-items:center;gap:4px}
+.tb-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tb-right{display:flex;gap:8px}
+.tb-icon-btn{width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;transition:background .2s}
+.tb-icon-btn:active{background:rgba(245,158,11,.25)}
+
+/* QUICK ACTIONS */
+.quick-strip{display:flex;gap:8px;padding:10px 14px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.quick-strip::-webkit-scrollbar{display:none}
+.qa-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:40px;padding:7px 14px;font-family:'Baloo 2',sans-serif;font-size:.8rem;color:var(--text);cursor:pointer;white-space:nowrap;transition:all .2s}
+.qa-btn:active{background:rgba(245,158,11,.2);border-color:var(--amber);color:var(--amber-l)}
+
+/* CHAT */
+.chat-wrap{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;overscroll-behavior:contain}
+.date-div{text-align:center;margin:4px 0}
+.date-div span{background:rgba(245,158,11,.1);color:var(--muted);font-size:.68rem;padding:3px 12px;border-radius:20px}
+.bubble-wrap{display:flex;gap:8px;max-width:88%}
+.bubble-wrap.user{align-self:flex-end;flex-direction:row-reverse}
+.bubble-wrap.ai{align-self:flex-start}
+.bubble-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;margin-top:auto}
+.bubble{padding:11px 14px;border-radius:18px;font-size:.95rem;line-height:1.55}
+.bubble.ai{background:var(--card);border:1px solid var(--border);border-radius:18px 18px 18px 4px;color:var(--text)}
+.bubble.user{background:linear-gradient(135deg,var(--amber-d),#B45309);color:#FEF9F0;border-radius:18px 18px 4px 18px}
+.bubble-time{font-size:.65rem;color:var(--muted);margin-top:4px}
+.bubble-wrap.user .bubble-time{text-align:right}
+
+.typing-wrap{display:flex;gap:8px;align-items:center;align-self:flex-start}
+.typing-dots{background:var(--card);border:1px solid var(--border);border-radius:18px 18px 18px 4px;padding:12px 16px;display:flex;gap:5px;align-items:center}
+.typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--amber);opacity:.4;animation:td 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+/* INPUT */
+.input-bar{padding:10px 14px;padding-bottom:calc(10px + var(--safe-b));background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+.input-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:11px 16px;font-family:'Baloo 2',sans-serif;font-size:.95rem;color:var(--text);outline:none;resize:none;max-height:120px;line-height:1.4;transition:border-color .2s}
+.input-box:focus{border-color:rgba(245,158,11,.5)}
+.input-box::placeholder{color:var(--muted)}
+.send-btn,.mic-btn{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.15rem;transition:all .2s;flex-shrink:0}
+.send-btn{background:linear-gradient(135deg,var(--amber),var(--saffron))}
+.send-btn:active{transform:scale(.9)}
+.mic-btn{background:var(--card);border:1px solid var(--border);font-size:1.3rem}
+.mic-btn.recording{background:rgba(239,68,68,.2);border-color:#ef4444;animation:recPulse 1s infinite}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+
+/* SOS */
+#sos-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:32px;text-align:center;backdrop-filter:blur(10px)}
+#sos-overlay.show{display:flex}
+.sos-circle{width:120px;height:120px;border-radius:50%;background:rgba(239,68,68,.2);border:3px solid #ef4444;display:flex;align-items:center;justify-content:center;font-size:3rem;animation:sosPulse 1s infinite}
+@keyframes sosPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 20px rgba(239,68,68,0)}}
+.sos-title{font-size:1.6rem;font-weight:800;color:#fff}
+.sos-sub{font-size:.9rem;color:rgba(255,255,255,.6);line-height:1.6}
+.sos-contacts{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px}
+.sos-contact-btn{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fff;padding:13px 20px;border-radius:12px;font-family:'Baloo 2',sans-serif;font-size:.95rem;cursor:pointer;display:flex;align-items:center;gap:10px;width:100%;text-align:left}
+.sos-cancel{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:10px 28px;border-radius:24px;font-family:'Baloo 2',sans-serif;font-size:.9rem;cursor:pointer;margin-top:4px}
+
+/* INSTALL BANNER */
+#install-banner{position:fixed;bottom:0;left:0;right:0;z-index:500;transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1)}
+#install-banner.show{transform:translateY(0)}
+.install-inner{background:var(--dark2);border-top:1px solid var(--border);padding:15px 18px;padding-bottom:calc(15px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px;max-width:430px;margin:0 auto}
+.install-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.install-text{flex:1}
+.install-text strong{font-size:.9rem;color:var(--text);display:block}
+.install-text span{font-size:.75rem;color:var(--muted)}
+.install-btn{background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;padding:9px 18px;border-radius:24px;font-family:'Baloo 2',sans-serif;font-size:.85rem;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap}
+.install-x{background:transparent;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px}
+
+/* SETTINGS */
+#screen-settings{background:var(--dark)}
+.settings-head{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--dark2);flex-shrink:0}
+.back-btn{background:transparent;border:none;color:var(--amber);font-size:1.2rem;cursor:pointer;padding:4px}
+.settings-title{font-size:1.05rem;font-weight:700;color:var(--text)}
+.settings-body{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.sec-title{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.settings-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid rgba(245,158,11,.07)}
+.settings-row:last-child{border-bottom:none}
+.settings-row label{font-size:.92rem;color:var(--text)}
+.settings-row small{font-size:.75rem;color:var(--muted);display:block;margin-top:2px}
+.s-input{background:rgba(245,158,11,.08);border:1px solid var(--border);border-radius:10px;padding:7px 11px;font-family:'Baloo 2',sans-serif;font-size:.88rem;color:var(--text);outline:none;width:155px;text-align:right}
+.toggle{width:44px;height:24px;border-radius:12px;background:rgba(245,158,11,.15);border:1px solid var(--border);cursor:pointer;position:relative;transition:background .3s;flex-shrink:0}
+.toggle.on{background:var(--amber-d);border-color:var(--amber)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .3s}
+.toggle.on::after{transform:translateX(20px)}
+.med-list{display:flex;flex-direction:column;gap:8px}
+.med-item{display:flex;align-items:center;gap:10px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.12);border-radius:10px;padding:10px 13px}
+.med-name{flex:1;font-size:.88rem;color:var(--text)}
+.med-time{font-size:.76rem;color:var(--amber)}
+.med-del{background:transparent;border:none;color:rgba(239,68,68,.6);font-size:.9rem;cursor:pointer}
+.add-med-row{display:flex;gap:8px;margin-top:8px}
+.add-med-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-family:'Baloo 2',sans-serif;font-size:.85rem;color:var(--text);outline:none}
+.add-med-btn{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:9px 14px;font-family:'Baloo 2',sans-serif;font-size:.85rem;color:var(--amber);cursor:pointer;white-space:nowrap}
+.empty-med{font-size:.82rem;color:var(--muted);padding:6px 0}
+</style>
+</head>
+<body>
+
+<div id="sos-overlay">
+  <div class="sos-circle">🆘</div>
+  <div class="sos-title">Emergency Alert</div>
+  <div class="sos-sub">आपके family members को<br>तुरंत message भेजा जाएगा।</div>
+  <div class="sos-contacts" id="sosContacts"></div>
+  <button class="sos-cancel" onclick="closeSOS()">रद्द करें — Cancel</button>
+</div>
+
+<div id="install-banner">
+  <div class="install-inner">
+    <div class="install-icon">🙏</div>
+    <div class="install-text">
+      <strong>साथी AI — App Install करें</strong>
+      <span>Home screen पर — बिल्कुल app जैसा!</span>
+    </div>
+    <button class="install-btn" id="installBtn">Install</button>
+    <button class="install-x" id="installClose">✕</button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="status-bar"></div>
+
+  <!-- ONBOARDING -->
+  <div class="screen" id="screen-onboard">
+    <svg class="ob-logo-icon" viewBox="0 0 90 90" fill="none">
+      <defs>
+        <linearGradient id="og" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#FDE68A"/><stop offset="100%" stop-color="#D97706"/>
+        </linearGradient>
+        <filter id="gf"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <circle cx="45" cy="45" r="42" fill="#1E1408" stroke="url(#og)" stroke-width="1.5" opacity="0.6"/>
+      <path d="M38 10 A35 35 0 0 0 38 80" stroke="#F59E0B" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path d="M52 10 A35 35 0 0 1 52 80" stroke="#D97706" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path d="M45 55 C31 45 24 35 30 26 C34 20 41 23 45 31 C49 23 56 20 60 26 C66 35 59 45 45 55Z" fill="url(#og)" filter="url(#gf)"/>
+      <circle cx="57" cy="18" r="3" fill="#FDE68A" opacity="0.9"/>
+      <circle cx="62" cy="35" r="2.5" fill="#F59E0B" opacity="0.7"/>
+      <circle cx="62" cy="55" r="2.5" fill="#F59E0B" opacity="0.7"/>
+      <circle cx="57" cy="72" r="3" fill="#FDE68A" opacity="0.9"/>
+    </svg>
+    <div class="ob-title">साथी AI</div>
+    <div class="ob-sub">आपका अपना digital साथी 🙏</div>
+    <div class="ob-form">
+      <div class="ob-label">आपका नाम / Your name</div>
+      <input class="ob-input" id="ob-name" type="text" placeholder="जैसे: Dadi ji, Nana ji...">
+      <div class="ob-label">Family member name (बेटा/बेटी)</div>
+      <input class="ob-input" id="ob-family" type="text" placeholder="जैसे: Priya (बेटी)">
+      <div class="ob-label">Emergency contact number</div>
+      <input class="ob-input" id="ob-phone" type="tel" placeholder="+91 XXXXXXXXXX">
+      <button class="ob-btn" onclick="finishOnboard()">साथी से मिलिए — Start 🙏</button>
+    </div>
+    <div class="ob-skip" onclick="skipOnboard()">अभी छोड़ें — Skip</div>
+  </div>
+
+  <!-- MAIN CHAT -->
+  <div class="screen hidden" id="screen-main">
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="tb-avatar">🙏</div>
+        <div>
+          <div class="tb-name">साथी AI</div>
+          <div class="tb-status"><div class="tb-dot"></div>हमेशा साथ हूं</div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-icon-btn" onclick="showSOS()">🆘</div>
+        <div class="tb-icon-btn" onclick="goSettings()">⚙️</div>
+      </div>
+    </div>
+    <div class="quick-strip">
+      <button class="qa-btn" onclick="quickSend('medicine')">💊 दवाई</button>
+      <button class="qa-btn" onclick="quickSend('date')">📅 तारीख</button>
+      <button class="qa-btn" onclick="quickSend('news')">📰 खबर</button>
+      <button class="qa-btn" onclick="quickSend('song')">🎵 गाना</button>
+      <button class="qa-btn" onclick="quickSend('weather')">🌤️ मौसम</button>
+      <button class="qa-btn" onclick="quickSend('family')">👨‍👩‍👧 परिवार</button>
+    </div>
+    <div class="chat-wrap" id="chatWrap">
+      <div class="date-div"><span id="dateLabel">आज</span></div>
+    </div>
+    <div class="input-bar">
+      <div class="input-row">
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+        <textarea class="input-box" id="msgInput"
+          placeholder="यहाँ लिखें या 🎤 बोलें..."
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" onclick="sendMsg()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen hidden" id="screen-settings">
+    <div class="settings-head">
+      <button class="back-btn" onclick="goMain()">←</button>
+      <div class="settings-title">⚙️ Settings</div>
+    </div>
+    <div class="settings-body">
+      <div>
+        <div class="sec-title">Profile</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div><label>आपका नाम</label><small>साथी इसी नाम से बुलाएगा</small></div>
+            <input class="s-input" id="s-name" placeholder="Dadi ji">
+          </div>
+          <div class="settings-row">
+            <div><label>Language</label><small>बातचीत की भाषा</small></div>
+            <select class="s-input" id="s-lang">
+              <option value="hinglish">Hinglish</option>
+              <option value="hindi">हिंदी</option>
+              <option value="english">English</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Medicine Reminders</div>
+        <div class="med-list" id="medList"></div>
+        <div class="add-med-row">
+          <input class="add-med-input" id="newMedName" placeholder="Medicine name">
+          <input class="add-med-input" id="newMedTime" type="time" style="width:88px">
+          <button class="add-med-btn" onclick="addMed()">+ Add</button>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Emergency Contact</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div><label>Family member</label></div>
+            <input class="s-input" id="s-fam" placeholder="Priya (बेटी)">
+          </div>
+          <div class="settings-row">
+            <div><label>Phone number</label></div>
+            <input class="s-input" id="s-phone" type="tel" placeholder="+91...">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Notifications</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div><label>Morning greeting</label><small>8 baje Namaste</small></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-row">
+            <div><label>Medicine reminders</label><small>Time pe yaad dilana</small></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-row">
+            <div><label>Evening check-in</label><small>7 baje kaisa feel hai</small></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+      </div>
+      <button class="ob-btn" onclick="saveSettings()">💾 Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let S = {
+  name:'Dadi ji', family:'Beta/Beti', phone:'',
+  lang:'hinglish', medicines:[], onboarded:false, msgs:[]
+};
+try{ const saved=localStorage.getItem('saathi_v1'); if(saved) S={...S,...JSON.parse(saved)}; }catch(e){}
+function save(){ try{ localStorage.setItem('saathi_v1',JSON.stringify(S)); }catch(e){} }
+
+// ── ONBOARDING ──
+function finishOnboard(){
+  S.name   = document.getElementById('ob-name').value.trim()   || 'Dadi ji';
+  S.family = document.getElementById('ob-family').value.trim() || 'Beta ji';
+  S.phone  = document.getElementById('ob-phone').value.trim();
+  S.onboarded=true; save(); startMain();
+}
+function skipOnboard(){ S.onboarded=true; save(); startMain(); }
+
+// ── SCREENS ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('hidden','slide-left');
+    if(s.id!==id) s.classList.add(s.id==='screen-main'?'slide-left':'hidden');
+  });
+}
+function goMain(){ showScreen('screen-main'); }
+function goSettings(){
+  document.getElementById('s-name').value  = S.name;
+  document.getElementById('s-lang').value  = S.lang;
+  document.getElementById('s-fam').value   = S.family;
+  document.getElementById('s-phone').value = S.phone;
+  renderMedList();
+  showScreen('screen-settings');
+}
+
+// ── START ──
+function startMain(){
+  showScreen('screen-main');
+  const now=new Date(), hr=now.getHours();
+  const greet = hr<12?'🌅 Suprabhat! Good Morning': hr<17?'☀️ Namaskar':'🌙 Shubh Sandhya';
+  document.getElementById('dateLabel').textContent =
+    now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  setTimeout(()=>{
+    addBubble('ai',`${greet}, ${S.name}! 🙏\n\nMain aapka saathi hoon — hamesha yahan hoon.\nAaj kaisa feel kar rahe hain aap?`);
+    scheduleMedCheck();
+  },500);
+}
+
+function saveSettings(){
+  S.name   = document.getElementById('s-name').value.trim()  || S.name;
+  S.lang   = document.getElementById('s-lang').value;
+  S.family = document.getElementById('s-fam').value.trim()   || S.family;
+  S.phone  = document.getElementById('s-phone').value.trim();
+  save(); goMain();
+  setTimeout(()=>addBubble('ai',`✓ Settings save ho gayi! Main ab aapko "${S.name}" bulaunga 😊`),300);
+}
+
+// ── BUBBLES ──
+function addBubble(role,text){
+  const wrap=document.getElementById('chatWrap');
+  const time=new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
+  const div=document.createElement('div');
+  div.className=`bubble-wrap ${role}`;
+  const safe=text.replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  div.innerHTML = role==='ai'
+    ? `<div class="bubble-av">🙏</div><div><div class="bubble ai">${safe}</div><div class="bubble-time">${time}</div></div>`
+    : `<div><div class="bubble user">${safe}</div><div class="bubble-time">${time}</div></div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop=wrap.scrollHeight;
+  S.msgs.push({role,text,time});
+  if(S.msgs.length>20) S.msgs.shift();
+}
+function showTyping(){
+  const wrap=document.getElementById('chatWrap');
+  const t=document.createElement('div');
+  t.id='typing'; t.className='typing-wrap';
+  t.innerHTML=`<div class="bubble-av">🙏</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
+  wrap.appendChild(t); wrap.scrollTop=wrap.scrollHeight;
+}
+function hideTyping(){ const t=document.getElementById('typing'); if(t) t.remove(); }
+
+// ── SEND ──
+async function sendMsg(){
+  const inp=document.getElementById('msgInput');
+  const text=inp.value.trim(); if(!text) return;
+  inp.value=''; inp.style.height='';
+  addBubble('user',text); showTyping();
+  await callAPI(text);
+}
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
+function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+
+// ── QUICK ACTIONS ──
+const QA={
+  medicine:()=>`Maine aaj apni medicines li hain kya? ${S.medicines.map(m=>m.name).join(', ')||'Mujhe remind karo.'}`,
+  date:    ()=>'Aaj ki date, din aur time kya hai?',
+  news:    ()=>'Aaj ki koi achi ya interesting khabar sunao.',
+  song:    ()=>'Koi ek purana Bollywood gaana suggest karo — Lata ji ya Kishore Kumar ka.',
+  weather: ()=>'Aaj ka mausam kaisa hai? Ghar se bahar jaana chahiye kya?',
+  family:  ()=>`${S.family} ki bahut yaad aa rahi hai...`
+};
+function quickSend(type){ document.getElementById('msgInput').value=QA[type]?.(); sendMsg(); }
+
+// ── API CALL → /api/chat (Vercel function, key stays server-side) ──
+async function callAPI(userMsg){
+  const sys=`Tu "Saathi AI" hai — ek warm, caring AI companion for elderly people.
+User ka naam: ${S.name}. Family member: ${S.family}.
+Language: ${S.lang==='hindi'?'Pure simple Hindi':'Friendly Hinglish (Hindi+English mix)'}.
+Medicines: ${S.medicines.map(m=>m.name).join(', ')||'none'}.
+Rules: Short 3-5 lines only. Warm patient caring tone. Simple words. 1-2 emojis max. Never cold or robotic.`;
+
+  const history=S.msgs.slice(-8).map(m=>({
+    role:m.role==='ai'?'assistant':'user', content:m.text
+  }));
+
+  try{
+    const res=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system: sys,
+        messages:[...history,{role:'user',content:userMsg}]
+      })
+    });
+    const data=await res.json();
+    hideTyping();
+    if(data.error){ addBubble('ai',`Error: ${data.error}`); return; }
+    addBubble('ai', data.reply || 'Maafi, kuch gadbad ho gayi. Dobara try karein. 🙏');
+  }catch(err){
+    hideTyping();
+    addBubble('ai','Network mein thodi problem aa gayi. Dobara try karein? 🙏');
+  }
+}
+
+// ── MIC ──
+let recog=null,isRec=false;
+function toggleMic(){
+  const btn=document.getElementById('micBtn');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ addBubble('ai','Voice support is browser mein nahi hai. Chrome use karein 🙏'); return; }
+  if(isRec){ recog?.stop(); return; }
+  recog=new SR(); recog.lang=S.lang==='english'?'en-IN':'hi-IN'; recog.interimResults=false;
+  recog.onresult=e=>{ document.getElementById('msgInput').value=e.results[0][0].transcript; sendMsg(); };
+  recog.onend=()=>{ isRec=false; btn.classList.remove('recording'); };
+  recog.onerror=()=>{ isRec=false; btn.classList.remove('recording'); };
+  recog.start(); isRec=true; btn.classList.add('recording');
+}
+
+// ── SOS ──
+function showSOS(){
+  const c=document.getElementById('sosContacts'); c.innerHTML='';
+  if(S.family&&S.phone){
+    const call=document.createElement('button'); call.className='sos-contact-btn';
+    call.innerHTML=`📞 Call ${S.family} — ${S.phone}`;
+    call.onclick=()=>window.location.href=`tel:${S.phone}`; c.appendChild(call);
+    const wa=document.createElement('button'); wa.className='sos-contact-btn';
+    wa.innerHTML=`💬 WhatsApp ${S.family}`;
+    wa.onclick=()=>{ const msg=encodeURIComponent(`🆘 EMERGENCY! ${S.name} ko help chahiye! Turant call karein!`); window.open(`https://wa.me/${S.phone.replace(/\D/g,'')}?text=${msg}`); };
+    c.appendChild(wa);
+  } else {
+    c.innerHTML='<p style="color:rgba(255,255,255,.5);font-size:.85rem">Settings mein emergency contact add karein.</p>';
+  }
+  document.getElementById('sos-overlay').classList.add('show');
+}
+function closeSOS(){ document.getElementById('sos-overlay').classList.remove('show'); }
+
+// ── MEDICINE REMINDERS ──
+function scheduleMedCheck(){ checkMeds(); setInterval(checkMeds,60000); }
+function checkMeds(){
+  if(!S.medicines.length) return;
+  const now=new Date(),hr=now.getHours(),min=now.getMinutes();
+  S.medicines.forEach((m,i)=>{
+    if(!m.time) return;
+    const [mh,mm]=m.time.split(':').map(Number);
+    if(mh===hr&&Math.abs(mm-min)<=2&&!m.reminded){
+      S.medicines[i].reminded=true; save();
+      addBubble('ai',`💊 ${S.name}, yaad dila doon — ${m.name} lene ka waqt ho gaya!\nPaani zaroor pijiye. 🌿`);
+    }
+  });
+}
+setInterval(()=>{ const n=new Date(); if(n.getHours()===0&&n.getMinutes()===0){ S.medicines.forEach(m=>m.reminded=false); save(); } },60000);
+
+function renderMedList(){
+  const el=document.getElementById('medList');
+  if(!S.medicines.length){ el.innerHTML='<div class="empty-med">Abhi koi medicine add nahi hai.</div>'; return; }
+  el.innerHTML=S.medicines.map((m,i)=>`
+    <div class="med-item">
+      <span class="med-name">💊 ${m.name}</span>
+      <span class="med-time">${m.time||'—'}</span>
+      <button class="med-del" onclick="delMed(${i})">✕</button>
+    </div>`).join('');
+}
+function addMed(){
+  const n=document.getElementById('newMedName').value.trim(); if(!n) return;
+  const t=document.getElementById('newMedTime').value;
+  S.medicines.push({name:n,time:t,reminded:false});
+  document.getElementById('newMedName').value=''; document.getElementById('newMedTime').value='';
+  save(); renderMedList();
+}
+function delMed(i){ S.medicines.splice(i,1); save(); renderMedList(); }
+
+// ── PWA INSTALL ──
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredPrompt=e; setTimeout(()=>document.getElementById('install-banner').classList.add('show'),4000); });
+document.getElementById('installBtn').addEventListener('click',async()=>{
+  if(!deferredPrompt){ addBubble('ai','iOS pe install:\n1. Safari mein open karein\n2. Share (↑) button\n3. "Add to Home Screen"\n\n✓ Done! 🎉'); document.getElementById('install-banner').classList.remove('show'); return; }
+  deferredPrompt.prompt(); const{outcome}=await deferredPrompt.userChoice; deferredPrompt=null;
+  document.getElementById('install-banner').classList.remove('show');
+  if(outcome==='accepted') addBubble('ai','🎉 साथी AI install ho gaya! Home screen pe icon aa gaya!');
+});
+document.getElementById('installClose').addEventListener('click',()=>document.getElementById('install-banner').classList.remove('show'));
+
+// ── INIT ──
+window.addEventListener('load',()=>{ if(S.onboarded) startMain(); });
+</script>
+</body>
+</html>
