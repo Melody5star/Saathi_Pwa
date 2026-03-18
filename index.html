@@ -55,8 +55,14 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .tb-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .tb-right{display:flex;gap:8px}
-.tb-icon-btn{width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;transition:background .2s}
+.tb-icon-btn{width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;transition:all .2s}
 .tb-icon-btn:active{background:rgba(245,158,11,.25)}
+/* muted state */
+.tb-icon-btn.muted{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4)}
+
+/* speaking animation on avatar */
+@keyframes speakPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 8px rgba(245,158,11,0)}}
+.tb-avatar.speaking{animation:speakPulse 1s ease-in-out infinite}
 
 /* QUICK ACTIONS */
 .quick-strip{display:flex;gap:8px;padding:10px 14px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
@@ -78,6 +84,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .bubble-time{font-size:.65rem;color:var(--muted);margin-top:4px}
 .bubble-wrap.user .bubble-time{text-align:right}
 
+/* typing dots */
 .typing-wrap{display:flex;gap:8px;align-items:center;align-self:flex-start}
 .typing-dots{background:var(--card);border:1px solid var(--border);border-radius:18px 18px 18px 4px;padding:12px 16px;display:flex;gap:5px;align-items:center}
 .typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--amber);opacity:.4;animation:td 1.2s infinite}
@@ -150,6 +157,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 </head>
 <body>
 
+<!-- SOS -->
 <div id="sos-overlay">
   <div class="sos-circle">🆘</div>
   <div class="sos-title">Emergency Alert</div>
@@ -158,6 +166,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
   <button class="sos-cancel" onclick="closeSOS()">रद्द करें — Cancel</button>
 </div>
 
+<!-- INSTALL BANNER -->
 <div id="install-banner">
   <div class="install-inner">
     <div class="install-icon">🙏</div>
@@ -209,17 +218,20 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
   <div class="screen hidden" id="screen-main">
     <div class="topbar">
       <div class="tb-left">
-        <div class="tb-avatar">🙏</div>
+        <div class="tb-avatar" id="tbAvatar">🙏</div>
         <div>
           <div class="tb-name">साथी AI</div>
-          <div class="tb-status"><div class="tb-dot"></div>हमेशा साथ हूं</div>
+          <div class="tb-status" id="tbStatus"><div class="tb-dot"></div>हमेशा साथ हूं</div>
         </div>
       </div>
       <div class="tb-right">
+        <!-- MUTE / UNMUTE BUTTON -->
+        <div class="tb-icon-btn" id="muteBtn" onclick="toggleMute()" title="आवाज़ बंद/चालू">🔊</div>
         <div class="tb-icon-btn" onclick="showSOS()">🆘</div>
         <div class="tb-icon-btn" onclick="goSettings()">⚙️</div>
       </div>
     </div>
+
     <div class="quick-strip">
       <button class="qa-btn" onclick="quickSend('medicine')">💊 दवाई</button>
       <button class="qa-btn" onclick="quickSend('date')">📅 तारीख</button>
@@ -228,9 +240,11 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
       <button class="qa-btn" onclick="quickSend('weather')">🌤️ मौसम</button>
       <button class="qa-btn" onclick="quickSend('family')">👨‍👩‍👧 परिवार</button>
     </div>
+
     <div class="chat-wrap" id="chatWrap">
       <div class="date-div"><span id="dateLabel">आज</span></div>
     </div>
+
     <div class="input-bar">
       <div class="input-row">
         <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
@@ -251,6 +265,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
       <div class="settings-title">⚙️ Settings</div>
     </div>
     <div class="settings-body">
+
       <div>
         <div class="sec-title">Profile</div>
         <div class="settings-card">
@@ -268,6 +283,25 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
           </div>
         </div>
       </div>
+
+      <div>
+        <div class="sec-title">Voice Settings</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div><label>साथी की आवाज़</label><small>Talking speed</small></div>
+            <select class="s-input" id="s-speed">
+              <option value="0.75">Slow (धीरे)</option>
+              <option value="0.9" selected>Normal</option>
+              <option value="1.1">Fast (तेज़)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div><label>Voice on/off</label><small>साथी बोले या सिर्फ लिखे</small></div>
+            <div class="toggle on" id="t-voice" onclick="toggleVoiceSetting(this)"></div>
+          </div>
+        </div>
+      </div>
+
       <div>
         <div class="sec-title">Medicine Reminders</div>
         <div class="med-list" id="medList"></div>
@@ -277,6 +311,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
           <button class="add-med-btn" onclick="addMed()">+ Add</button>
         </div>
       </div>
+
       <div>
         <div class="sec-title">Emergency Contact</div>
         <div class="settings-card">
@@ -290,6 +325,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
           </div>
         </div>
       </div>
+
       <div>
         <div class="sec-title">Notifications</div>
         <div class="settings-card">
@@ -307,30 +343,165 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
           </div>
         </div>
       </div>
+
       <button class="ob-btn" onclick="saveSettings()">💾 Save Settings</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── STATE ──
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
 let S = {
   name:'Dadi ji', family:'Beta/Beti', phone:'',
-  lang:'hinglish', medicines:[], onboarded:false, msgs:[]
+  lang:'hinglish', voiceOn:true, voiceSpeed:0.9,
+  medicines:[], onboarded:false, msgs:[]
 };
-try{ const saved=localStorage.getItem('saathi_v1'); if(saved) S={...S,...JSON.parse(saved)}; }catch(e){}
+try{ const sv=localStorage.getItem('saathi_v1'); if(sv) S={...S,...JSON.parse(sv)}; }catch(e){}
 function save(){ try{ localStorage.setItem('saathi_v1',JSON.stringify(S)); }catch(e){} }
 
-// ── ONBOARDING ──
+// ══════════════════════════════════════════
+//  TEXT-TO-SPEECH
+// ══════════════════════════════════════════
+let isMuted = !S.voiceOn;
+
+function cleanTextForSpeech(text){
+  return text
+    // remove emojis
+    .replace(/[\u{1F300}-\u{1FFFF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{FE00}-\u{FEFF}]|[\u{1F900}-\u{1F9FF}]/gu,'')
+    // remove HTML tags if any
+    .replace(/<[^>]*>/g,' ')
+    // remove extra spaces
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function speakText(text){
+  // Don't speak if muted or TTS not available
+  if(isMuted) return;
+  if(!window.speechSynthesis) return;
+
+  // Cancel any ongoing speech first
+  window.speechSynthesis.cancel();
+
+  const clean = cleanTextForSpeech(text);
+  if(!clean) return;
+
+  const utter = new SpeechSynthesisUtterance(clean);
+
+  // Pick language based on setting
+  if(S.lang === 'english'){
+    utter.lang = 'en-IN';
+  } else {
+    // Hindi and Hinglish — use hi-IN
+    // Browser will handle Hindi script + Roman Hindi reasonably
+    utter.lang = 'hi-IN';
+  }
+
+  utter.rate  = parseFloat(S.voiceSpeed) || 0.9;  // slightly slower for elderly
+  utter.pitch = 1.0;
+  utter.volume = 1.0;
+
+  // Try to find a good Hindi voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const hindiVoice = voices.find(v =>
+    v.lang === 'hi-IN' || v.lang.startsWith('hi')
+  );
+  const indianEnglish = voices.find(v =>
+    v.lang === 'en-IN'
+  );
+
+  if(S.lang === 'english' && indianEnglish){
+    utter.voice = indianEnglish;
+  } else if(hindiVoice){
+    utter.voice = hindiVoice;
+  }
+
+  // Visual feedback — avatar pulses while speaking
+  utter.onstart = () => {
+    document.getElementById('tbAvatar')?.classList.add('speaking');
+    document.getElementById('tbStatus').innerHTML = '<div class="tb-dot" style="background:var(--amber)"></div>बोल रहा हूं...';
+  };
+  utter.onend = () => {
+    document.getElementById('tbAvatar')?.classList.remove('speaking');
+    document.getElementById('tbStatus').innerHTML = '<div class="tb-dot"></div>हमेशा साथ हूं';
+  };
+  utter.onerror = () => {
+    document.getElementById('tbAvatar')?.classList.remove('speaking');
+    document.getElementById('tbStatus').innerHTML = '<div class="tb-dot"></div>हमेशा साथ हूं';
+  };
+
+  // iOS Safari fix — must call speak inside user gesture context
+  // We use a tiny delay to ensure it fires correctly
+  setTimeout(() => window.speechSynthesis.speak(utter), 100);
+}
+
+// Mute toggle
+function toggleMute(){
+  isMuted = !isMuted;
+  S.voiceOn = !isMuted;
+  save();
+  const btn = document.getElementById('muteBtn');
+  if(isMuted){
+    btn.textContent = '🔇';
+    btn.classList.add('muted');
+    window.speechSynthesis.cancel();
+  } else {
+    btn.textContent = '🔊';
+    btn.classList.remove('muted');
+    // Speak a quick confirmation
+    speakText('Awaaz chalu ho gayi');
+  }
+}
+
+// Voice setting toggle in settings screen
+function toggleVoiceSetting(el){
+  el.classList.toggle('on');
+  isMuted = !el.classList.contains('on');
+  S.voiceOn = !isMuted;
+  save();
+  const btn = document.getElementById('muteBtn');
+  if(btn){
+    btn.textContent = isMuted ? '🔇' : '🔊';
+    isMuted ? btn.classList.add('muted') : btn.classList.remove('muted');
+  }
+}
+
+// Load voices (async on some browsers)
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices(); // trigger load
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+// ══════════════════════════════════════════
+//  ONBOARDING
+// ══════════════════════════════════════════
 function finishOnboard(){
   S.name   = document.getElementById('ob-name').value.trim()   || 'Dadi ji';
   S.family = document.getElementById('ob-family').value.trim() || 'Beta ji';
   S.phone  = document.getElementById('ob-phone').value.trim();
-  S.onboarded=true; save(); startMain();
+  S.onboarded = true;
+  save();
+  // Unlock audio context with user gesture (important for iOS)
+  if(window.speechSynthesis){
+    const u = new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(u);
+  }
+  startMain();
 }
-function skipOnboard(){ S.onboarded=true; save(); startMain(); }
+function skipOnboard(){
+  S.onboarded = true; save();
+  if(window.speechSynthesis){
+    const u = new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(u);
+  }
+  startMain();
+}
 
-// ── SCREENS ──
+// ══════════════════════════════════════════
+//  SCREEN ROUTING
+// ══════════════════════════════════════════
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>{
     s.classList.remove('hidden','slide-left');
@@ -343,161 +514,237 @@ function goSettings(){
   document.getElementById('s-lang').value  = S.lang;
   document.getElementById('s-fam').value   = S.family;
   document.getElementById('s-phone').value = S.phone;
+  document.getElementById('s-speed').value = S.voiceSpeed || 0.9;
+  const tv = document.getElementById('t-voice');
+  if(tv){ isMuted ? tv.classList.remove('on') : tv.classList.add('on'); }
   renderMedList();
   showScreen('screen-settings');
 }
+function saveSettings(){
+  S.name       = document.getElementById('s-name').value.trim()  || S.name;
+  S.lang       = document.getElementById('s-lang').value;
+  S.family     = document.getElementById('s-fam').value.trim()   || S.family;
+  S.phone      = document.getElementById('s-phone').value.trim();
+  S.voiceSpeed = parseFloat(document.getElementById('s-speed').value) || 0.9;
+  save(); goMain();
+  setTimeout(()=>{
+    const msg = `Settings save ho gayi! Main ab aapko ${S.name} bulaunga`;
+    addBubble('ai', `✓ Settings save ho gayi! Main ab aapko "${S.name}" bulaunga 😊`);
+    speakText(msg);
+  },300);
+}
 
-// ── START ──
+// ══════════════════════════════════════════
+//  START MAIN
+// ══════════════════════════════════════════
 function startMain(){
   showScreen('screen-main');
+  // sync mute button state
+  const btn = document.getElementById('muteBtn');
+  if(btn){
+    btn.textContent = isMuted ? '🔇' : '🔊';
+    isMuted ? btn.classList.add('muted') : btn.classList.remove('muted');
+  }
   const now=new Date(), hr=now.getHours();
-  const greet = hr<12?'🌅 Suprabhat! Good Morning': hr<17?'☀️ Namaskar':'🌙 Shubh Sandhya';
+  const greet = hr<12 ? '🌅 Suprabhat! Good Morning' : hr<17 ? '☀️ Namaskar' : '🌙 Shubh Sandhya';
   document.getElementById('dateLabel').textContent =
     now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
   setTimeout(()=>{
-    addBubble('ai',`${greet}, ${S.name}! 🙏\n\nMain aapka saathi hoon — hamesha yahan hoon.\nAaj kaisa feel kar rahe hain aap?`);
+    const welcomeText = `${greet}, ${S.name}! Main aapka saathi hoon — hamesha yahan hoon. Aaj kaisa feel kar rahe hain aap?`;
+    addBubble('ai', `${greet}, ${S.name}! 🙏\n\nMain aapka saathi hoon — hamesha yahan hoon.\nAaj kaisa feel kar rahe hain aap?`);
+    speakText(welcomeText);
     scheduleMedCheck();
-  },500);
+  }, 600);
 }
 
-function saveSettings(){
-  S.name   = document.getElementById('s-name').value.trim()  || S.name;
-  S.lang   = document.getElementById('s-lang').value;
-  S.family = document.getElementById('s-fam').value.trim()   || S.family;
-  S.phone  = document.getElementById('s-phone').value.trim();
-  save(); goMain();
-  setTimeout(()=>addBubble('ai',`✓ Settings save ho gayi! Main ab aapko "${S.name}" bulaunga 😊`),300);
-}
-
-// ── BUBBLES ──
-function addBubble(role,text){
-  const wrap=document.getElementById('chatWrap');
-  const time=new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
-  const div=document.createElement('div');
-  div.className=`bubble-wrap ${role}`;
-  const safe=text.replace(/</g,'&lt;').replace(/\n/g,'<br>');
+// ══════════════════════════════════════════
+//  CHAT BUBBLES
+// ══════════════════════════════════════════
+function addBubble(role, text){
+  const wrap = document.getElementById('chatWrap');
+  const time = new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
+  const div  = document.createElement('div');
+  div.className = `bubble-wrap ${role}`;
+  const safe = text.replace(/</g,'&lt;').replace(/\n/g,'<br>');
   div.innerHTML = role==='ai'
     ? `<div class="bubble-av">🙏</div><div><div class="bubble ai">${safe}</div><div class="bubble-time">${time}</div></div>`
     : `<div><div class="bubble user">${safe}</div><div class="bubble-time">${time}</div></div>`;
   wrap.appendChild(div);
-  wrap.scrollTop=wrap.scrollHeight;
-  S.msgs.push({role,text,time});
-  if(S.msgs.length>20) S.msgs.shift();
+  wrap.scrollTop = wrap.scrollHeight;
+  S.msgs.push({role, text, time});
+  if(S.msgs.length > 20) S.msgs.shift();
 }
+
 function showTyping(){
-  const wrap=document.getElementById('chatWrap');
-  const t=document.createElement('div');
-  t.id='typing'; t.className='typing-wrap';
-  t.innerHTML=`<div class="bubble-av">🙏</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
-  wrap.appendChild(t); wrap.scrollTop=wrap.scrollHeight;
+  const wrap = document.getElementById('chatWrap');
+  const t = document.createElement('div');
+  t.id = 'typing'; t.className = 'typing-wrap';
+  t.innerHTML = `<div class="bubble-av">🙏</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
+  wrap.appendChild(t); wrap.scrollTop = wrap.scrollHeight;
 }
 function hideTyping(){ const t=document.getElementById('typing'); if(t) t.remove(); }
 
-// ── SEND ──
+// ══════════════════════════════════════════
+//  SEND MESSAGE
+// ══════════════════════════════════════════
 async function sendMsg(){
-  const inp=document.getElementById('msgInput');
-  const text=inp.value.trim(); if(!text) return;
-  inp.value=''; inp.style.height='';
-  addBubble('user',text); showTyping();
+  const inp  = document.getElementById('msgInput');
+  const text = inp.value.trim(); if(!text) return;
+  inp.value  = ''; inp.style.height = '';
+  // Stop any current speech when user sends a message
+  window.speechSynthesis?.cancel();
+  addBubble('user', text);
+  showTyping();
   await callAPI(text);
 }
 function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
 function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
-// ── QUICK ACTIONS ──
-const QA={
-  medicine:()=>`Maine aaj apni medicines li hain kya? ${S.medicines.map(m=>m.name).join(', ')||'Mujhe remind karo.'}`,
-  date:    ()=>'Aaj ki date, din aur time kya hai?',
-  news:    ()=>'Aaj ki koi achi ya interesting khabar sunao.',
-  song:    ()=>'Koi ek purana Bollywood gaana suggest karo — Lata ji ya Kishore Kumar ka.',
-  weather: ()=>'Aaj ka mausam kaisa hai? Ghar se bahar jaana chahiye kya?',
-  family:  ()=>`${S.family} ki bahut yaad aa rahi hai...`
+// ══════════════════════════════════════════
+//  QUICK ACTIONS
+// ══════════════════════════════════════════
+const QA = {
+  medicine: ()=>`Maine aaj apni medicines li hain kya? ${S.medicines.map(m=>m.name).join(', ')||'Mujhe remind karo.'}`,
+  date:     ()=>'Aaj ki date, din aur time kya hai?',
+  news:     ()=>'Aaj ki koi achi ya interesting khabar sunao.',
+  song:     ()=>'Koi ek purana Bollywood gaana suggest karo — Lata ji ya Kishore Kumar ka.',
+  weather:  ()=>'Aaj ka mausam kaisa hai? Ghar se bahar jaana chahiye kya?',
+  family:   ()=>`${S.family} ki bahut yaad aa rahi hai...`
 };
-function quickSend(type){ document.getElementById('msgInput').value=QA[type]?.(); sendMsg(); }
+function quickSend(type){
+  document.getElementById('msgInput').value = QA[type]?.();
+  sendMsg();
+}
 
-// ── API CALL → /api/chat (Vercel function, key stays server-side) ──
+// ══════════════════════════════════════════
+//  API CALL → /api/chat (Vercel function)
+// ══════════════════════════════════════════
 async function callAPI(userMsg){
-  const sys=`Tu "Saathi AI" hai — ek warm, caring AI companion for elderly people.
+  const sys = `Tu "Saathi AI" hai — ek warm, caring AI companion for elderly people.
 User ka naam: ${S.name}. Family member: ${S.family}.
-Language: ${S.lang==='hindi'?'Pure simple Hindi':'Friendly Hinglish (Hindi+English mix)'}.
-Medicines: ${S.medicines.map(m=>m.name).join(', ')||'none'}.
-Rules: Short 3-5 lines only. Warm patient caring tone. Simple words. 1-2 emojis max. Never cold or robotic.`;
+Language: ${S.lang==='hindi'?'Pure simple Hindi (Devanagari words, easy to understand)':S.lang==='english'?'Simple clear English':'Friendly Hinglish — mix of Hindi and English, warm and casual'}.
+Medicines: ${S.medicines.map(m=>m.name).join(', ')||'none added yet'}.
+IMPORTANT: Short responses only — 3 to 5 lines max. Warm patient caring tone. Simple words no jargon. 1 to 2 emojis max. Never cold or robotic. If health emergency suggest SOS button.`;
 
-  const history=S.msgs.slice(-8).map(m=>({
-    role:m.role==='ai'?'assistant':'user', content:m.text
+  const history = S.msgs.slice(-8).map(m=>({
+    role: m.role==='ai'?'assistant':'user',
+    content: m.text
   }));
 
   try{
-    const res=await fetch('/api/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
+    const res = await fetch('/api/chat',{
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
         system: sys,
-        messages:[...history,{role:'user',content:userMsg}]
+        messages: [...history, {role:'user', content:userMsg}]
       })
     });
-    const data=await res.json();
+    const data = await res.json();
     hideTyping();
     if(data.error){ addBubble('ai',`Error: ${data.error}`); return; }
-    addBubble('ai', data.reply || 'Maafi, kuch gadbad ho gayi. Dobara try karein. 🙏');
-  }catch(err){
+    const reply = data.reply || 'Maafi, kuch gadbad ho gayi. Dobara try karein. 🙏';
+    addBubble('ai', reply);
+    // ✅ SPEAK THE REPLY
+    speakText(reply);
+  } catch(err){
     hideTyping();
-    addBubble('ai','Network mein thodi problem aa gayi. Dobara try karein? 🙏');
+    const errMsg = 'Network mein thodi problem aa gayi. Dobara try karein?';
+    addBubble('ai', errMsg + ' 🙏');
+    speakText(errMsg);
   }
 }
 
-// ── MIC ──
-let recog=null,isRec=false;
+// ══════════════════════════════════════════
+//  VOICE INPUT (MIC)
+// ══════════════════════════════════════════
+let recog=null, isRec=false;
 function toggleMic(){
-  const btn=document.getElementById('micBtn');
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const btn = document.getElementById('micBtn');
+  const SR  = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR){ addBubble('ai','Voice support is browser mein nahi hai. Chrome use karein 🙏'); return; }
   if(isRec){ recog?.stop(); return; }
-  recog=new SR(); recog.lang=S.lang==='english'?'en-IN':'hi-IN'; recog.interimResults=false;
-  recog.onresult=e=>{ document.getElementById('msgInput').value=e.results[0][0].transcript; sendMsg(); };
-  recog.onend=()=>{ isRec=false; btn.classList.remove('recording'); };
-  recog.onerror=()=>{ isRec=false; btn.classList.remove('recording'); };
-  recog.start(); isRec=true; btn.classList.add('recording');
+
+  // Stop any speaking before listening
+  window.speechSynthesis?.cancel();
+
+  recog = new SR();
+  recog.lang            = S.lang==='english' ? 'en-IN' : 'hi-IN';
+  recog.interimResults  = false;
+  recog.maxAlternatives = 1;
+
+  recog.onresult = e => {
+    document.getElementById('msgInput').value = e.results[0][0].transcript;
+    sendMsg();
+  };
+  recog.onend   = ()=>{ isRec=false; btn.classList.remove('recording'); };
+  recog.onerror = ()=>{ isRec=false; btn.classList.remove('recording'); };
+
+  recog.start();
+  isRec = true;
+  btn.classList.add('recording');
 }
 
-// ── SOS ──
+// ══════════════════════════════════════════
+//  SOS
+// ══════════════════════════════════════════
 function showSOS(){
-  const c=document.getElementById('sosContacts'); c.innerHTML='';
-  if(S.family&&S.phone){
-    const call=document.createElement('button'); call.className='sos-contact-btn';
-    call.innerHTML=`📞 Call ${S.family} — ${S.phone}`;
-    call.onclick=()=>window.location.href=`tel:${S.phone}`; c.appendChild(call);
-    const wa=document.createElement('button'); wa.className='sos-contact-btn';
-    wa.innerHTML=`💬 WhatsApp ${S.family}`;
-    wa.onclick=()=>{ const msg=encodeURIComponent(`🆘 EMERGENCY! ${S.name} ko help chahiye! Turant call karein!`); window.open(`https://wa.me/${S.phone.replace(/\D/g,'')}?text=${msg}`); };
+  // Stop speech during SOS
+  window.speechSynthesis?.cancel();
+  const c = document.getElementById('sosContacts'); c.innerHTML = '';
+  if(S.family && S.phone){
+    const call = document.createElement('button'); call.className='sos-contact-btn';
+    call.innerHTML = `📞 Call ${S.family} — ${S.phone}`;
+    call.onclick   = ()=> window.location.href=`tel:${S.phone}`;
+    c.appendChild(call);
+    const wa = document.createElement('button'); wa.className='sos-contact-btn';
+    wa.innerHTML = `💬 WhatsApp ${S.family}`;
+    wa.onclick   = ()=>{
+      const msg = encodeURIComponent(`🆘 EMERGENCY! ${S.name} ko help chahiye! Turant call karein!`);
+      window.open(`https://wa.me/${S.phone.replace(/\D/g,'')}?text=${msg}`);
+    };
     c.appendChild(wa);
   } else {
-    c.innerHTML='<p style="color:rgba(255,255,255,.5);font-size:.85rem">Settings mein emergency contact add karein.</p>';
+    c.innerHTML = '<p style="color:rgba(255,255,255,.5);font-size:.85rem;text-align:center">Settings mein emergency contact add karein.</p>';
   }
   document.getElementById('sos-overlay').classList.add('show');
 }
 function closeSOS(){ document.getElementById('sos-overlay').classList.remove('show'); }
 
-// ── MEDICINE REMINDERS ──
-function scheduleMedCheck(){ checkMeds(); setInterval(checkMeds,60000); }
+// ══════════════════════════════════════════
+//  MEDICINE REMINDERS
+// ══════════════════════════════════════════
+function scheduleMedCheck(){ checkMeds(); setInterval(checkMeds, 60000); }
 function checkMeds(){
   if(!S.medicines.length) return;
-  const now=new Date(),hr=now.getHours(),min=now.getMinutes();
+  const now=new Date(), hr=now.getHours(), min=now.getMinutes();
   S.medicines.forEach((m,i)=>{
     if(!m.time) return;
-    const [mh,mm]=m.time.split(':').map(Number);
-    if(mh===hr&&Math.abs(mm-min)<=2&&!m.reminded){
-      S.medicines[i].reminded=true; save();
-      addBubble('ai',`💊 ${S.name}, yaad dila doon — ${m.name} lene ka waqt ho gaya!\nPaani zaroor pijiye. 🌿`);
+    const [mh,mm] = m.time.split(':').map(Number);
+    if(mh===hr && Math.abs(mm-min)<=2 && !m.reminded){
+      S.medicines[i].reminded = true; save();
+      const reminderMsg = `${S.name}, yaad dila doon — ${m.name} lene ka waqt ho gaya hai! Paani zaroor pijiye.`;
+      addBubble('ai', `💊 ${S.name}, yaad dila doon — ${m.name} lene ka waqt ho gaya hai!\nPaani zaroor pijiye. 🌿`);
+      // ✅ SPEAK THE REMINDER
+      speakText(reminderMsg);
     }
   });
 }
-setInterval(()=>{ const n=new Date(); if(n.getHours()===0&&n.getMinutes()===0){ S.medicines.forEach(m=>m.reminded=false); save(); } },60000);
+// Reset reminded flags at midnight
+setInterval(()=>{
+  const n=new Date();
+  if(n.getHours()===0 && n.getMinutes()===0){
+    S.medicines.forEach(m=>m.reminded=false); save();
+  }
+}, 60000);
 
 function renderMedList(){
-  const el=document.getElementById('medList');
-  if(!S.medicines.length){ el.innerHTML='<div class="empty-med">Abhi koi medicine add nahi hai.</div>'; return; }
-  el.innerHTML=S.medicines.map((m,i)=>`
+  const el = document.getElementById('medList');
+  if(!S.medicines.length){
+    el.innerHTML='<div class="empty-med">Abhi koi medicine add nahi hai.</div>'; return;
+  }
+  el.innerHTML = S.medicines.map((m,i)=>`
     <div class="med-item">
       <span class="med-name">💊 ${m.name}</span>
       <span class="med-time">${m.time||'—'}</span>
@@ -505,27 +752,48 @@ function renderMedList(){
     </div>`).join('');
 }
 function addMed(){
-  const n=document.getElementById('newMedName').value.trim(); if(!n) return;
-  const t=document.getElementById('newMedTime').value;
-  S.medicines.push({name:n,time:t,reminded:false});
-  document.getElementById('newMedName').value=''; document.getElementById('newMedTime').value='';
+  const n = document.getElementById('newMedName').value.trim(); if(!n) return;
+  const t = document.getElementById('newMedTime').value;
+  S.medicines.push({name:n, time:t, reminded:false});
+  document.getElementById('newMedName').value='';
+  document.getElementById('newMedTime').value='';
   save(); renderMedList();
 }
 function delMed(i){ S.medicines.splice(i,1); save(); renderMedList(); }
 
-// ── PWA INSTALL ──
+// ══════════════════════════════════════════
+//  PWA INSTALL
+// ══════════════════════════════════════════
 let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredPrompt=e; setTimeout(()=>document.getElementById('install-banner').classList.add('show'),4000); });
-document.getElementById('installBtn').addEventListener('click',async()=>{
-  if(!deferredPrompt){ addBubble('ai','iOS pe install:\n1. Safari mein open karein\n2. Share (↑) button\n3. "Add to Home Screen"\n\n✓ Done! 🎉'); document.getElementById('install-banner').classList.remove('show'); return; }
-  deferredPrompt.prompt(); const{outcome}=await deferredPrompt.userChoice; deferredPrompt=null;
-  document.getElementById('install-banner').classList.remove('show');
-  if(outcome==='accepted') addBubble('ai','🎉 साथी AI install ho gaya! Home screen pe icon aa gaya!');
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault(); deferredPrompt=e;
+  setTimeout(()=>document.getElementById('install-banner').classList.add('show'), 4000);
 });
-document.getElementById('installClose').addEventListener('click',()=>document.getElementById('install-banner').classList.remove('show'));
+document.getElementById('installBtn').addEventListener('click', async()=>{
+  if(!deferredPrompt){
+    addBubble('ai','iOS pe install karne ke liye:\n1. Safari mein yeh page open karein\n2. Neeche Share (↑) button press karein\n3. "Add to Home Screen" select karein\n\nDone! Icon home screen pe aa jayega 🎉');
+    document.getElementById('install-banner').classList.remove('show'); return;
+  }
+  deferredPrompt.prompt();
+  const {outcome} = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-banner').classList.remove('show');
+  if(outcome==='accepted'){
+    addBubble('ai','🎉 साथी AI install ho gaya! Ab home screen pe icon aa gaya!');
+    speakText('Saathi AI install ho gaya! Ab home screen pe icon aa gaya!');
+  }
+});
+document.getElementById('installClose').addEventListener('click',()=>{
+  document.getElementById('install-banner').classList.remove('show');
+});
 
-// ── INIT ──
-window.addEventListener('load',()=>{ if(S.onboarded) startMain(); });
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+window.addEventListener('load',()=>{
+  isMuted = !S.voiceOn;
+  if(S.onboarded) startMain();
+});
 </script>
 </body>
 </html>
