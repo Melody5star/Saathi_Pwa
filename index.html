@@ -332,14 +332,26 @@ function save(){ try{ localStorage.setItem('saathi_v1',JSON.stringify(S)); }catc
 
 // ══════════════════════════════════════════════════════
 //  ONE-TIME REMINDER ENGINE
+//  - Stores timer IDs so they can be cancelled
+//  - Parses [REMINDER:...] and [CANCEL_REMINDER] tags
 // ══════════════════════════════════════════════════════
+
+// Store active timer IDs — so we can cancel them
+const activeReminders = [];
+
 function parseReminderTag(text){
   const m=text.match(/\[REMINDER:(\{[^}]+\})\]/);
   if(!m) return null;
   try{ return JSON.parse(m[1]); }catch(e){ return null; }
 }
-function stripReminderTag(text){
-  return text.replace(/\[REMINDER:\{[^}]+\}\]/g,'').trim();
+function parseCancelTag(text){
+  return /\[CANCEL_REMINDER\]/i.test(text);
+}
+function stripAllTags(text){
+  return text
+    .replace(/\[REMINDER:\{[^}]+\}\]/g,'')
+    .replace(/\[CANCEL_REMINDER\]/gi,'')
+    .trim();
 }
 function msUntilTime(timeStr){
   const [h,m]=timeStr.split(':').map(Number);
@@ -355,12 +367,20 @@ function fmt12(timeStr){
 function scheduleOneTimeReminder(timeStr,task){
   const ms=msUntilTime(timeStr);
   if(ms<=0||ms>24*60*60*1000) return;
-  setTimeout(()=>{
+  const tid=setTimeout(()=>{
     const fireMsg=`⏰ ${S.name}, yaad dila doon!\n\n${task}`;
     const speakMsg=`${S.name}, yaad dila doon! ${task}`;
     addBubble('ai',fireMsg,'','reminder',true);
     speakText(speakMsg);
+    // Remove from active list after firing
+    const idx=activeReminders.indexOf(tid);
+    if(idx>-1) activeReminders.splice(idx,1);
   },ms);
+  activeReminders.push(tid);
+}
+function cancelAllReminders(){
+  activeReminders.forEach(tid=>clearTimeout(tid));
+  activeReminders.length=0;
 }
 
 // ══════════════════════════════════════════════════════
@@ -585,13 +605,30 @@ KNOWLEDGE & WEB SEARCH RULES — sabse important:
 - KABHI bhi mat kaho "main sirf companion hoon" — tu ek complete, intelligent, helpful assistant hai jo warm aur caring bhi hai.
 - Har sawaal ka jawab do — chahe current ho, chahe general knowledge ho, chahe emotional support ho.
 
-ONE-TIME REMINDER RULES:
-- Agar user ek-baar ka reminder maange — "5 baje yaad dilao", "1 ghante baad", "kal 9 baje" etc.
-- Reply ke BILKUL END mein yeh tag lagao:
-  [REMINDER:{"time":"HH:MM","task":"kaam yahan"}]
-- Time 24-hour format. "1 ghante baad" = ${currentTime} + 60 min.
-- TAG SIRF EK BAAR. Dobara bilkul mat lagao.
-- Recurring/daily reminders ke liye Settings use karne ko kaho.
+REMINDER RULES — samajh ke padh:
+
+Ek simple rule yaad rakh — jab bhi koi reminder ki baat kare:
+
+STEP 1 — Pehle samajh: kya user recurring chahta hai ya ek baar?
+- "Roz yaad dilana", "daily reminder", "har din" = RECURRING → Settings mein jaane ko kaho, tu sirf ek baar ka reminder set kar sakta hai.
+- Baaki SAB — "yaad dilana", "yaad kar lena", "5 baje yaad dilao", "kal batana", "1 ghante baad" = ONE TIME ONLY by default. Seedha set karo, poochho mat.
+
+STEP 2 — Agar bilkul clear nahi hai recurring ya one-time — toh SIRF TAB poochho:
+"Ek baar yaad dilaun ya roz roz?" — bas yahi ek chhoti line. Lamba mat karo.
+
+STEP 3 — One-time reminder set karte waqt — reply ke BILKUL END mein tag lagao:
+[REMINDER:{"time":"HH:MM","task":"kaam yahan likho"}]
+- Time HAMESHA 24-hour format mein: 5 PM = 17:00, 9 AM = 09:00
+- "1 ghante baad" matlab: current time ${currentTime} mein 60 min jodo
+- "Kal subah 9 baje" matlab: kal 09:00
+- TAG SIRF EK BAAR — ek hi message mein, end mein. Dobara kabhi mat lagao.
+
+STEP 4 — Confirmation sirf ek baar do — jaise: "Theek hai! 2 baje yaad dila dunga. ✓"
+Dobara mat kaho. Ek baar kafi hai.
+
+STEP 5 — Cancel: Agar user bole "ab mat yaad dilana / rehne do / cancel / zaroorat nahi":
+Reply ke end mein lagao: [CANCEL_REMINDER]
+Aur bolo: "Theek hai, yaad nahi dilaaunga. 😊"
 
 GENERAL RULES:
 - 3-5 lines max. Short aur warm.
@@ -616,17 +653,25 @@ GENERAL RULES:
 
     let reply=data.reply||'Maafi, kuch gadbad ho gayi. Dobara try karein. 🙏';
 
-    // HANDLE REMINDER TAG
+    // ── HANDLE CANCEL TAG ──
+    // If AI detected user wants to cancel reminder
+    if(parseCancelTag(reply)){
+      cancelAllReminders();
+      const cleanReply=stripAllTags(reply)||'Theek hai, reminder cancel kar diya. 😊';
+      addBubble('ai',cleanReply);  // saved to history normally
+      speakText(cleanReply);
+      return;
+    }
+
+    // ── HANDLE REMINDER TAG ──
     const rd=parseReminderTag(reply);
     if(rd&&rd.time&&rd.task){
-      const cleanReply=stripReminderTag(reply)||`Bilkul, ${S.name}!`;
-      const confirmText=`Theek hai! Main aapko ${fmt12(rd.time)} pe yaad dila dunga. ✓`;
-      addBubble('ai',cleanReply);
-      speakText(cleanReply);
-      setTimeout(()=>{
-        addBubble('ai',confirmText,'','',true);
-        speakText(confirmText);
-      },500);
+      const cleanReply=stripAllTags(reply)||`Bilkul, ${S.name}!`;
+      // ✅ ONE confirmation only — no duplicate setTimeout confirmation
+      const confirmText=`Theek hai! ${fmt12(rd.time)} pe yaad dila dunga. ✓`;
+      const fullReply=`${cleanReply}\n\n${confirmText}`;
+      addBubble('ai',fullReply);   // saved to history
+      speakText(`${cleanReply} ${confirmText}`);
       scheduleOneTimeReminder(rd.time,rd.task);
       return;
     }
