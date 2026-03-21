@@ -491,11 +491,19 @@ function speakText(text) {
   var clean = cleanForSpeech(text);
   if(!clean || clean.length < 2) return;
   var u = new SpeechSynthesisUtterance(clean);
-  u.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
+  // Set TTS language strictly based on user's saved language setting
+  if(S.lang === 'english') {
+    u.lang = 'en-IN';
+  } else if(S.lang === 'hindi') {
+    u.lang = 'hi-IN';
+  } else {
+    // hinglish — use Hindi voice (best for mixed content)
+    u.lang = 'hi-IN';
+  }
   u.rate = parseFloat(S.voiceSpeed) || 0.9;
   u.pitch = 1.05;
   u.volume = 1.0;
-  var voice = getBestVoice(S.lang);
+  var voice = getBestVoice(S.lang === 'english' ? 'english' : 'hindi');
   if(voice) u.voice = voice;
   u.onstart = function() {
     var av = document.getElementById('tbAvatar');
@@ -627,7 +635,13 @@ function callAPI(userMsg) {
 
   var sys = 'Tu "Saathi AI" hai — India ka companion for people aged 30 to 86+.\n'
     + 'User: ' + (S.name||'Aap') + (S.family ? ('. Trusted person: ' + S.family) : '') + '.\n'
-    + 'Language: ' + (S.lang==='hindi'?'Natural Hindi — bilkul ghar jaisi':'Warm Hinglish — jaise ek padha-likha apna bolta hai') + '.\n'
+    + 'Language setting: ' + S.lang + '.\n'
+    + (S.lang === 'hindi'
+        ? 'STRICT RULE: Sirf aur sirf shuddh Hindi mein baat karo. Koi bhi English word mat use karo — ek bhi nahi. Poori baat Hindi mein.'
+        : S.lang === 'english'
+        ? 'STRICT RULE: Speak only and only in English. Do not use any Hindi or Hinglish words at all. Every single word must be in English.'
+        : 'STRICT RULE: Hinglish mein baat karo — Hindi aur English ka natural mix, jaise Indians normally bolte hain. Na poori Hindi, na poori English.'
+      ) + '\n'
     + 'Time: ' + currentTime + '. Date: ' + now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '.\n'
     + (S.medicines.length ? ('Medicines: ' + S.medicines.map(function(m){return m.name+' at '+m.time;}).join(', ') + '.\n') : '')
     + '\nPERSONA: ' + personaCtx + '\n\n'
