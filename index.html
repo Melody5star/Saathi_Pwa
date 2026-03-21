@@ -44,6 +44,8 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:var(--r);font-family:'Baloo 2',sans-serif;font-size:1.05rem;font-weight:800;color:#fff;cursor:pointer;margin-top:6px;transition:opacity .2s,transform .15s}
 .ob-btn:active{transform:scale(.97);opacity:.9}
 .ob-skip{font-size:.82rem;color:var(--muted);margin-top:12px;cursor:pointer;text-decoration:underline}
+.ob-who-btn{width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);font-family:'Baloo 2',sans-serif;font-size:.9rem;color:var(--text);cursor:pointer;text-align:left;transition:all .2s}
+.ob-who-btn:hover,.ob-who-btn.selected{background:rgba(245,158,11,.15);border-color:var(--amber);color:var(--amber-l)}
 
 /* TOP BAR */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0}
@@ -194,17 +196,21 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
       <circle cx="57" cy="72" r="3" fill="#FDE68A" opacity="0.9"/>
     </svg>
     <div class="ob-title">साथी AI</div>
-    <div class="ob-sub">आपका अपना digital साथी 🙏</div>
+    <div class="ob-sub">Aapka apna digital saathi 🙏</div>
+
     <div class="ob-form">
-      <div class="ob-label">आपका नाम / Your name</div>
-      <input class="ob-input" id="ob-name" type="text" placeholder="जैसे: Dadi ji, Nana ji...">
-      <div class="ob-label">Family member name (बेटा/बेटी)</div>
-      <input class="ob-input" id="ob-family" type="text" placeholder="जैसे: Priya (बेटी)">
-      <div class="ob-label">Emergency contact number</div>
+      <div class="ob-label">Naam / Name</div>
+      <input class="ob-input" id="ob-name" type="text" placeholder="Aapka naam...">
+
+      <div class="ob-label">Phone number</div>
       <input class="ob-input" id="ob-phone" type="tel" placeholder="+91 XXXXXXXXXX">
-      <button class="ob-btn" id="startBtn">साथी से मिलिए — Start 🙏</button>
+
+      <div class="ob-label">Family member ka naam (optional)</div>
+      <input class="ob-input" id="ob-family" type="text" placeholder="Jaise: Priya, Rahul...">
+
+      <button class="ob-btn" id="startBtn">🙏 Sign Up — Start</button>
     </div>
-    <div class="ob-skip" id="skipBtn">अभी छोड़ें — Skip</div>
+    <div class="ob-skip" id="skipBtn">Skip — seedha shuru karein</div>
   </div>
 
   <div class="screen hidden" id="screen-main">
@@ -332,9 +338,10 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 
 // ── STATE ──
 var S = {
-  name:'Dadi ji', family:'Beta/Beti', phone:'',
+  name:'', family:'', phone:'',
   lang:'hinglish', voiceOn:true, voiceSpeed:0.9,
-  medicines:[], onboarded:false, msgs:[]
+  medicines:[], onboarded:false, msgs:[],
+  userType:'family-setup'  // 'self-elderly' | 'family-setup'
 };
 try { var sv = localStorage.getItem('saathi_v1'); if(sv) S = Object.assign(S, JSON.parse(sv)); } catch(e){}
 function save() { try { localStorage.setItem('saathi_v1', JSON.stringify(S)); } catch(e){} }
@@ -542,26 +549,33 @@ var QA = {
 function callAPI(userMsg) {
   var now = new Date();
   var currentTime = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
-  var sys = 'Tu "Saathi AI" hai — ek intelligent, warm, voice-first AI companion for elderly people in India.\n'
-    + 'User ka naam: ' + S.name + '. Family member: ' + S.family + '.\n'
-    + 'Language: ' + (S.lang==='hindi'?'Pure simple Hindi — natural aur warm':'Friendly Hinglish — jaise ek padha-likha apna baat karta ho') + '.\n'
-    + 'Current time: ' + currentTime + '. Aaj: ' + now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '.\n'
-    + 'Daily medicines: ' + (S.medicines.map(function(m){return m.name+' at '+m.time;}).join(', ')||'none') + '.\n\n'
-    + 'VOICE AGENT RULES:\n'
-    + '- Chhoti natural sentences. BILKUL NO: asterisks **, hashes ##, bullets, dashes --.\n'
-    + '- Emojis sirf 1-2: 😊 🙏 only. Clock/alarm emoji kabhi nahi.\n'
-    + '- Conversational tone. Kabhi "As an AI" mat kaho.\n\n'
-    + 'KNOWLEDGE: Tere paas web search hai. Current news, DM, CM, PM, cricket — sab answer do. KABHI "Google karo" mat kaho.\n\n'
-    + 'WELLNESS (har 4-5 msgs mein naturally): Paani, walk, khana, aankhein rest, motivation.\n\n'
-    + 'NOTES: "note kar lo/save kar lo/yaad rakh" sunke reply ke end mein: [NOTE:text]\n\n'
-    + 'REMINDER RULES:\n'
-    + '- Default = ONE TIME ONLY. Seedha set karo.\n'
-    + '- "Roz/daily" = Settings jaane ko kaho.\n'
-    + '- One-time: reply ke END mein: [REMINDER:{"time":"HH:MM","task":"kaam"}]\n'
-    + '- "1 ghante baad" = ' + currentTime + ' + 60min. Time 24hr format.\n'
-    + '- TAG SIRF EK BAAR. Confirmation sirf ek baar.\n'
-    + '- Cancel: [CANCEL_REMINDER]\n\n'
-    + 'GENERAL: 3-5 lines max. Warm. Entertaining.';
+  // Age-aware persona based on user type
+  var userType = S.userType || 'family-setup';
+  var personaCtx = '';
+  if(userType === 'self-elderly') {
+    personaCtx = 'User ne khud yeh app set kiya hai — woh 30 se 70+ ke beech ke hain aur ek digital saathi chahte hain. Unke saath ek intelligent, respectful dost ki tarah baat karo — na zyada childish, na over-formal. Woh independent hain.';
+  } else {
+    personaCtx = 'Family member ne yeh buzurg ke liye set kiya hai. User ' + (S.name||'aap') + ' hain — likely 65 se 86+ ke beech. Unke saath warm, patient, caring baat karo jaise ek ghar ka pyaara saathi.';
+  }
+
+  var sys = 'Tu "Saathi AI" hai — India ka companion for people aged 30 to 86+.\n'
+    + 'User: ' + (S.name||'Aap') + (S.family ? ('. Trusted person: ' + S.family) : '') + '.\n'
+    + 'Language: ' + (S.lang==='hindi'?'Natural Hindi':'Warm Hinglish — jaise ek samajhdar apna') + '.\n'
+    + 'Time: ' + currentTime + '. Date: ' + now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '.\n'
+    + (S.medicines.length ? ('Medicines: ' + S.medicines.map(function(m){return m.name+' at '+m.time;}).join(', ') + '.\n') : '')
+    + '\nPERSONA: ' + personaCtx + '\n\n'
+    + 'HUMAN JAISI BAAT:\n'
+    + '- Pehle feel karo. Phir respond karo naturally.\n'
+    + '- Kabhi kabhi "Achha..." "Hmm..." "Wah!" se shuru karo.\n'
+    + '- Genuinely react karo — khushi, chinta, excitement.\n'
+    + '- Kabhi ek sawaal wapas poochho jaise dost karta hai.\n'
+    + '- ZERO: ** ## bullets dashes -- arrows. Max 1 emoji (sirf 😊 ya 🙏).\n'
+    + '- "As an AI" kabhi nahi.\n\n'
+    + 'KNOWLEDGE: Web search available — news, DM, cricket, weather — seedha jawab. "Google karo" kabhi nahi.\n\n'
+    + 'WELLNESS (kabhi kabhi, naturally): Paani, walk, khana, aankhein rest — age ke hisaab se.\n\n'
+    + 'NOTES: "note kar lo" → end mein [NOTE:text]\n'
+    + 'REMINDER: One-time default. End mein [REMINDER:{"time":"HH:MM","task":"..."}]. "1 ghante baad"=' + currentTime + '+60min. Cancel: [CANCEL_REMINDER]\n\n'
+    + 'LENGTH: 2-4 short sentences. Jaise real baat.';
 
   var history = S.msgs.slice(-8).map(function(m){ return {role:m.role==='ai'?'assistant':'user', content:m.text}; });
 
@@ -632,21 +646,43 @@ function toggleMic() {
 function showSOS() {
   if(window.speechSynthesis) window.speechSynthesis.cancel();
   var c = document.getElementById('sosContacts'); c.innerHTML = '';
-  if(S.family && S.phone) {
+
+  // If family/contact exists
+  if(S.phone) {
+    var label = S.family || 'Emergency contact';
     var call = document.createElement('button'); call.className = 'sos-contact-btn';
-    call.innerHTML = '📞 Call ' + S.family + ' — ' + S.phone;
+    call.innerHTML = '📞 Call ' + label + ' — ' + S.phone;
     call.onclick = function() { window.location.href = 'tel:' + S.phone; };
     c.appendChild(call);
+
     var wa = document.createElement('button'); wa.className = 'sos-contact-btn';
-    wa.innerHTML = '💬 WhatsApp ' + S.family;
+    wa.innerHTML = '💬 WhatsApp ' + label;
     wa.onclick = function() {
-      var msg = encodeURIComponent('🆘 EMERGENCY! ' + S.name + ' ko help chahiye! Turant call karein!');
+      var msg = encodeURIComponent('🆘 EMERGENCY! ' + (S.name||'Main') + ' ko help chahiye! Turant call karein!');
       window.open('https://wa.me/' + S.phone.replace(/\D/g,'') + '?text=' + msg);
     };
     c.appendChild(wa);
-  } else {
-    c.innerHTML = '<p style="color:rgba(255,255,255,.5);font-size:.85rem;text-align:center">Settings mein emergency contact add karein.</p>';
   }
+
+  // ALWAYS show emergency services — critical for users without family
+  var emergency = document.createElement('button'); emergency.className = 'sos-contact-btn';
+  emergency.style.borderColor = 'rgba(234,88,12,.6)';
+  emergency.innerHTML = '🚨 Call 112 — National Emergency';
+  emergency.onclick = function() { window.location.href = 'tel:112'; };
+  c.appendChild(emergency);
+
+  var ambulance = document.createElement('button'); ambulance.className = 'sos-contact-btn';
+  ambulance.innerHTML = '🏥 Call 108 — Ambulance';
+  ambulance.onclick = function() { window.location.href = 'tel:108'; };
+  c.appendChild(ambulance);
+
+  if(!S.phone) {
+    var hint = document.createElement('p');
+    hint.style.cssText = 'color:rgba(255,255,255,.45);font-size:.8rem;text-align:center;margin-top:8px;font-family:Baloo 2';
+    hint.textContent = 'Settings mein trusted contact add karein — padosi, doctor, koi bhi.';
+    c.appendChild(hint);
+  }
+
   document.getElementById('sos-overlay').classList.add('show');
 }
 window.closeSOS = function() { document.getElementById('sos-overlay').classList.remove('show'); };
@@ -700,11 +736,11 @@ function startMain() {
 // ── WIRE UP ALL BUTTONS (no inline onclick) ──
 window.addEventListener('DOMContentLoaded', function() {
 
-  // Onboarding
+  // Onboarding — simple Sign Up
   document.getElementById('startBtn').addEventListener('click', function() {
-    S.name   = document.getElementById('ob-name').value.trim() || 'Dadi ji';
-    S.family = document.getElementById('ob-family').value.trim() || 'Beta ji';
-    S.phone  = document.getElementById('ob-phone').value.trim();
+    S.name      = document.getElementById('ob-name').value.trim()   || 'Aap';
+    S.phone     = document.getElementById('ob-phone').value.trim()  || '';
+    S.family    = document.getElementById('ob-family').value.trim() || '';
     S.onboarded = true; save();
     if(window.speechSynthesis) { var u=new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(u); }
     startMain();
