@@ -12,7 +12,6 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>साथी AI</title>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -26,9 +25,9 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--dark)}
 body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);overscroll-behavior:none}
-#app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;background:var(--dark);overflow:hidden;position:relative}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto;background:var(--dark);overflow:hidden;position:relative}
 .status-bar{height:env(safe-area-inset-top,0px);background:var(--dark2);flex-shrink:0}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .38s}
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .38s;height:100%}
 .screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
 .screen.slide-left{transform:translateX(-100%);opacity:0;pointer-events:none}
 
@@ -92,7 +91,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 @keyframes td{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
 
 /* INPUT */
-.input-bar{padding:10px 14px;padding-bottom:calc(10px + var(--safe-b));background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0}
+.input-bar{padding:10px 14px 14px;background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0}
 .input-row{display:flex;gap:10px;align-items:flex-end}
 .input-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:11px 16px;font-family:'Baloo 2',sans-serif;font-size:.95rem;color:var(--text);outline:none;resize:none;max-height:120px;line-height:1.4;transition:border-color .2s}
 .input-box:focus{border-color:rgba(245,158,11,.5)}
@@ -296,14 +295,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div class="tb-icon-btn" id="settingsBtn">⚙️</div>
       </div>
     </div>
-    <!-- Plan banner — shown when near limit or on free plan -->
-    <div class="plan-banner" id="planBanner" style="display:none">
-      <div class="plan-banner-text" id="planBannerText">Free plan: 5 messages/day</div>
-      <button class="plan-banner-btn" id="planBannerBtn">Upgrade ₹99 →</button>
-    </div>
-    <!-- Message counter -->
-    <div class="msg-counter" id="msgCounter" style="display:none"></div>
-
+    <!-- Plan banner — shown as floating pill above input, not in layout flow -->
     <div class="quick-strip">
       <button class="qa-btn" data-action="medicine">💊 दवाई</button>
       <button class="qa-btn" data-action="date">📅 तारीख</button>
@@ -318,6 +310,12 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
     <div class="chat-wrap" id="chatWrap">
       <div class="date-div"><span id="dateLabel">आज</span></div>
     </div>
+    <!-- Plan banner above input -->
+    <div class="plan-banner" id="planBanner" style="display:none">
+      <div class="plan-banner-text" id="planBannerText">Free plan: 5 messages/day</div>
+      <button class="plan-banner-btn" id="planBannerBtn">Upgrade ₹99 →</button>
+    </div>
+    <div class="msg-counter" id="msgCounter" style="display:none"></div>
     <div class="input-bar">
       <div class="input-row">
         <button class="mic-btn" id="micBtn">🎤</button>
@@ -1251,68 +1249,83 @@ function showUpgradeModal(reason) {
   document.getElementById('upgrade-overlay').classList.add('show');
 }
 
-// ── RAZORPAY PAYMENT ──
+// ── INSTAMOJO PAYMENT ──
 function startPayment(plan) {
+  var btn = plan === 'founding'
+    ? document.getElementById('payFounding')
+    : document.getElementById('payPro');
+  if(btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
+
   fetch('/api/payment', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ plan: plan, userName: S.name || 'Saathi User' })
+    body: JSON.stringify({
+      plan:      plan,
+      userName:  S.name  || 'Saathi User',
+      userPhone: S.phone || ''
+    })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if(data.error) {
       alert('Payment error: ' + data.error);
+      if(btn) { btn.textContent = plan==='founding'?'🙏 ₹99 se Shuru Karen':'Choose Pro — ₹299/month'; btn.disabled=false; }
       return;
     }
-    var options = {
-      key: data.keyId,
-      amount: data.amount,
-      currency: data.currency,
-      name: 'Saathi AI',
-      description: data.description,
-      order_id: data.orderId,
-      prefill: {
-        name: S.name || '',
-        contact: S.phone || ''
-      },
-      theme: { color: '#F59E0B' },
-      modal: {
-        ondismiss: function() {
-          // User closed payment — do nothing
-        }
-      },
-      handler: function(response) {
-        // Payment successful
-        onPaymentSuccess(plan, response);
-      }
-    };
-    var rzp = new Razorpay(options);
-    rzp.open();
+    // Instamojo opens payment page — redirect user
+    window.location.href = data.paymentUrl;
   })
-  .catch(function(err) {
-    // Razorpay not configured yet — show demo success for testing
-    console.log('Payment API not configured:', err.message);
+  .catch(function() {
+    // API not configured yet — demo mode for testing
     onPaymentSuccess(plan, {demo: true});
+    if(btn) { btn.disabled = false; }
   });
 }
 
 function onPaymentSuccess(plan, response) {
   var planData = getPlan() || {};
-  planData.type = plan;
-  planData.paidAt = Date.now();
-  planData.paymentId = response.razorpay_payment_id || 'demo_' + Date.now();
+  planData.type      = plan;
+  planData.paidAt    = Date.now();
+  planData.paymentId = (response && response.payment_id) || 'demo_' + Date.now();
   if(plan === 'founding') {
-    planData.foundingEnd = Date.now() + (90 * 24 * 60 * 60 * 1000); // 3 months
+    planData.foundingEnd = Date.now() + (90 * 24 * 60 * 60 * 1000);
   }
   setPlan(planData);
   document.getElementById('upgrade-overlay').classList.remove('show');
   updatePlanUI();
-  // Celebrate
   var msg = plan === 'founding'
-    ? 'Bahut shukriya! Aap ab Saathi AI ke Founding Member hain! 3 mahine ₹99/month, phir ₹299. Unlimited sab kuch unlock ho gaya! 🎉'
-    : 'Welcome to Saathi Pro! Unlimited conversations, reminders, aur sab kuch unlock ho gaya! 🎉';
+    ? 'Bahut shukriya! Aap ab Saathi AI ke Founding Member hain! 3 mahine ₹99, phir ₹299. Sab kuch unlock ho gaya! 🎉'
+    : 'Welcome to Saathi Pro! Unlimited conversations aur sab kuch unlock ho gaya! 🎉';
   addBubble('ai', msg, '', '', true);
   speakText('Bahut shukriya! Aap ab Saathi ke premium member hain.');
+}
+
+// Check URL params on load — handle return from Instamojo payment page
+function checkPaymentReturn() {
+  var params = new URLSearchParams(window.location.search);
+  var payment = params.get('payment');
+  var plan    = params.get('plan');
+  var paymentId = params.get('payment_id');
+
+  if(payment === 'success' && plan) {
+    // Verify with backend if paymentId exists
+    if(paymentId) {
+      fetch('/api/payment', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({action:'verify', paymentId: paymentId})
+      }).then(function(r){return r.json();}).then(function(d){
+        if(d.verified) onPaymentSuccess(plan, {payment_id: paymentId});
+      }).catch(function(){
+        // Fallback — trust the redirect
+        onPaymentSuccess(plan, {});
+      });
+    } else {
+      onPaymentSuccess(plan, {});
+    }
+    // Clean URL
+    window.history.replaceState({}, '', '/');
+  }
 }
 
 // ── WIRE UP ALL BUTTONS (no inline onclick) ──
@@ -1466,6 +1479,7 @@ window.addEventListener('DOMContentLoaded', function() {
   // Init
   isMuted = !S.voiceOn;
   initPlan();
+  checkPaymentReturn();
   if(S.onboarded) { startMain(); updatePlanUI(); }
 });
 
@@ -1473,7 +1487,7 @@ window.addEventListener('DOMContentLoaded', function() {
 var deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault(); deferredPrompt = e;
-  setTimeout(function() { document.getElementById('install-banner').classList.add('show'); }, 4000);
+  setTimeout(function() { document.getElementById('install-banner').classList.add('show'); }, 30000);
 });
 
 })();
