@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D0A07">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="साथी AI">
+<meta name="description" content="Your elderly companion — Hindi and English AI assistant">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>साथी AI v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --amber:#F59E0B;--amber-d:#D97706;--amber-l:#FDE68A;
+  --saffron:#EA580C;--dark:#0D0A07;--dark2:#18100A;
+  --card:#1E1408;--border:rgba(245,158,11,0.18);
+  --text:#FEF3C7;--muted:rgba(254,243,199,0.5);
+  --r:16px;--safe-b:env(safe-area-inset-bottom,16px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--dark)}
+body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);overscroll-behavior:none}
+#app{display:flex;flex-direction:column;height:100vh;height:100svh;max-width:430px;margin:0 auto;background:var(--dark);overflow:hidden;position:relative}
+.status-bar{height:env(safe-area-inset-top,0px);background:var(--dark2);flex-shrink:0}
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .38s;height:100%;overflow:hidden}
+#screen-main{display:flex;flex-direction:column;overflow:hidden}
+.screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
+.screen.slide-left{transform:translateX(-100%);opacity:0;pointer-events:none}
+
+/* ONBOARDING */
+#screen-onboard{background:var(--dark);justify-content:center;align-items:center;padding:32px 28px;text-align:center;overflow-y:auto}
+.ob-logo-icon{width:88px;height:88px;margin:0 auto 14px;display:block}
+.ob-title{font-size:2.6rem;font-weight:800;color:var(--amber);line-height:1}
+.ob-sub{font-size:1rem;color:var(--muted);margin-top:5px}
+.ob-form{width:100%;max-width:320px;margin-top:32px;display:flex;flex-direction:column;gap:12px}
+.ob-label{font-size:.75rem;color:var(--muted);letter-spacing:1px;text-align:left;margin-bottom:-4px}
+.ob-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;font-family:'Baloo 2',sans-serif;font-size:1rem;color:var(--text);outline:none;transition:border-color .2s}
+.ob-input:focus{border-color:var(--amber)}
+.ob-input::placeholder{color:var(--muted)}
+.ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:var(--r);font-family:'Baloo 2',sans-serif;font-size:1.05rem;font-weight:800;color:#fff;cursor:pointer;margin-top:6px;transition:opacity .2s,transform .15s}
+.ob-btn:active{transform:scale(.97);opacity:.9}
+.ob-skip{font-size:.82rem;color:var(--muted);margin-top:12px;cursor:pointer;text-decoration:underline}
+.ob-who-btn{width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);font-family:'Baloo 2',sans-serif;font-size:.9rem;color:var(--text);cursor:pointer;text-align:left;transition:all .2s}
+.ob-who-btn:hover,.ob-who-btn.selected{background:rgba(245,158,11,.15);border-color:var(--amber);color:var(--amber-l)}
+
+/* TOPBAR — refined */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;border:2.5px solid rgba(245,158,11,.4);transition:box-shadow .3s;box-shadow:0 0 0 0 rgba(245,158,11,.3)}
+.tb-avatar.speaking{box-shadow:0 0 0 5px rgba(245,158,11,.25),0 0 16px rgba(245,158,11,.15);animation:avatarPulse 1.5s ease-in-out infinite}
+@keyframes avatarPulse{0%,100%{box-shadow:0 0 0 4px rgba(245,158,11,.2)}50%{box-shadow:0 0 0 8px rgba(245,158,11,.1),0 0 20px rgba(245,158,11,.15)}}
+.tb-name{font-size:1.05rem;font-weight:800;color:var(--text);line-height:1.1;font-family:'Baloo 2'}
+.tb-status{font-size:.7rem;color:#4ade80;font-weight:600;display:flex;align-items:center;gap:4px;margin-top:1px}
+.tb-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tb-right{display:flex;gap:6px}
+.tb-icon-btn{width:34px;height:34px;border-radius:50%;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;transition:all .2s}
+.tb-icon-btn:active{background:rgba(245,158,11,.22);transform:scale(.92)}
+.tb-icon-btn.muted{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3)}
+
+/* QUICK STRIP */
+.quick-strip{display:flex;gap:7px;padding:8px 14px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.quick-strip::-webkit-scrollbar{display:none}
+.qa-btn{flex-shrink:0;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.15);border-radius:40px;padding:6px 13px;font-family:'Baloo 2',sans-serif;font-size:.78rem;font-weight:600;color:rgba(254,243,199,.75);cursor:pointer;white-space:nowrap;transition:all .2s}
+.qa-btn:active,.qa-btn:hover{background:rgba(245,158,11,.18);border-color:var(--amber);color:var(--amber-l)}
+
+/* CHAT */
+.chat-wrap{flex:1 1 0;overflow-y:auto;padding:12px 14px 80px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;overscroll-behavior:contain;min-height:0}
+.date-div{text-align:center;margin:4px 0}
+.date-div span{background:rgba(245,158,11,.08);color:var(--muted);font-size:.67rem;padding:3px 12px;border-radius:20px;font-family:'Baloo 2'}
+.bubble-wrap{display:flex;gap:8px;max-width:90%}
+.bubble-wrap.user{align-self:flex-end;flex-direction:row-reverse}
+.bubble-wrap.ai{align-self:flex-start}
+.bubble-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;margin-top:auto}
+.bubble{padding:11px 15px;border-radius:20px;font-size:.97rem;line-height:1.6;font-family:'Baloo 2'}
+.bubble.ai{background:var(--card);border:1px solid rgba(245,158,11,.14);border-radius:20px 20px 20px 5px;color:var(--text)}
+.bubble.user{background:linear-gradient(135deg,#B45309,var(--saffron));color:#FEF9F0;border-radius:20px 20px 5px 20px;box-shadow:0 3px 12px rgba(234,88,12,.25)}
+.bubble.reminder-fire{background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(234,88,12,.12));border:1.5px solid rgba(245,158,11,.4);border-radius:20px 20px 20px 5px;color:var(--amber-l);font-size:.98rem;font-weight:700}
+.bubble-time{font-size:.63rem;color:var(--muted);margin-top:3px}
+.bubble-wrap.user .bubble-time{text-align:right}
+.app-link{display:inline-flex;align-items:center;gap:7px;margin-top:10px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);padding:8px 14px;border-radius:20px;color:var(--amber-l);font-size:.85rem;cursor:pointer;font-family:'Baloo 2'}
+.app-link:active{background:rgba(245,158,11,.25)}
+
+/* TYPING */
+.typing-wrap{display:flex;gap:8px;align-items:center;align-self:flex-start}
+.typing-dots{background:var(--card);border:1px solid rgba(245,158,11,.14);border-radius:20px 20px 20px 5px;padding:12px 16px;display:flex;gap:5px;align-items:center}
+.typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--amber);opacity:.4;animation:td 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+/* INPUT BAR — always visible at bottom */
+.input-bar{padding:8px 14px 16px;background:var(--dark2);border-top:1px solid rgba(245,158,11,.2);position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:200}
+.input-row{display:flex;gap:10px;align-items:center}
+.input-box{flex:1;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.18);border-radius:26px;padding:12px 18px;font-family:'Baloo 2',sans-serif;font-size:.97rem;color:var(--text);outline:none;resize:none;max-height:100px;line-height:1.4;transition:border-color .25s,background .25s}
+.input-box:focus{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.09)}
+.input-box::placeholder{color:rgba(254,243,199,.3)}
+/* Send button — compact */
+.send-btn{width:42px;height:42px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all .2s;flex-shrink:0;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--amber)}
+.send-btn:active{transform:scale(.88);background:rgba(245,158,11,.3)}
+/* MIC — clear, always visible */
+.mic-btn{width:46px;height:46px;border-radius:50%;border:2px solid rgba(245,158,11,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.3rem;transition:all .2s;flex-shrink:0;background:rgba(245,158,11,.12);color:#fff}
+.mic-btn:active{transform:scale(.92);background:rgba(245,158,11,.25)}
+.mic-btn.recording{background:rgba(239,68,68,.25);border-color:#ef4444;animation:recPulse 1s infinite}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+
+/* SOS */
+#sos-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:32px;text-align:center;backdrop-filter:blur(10px)}
+#sos-overlay.show{display:flex}
+.sos-circle{width:120px;height:120px;border-radius:50%;background:rgba(239,68,68,.2);border:3px solid #ef4444;display:flex;align-items:center;justify-content:center;font-size:3rem;animation:sosPulse 1s infinite}
+@keyframes sosPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 20px rgba(239,68,68,0)}}
+.sos-title{font-size:1.6rem;font-weight:800;color:#fff}
+.sos-sub{font-size:.9rem;color:rgba(255,255,255,.6);line-height:1.6}
+.sos-contacts{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px}
+.sos-contact-btn{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fff;padding:13px 20px;border-radius:12px;font-family:'Baloo 2',sans-serif;font-size:.95rem;cursor:pointer;display:flex;align-items:center;gap:10px;width:100%;text-align:left}
+.sos-cancel{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:10px 28px;border-radius:24px;font-family:'Baloo 2',sans-serif;font-size:.9rem;cursor:pointer;margin-top:4px}
+
+/* INSTALL */
+#install-banner{position:fixed;bottom:0;left:0;right:0;z-index:500;transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1)}
+#install-banner.show{transform:translateY(0)}
+.install-inner{background:var(--dark2);border-top:1px solid var(--border);padding:8px 14px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;max-width:430px;margin:0 auto}
+.install-icon{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.install-text{flex:1}
+.install-text strong{font-size:.78rem;color:var(--text);display:block}
+.install-text span{font-size:.68rem;color:var(--muted)}
+.install-btn{background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;padding:6px 14px;border-radius:20px;font-family:'Baloo 2',sans-serif;font-size:.75rem;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap}
+.install-x{background:transparent;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px}
+
+/* SETTINGS + NOTES */
+#screen-settings,#screen-notes{background:var(--dark)}
+.settings-head{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--dark2);flex-shrink:0}
+.back-btn{background:transparent;border:none;color:var(--amber);font-size:1.2rem;cursor:pointer;padding:4px}
+.settings-title{font-size:1.05rem;font-weight:700;color:var(--text)}
+.settings-body{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.sec-title{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.settings-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid rgba(245,158,11,.07)}
+.settings-row:last-child{border-bottom:none}
+.settings-row label{font-size:.92rem;color:var(--text)}
+.settings-row small{font-size:.75rem;color:var(--muted);display:block;margin-top:2px}
+.s-input{background:rgba(245,158,11,.08);border:1px solid var(--border);border-radius:10px;padding:7px 11px;font-family:'Baloo 2',sans-serif;font-size:.88rem;color:var(--text);outline:none;width:155px;text-align:right}
+.toggle{width:44px;height:24px;border-radius:12px;background:rgba(245,158,11,.15);border:1px solid var(--border);cursor:pointer;position:relative;transition:background .3s;flex-shrink:0}
+.toggle.on{background:var(--amber-d);border-color:var(--amber)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .3s}
+.toggle.on::after{transform:translateX(20px)}
+.med-list{display:flex;flex-direction:column;gap:8px}
+.med-item{display:flex;align-items:center;gap:10px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.12);border-radius:10px;padding:10px 13px}
+.med-name{flex:1;font-size:.88rem;color:var(--text)}
+.med-time{font-size:.76rem;color:var(--amber)}
+.med-del{background:transparent;border:none;color:rgba(239,68,68,.6);font-size:.9rem;cursor:pointer}
+.add-med-row{display:flex;gap:8px;margin-top:8px}
+.add-med-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-family:'Baloo 2',sans-serif;font-size:.85rem;color:var(--text);outline:none}
+.add-med-btn{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:9px 14px;font-family:'Baloo 2',sans-serif;font-size:.85rem;color:var(--amber);cursor:pointer;white-space:nowrap}
+.empty-med{font-size:.82rem;color:var(--muted);padding:6px 0}
+
+/* PLAN / UPGRADE STYLES */
+
+
+
+
+
+
+
+/* UPGRADE OVERLAY */
+#upgrade-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9998;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(10px)}
+#upgrade-overlay.show{display:flex}
+.upgrade-sheet{background:var(--dark2);border-radius:28px 28px 0 0;border:1px solid rgba(245,158,11,.2);padding:28px 24px 40px;width:100%;max-width:430px}
+.upgrade-close{float:right;background:transparent;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;margin-top:-4px}
+.upgrade-title{font-family:'Baloo 2';font-size:1.25rem;font-weight:800;color:var(--amber);margin-bottom:6px}
+.upgrade-sub{font-size:.85rem;color:var(--muted);line-height:1.5;margin-bottom:22px}
+.plan-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:12px;cursor:pointer;transition:all .25s;position:relative}
+.plan-card.featured{border-color:var(--amber);background:rgba(245,158,11,.08)}
+.plan-card:hover{border-color:var(--amber);transform:translateY(-2px)}
+.plan-popular{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,var(--amber),var(--saffron));color:#fff;padding:3px 16px;border-radius:20px;font-family:'Baloo 2';font-size:.7rem;font-weight:700;white-space:nowrap}
+.plan-name{font-family:'Baloo 2';font-size:1rem;font-weight:700;color:var(--text);margin-bottom:3px}
+.plan-price{font-family:'Baloo 2';font-size:1.5rem;font-weight:800;color:var(--amber)}
+.plan-price span{font-size:.8rem;color:var(--muted);font-weight:400}
+.plan-desc{font-size:.78rem;color:var(--muted);margin-top:5px;line-height:1.5}
+.plan-feats{font-size:.78rem;color:rgba(254,243,199,.6);margin-top:8px;line-height:1.7}
+.pay-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:14px;font-family:'Baloo 2';font-size:1rem;font-weight:800;color:#fff;cursor:pointer;margin-top:6px;transition:all .3s;box-shadow:0 8px 24px rgba(245,158,11,.3)}
+.pay-btn:active{transform:scale(.98)}
+.upgrade-free-note{text-align:center;font-size:.75rem;color:var(--muted);margin-top:12px}
+</style>
+</head>
+<body>
+
+<div id="sos-overlay">
+  <div class="sos-circle">🆘</div>
+  <div class="sos-title">Emergency Alert</div>
+  <div class="sos-sub">आपके family members को तुरंत message भेजा जाएगा।</div>
+  <div class="sos-contacts" id="sosContacts"></div>
+  <button class="sos-cancel" id="sosCancelBtn">
+    <span id="sosCancelText">Hold to Cancel — 3s</span>
+    <div id="sosCancelBar" style="height:3px;background:rgba(255,255,255,0.4);border-radius:2px;margin-top:6px;width:0%;transition:width 0.1s linear"></div>
+  </button>
+</div>
+
+<div id="upgrade-overlay">
+  <div class="upgrade-sheet">
+    <button class="upgrade-close" id="upgradeClose">✕</button>
+    <div class="upgrade-title" id="upgradeTitle">🔓 Saathi Unlock karein</div>
+    <div class="upgrade-sub" id="upgradeSub">Aaj ka free limit ho gaya. Aage baat karne ke liye upgrade karein.</div>
+
+    <!-- Founding Member Plan -->
+    <div class="plan-card featured" id="planFounding">
+      <div class="plan-popular">⭐ Founding Member — Limited Offer</div>
+      <div style="margin-top:10px">
+        <div class="plan-name">साथी Founding Plan</div>
+        <div class="plan-price">₹99 <span>/ month for 3 months</span></div>
+        <div class="plan-desc" style="color:var(--amber-l)">Phir sirf ₹299/month — aur founding members ko hamesha special support milega</div>
+        <div class="plan-feats">
+          ✓ Unlimited conversations<br>
+          ✓ Unlimited reminders<br>
+          ✓ Prescription reader<br>
+          ✓ Voice + Notes + SOS<br>
+          ✓ Early access to new features
+        </div>
+      </div>
+      <button class="pay-btn" id="payFounding">🙏 ₹99 se Shuru Karen — Abhi</button>
+    </div>
+
+    <!-- Pro Plan -->
+    <div class="plan-card" id="planPro" style="opacity:.8">
+      <div class="plan-name">साथी Pro</div>
+      <div class="plan-price">₹299 <span>/ month</span></div>
+      <div class="plan-desc">Standard plan — sab kuch unlimited</div>
+      <button class="pay-btn" style="background:rgba(245,158,11,.15);color:var(--amber);box-shadow:none;border:1px solid rgba(245,158,11,.3)" id="payPro">Choose Pro — ₹299/month</button>
+    </div>
+
+    <div class="upgrade-free-note">
+      🔒 Secure payment via Razorpay · UPI, Card, NetBanking accepted<br>
+      Cancel anytime · No hidden charges
+    </div>
+  </div>
+</div>
+  <div class="install-inner">
+    <div class="install-icon">🙏</div>
+    <div class="install-text">
+      <strong>साथी AI — Install करें</strong>
+      <span>Home screen पर add करें — हमेशा ready</span>
+    </div>
+    <button class="install-btn" id="installBtn">Install</button>
+    <button class="install-x" id="installClose">✕</button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="status-bar"></div>
+
+  <div class="screen" id="screen-onboard">
+    <svg class="ob-logo-icon" viewBox="0 0 90 90" fill="none">
+      <defs>
+        <linearGradient id="og" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#FDE68A"/><stop offset="100%" stop-color="#D97706"/>
+        </linearGradient>
+        <filter id="gf"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <circle cx="45" cy="45" r="42" fill="#1E1408" stroke="url(#og)" stroke-width="1.5" opacity="0.6"/>
+      <path d="M38 10 A35 35 0 0 0 38 80" stroke="#F59E0B" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path d="M52 10 A35 35 0 0 1 52 80" stroke="#D97706" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path d="M45 55 C31 45 24 35 30 26 C34 20 41 23 45 31 C49 23 56 20 60 26 C66 35 59 45 45 55Z" fill="url(#og)" filter="url(#gf)"/>
+      <circle cx="57" cy="18" r="3" fill="#FDE68A" opacity="0.9"/>
+      <circle cx="62" cy="35" r="2.5" fill="#F59E0B" opacity="0.7"/>
+      <circle cx="62" cy="55" r="2.5" fill="#F59E0B" opacity="0.7"/>
+      <circle cx="57" cy="72" r="3" fill="#FDE68A" opacity="0.9"/>
+    </svg>
+    <div class="ob-title">साथी AI</div>
+    <div class="ob-sub">Aapka apna digital saathi 🙏</div>
+
+    <div class="ob-form">
+      <div class="ob-label">Naam / Name</div>
+      <input class="ob-input" id="ob-name" type="text" placeholder="Aapka naam...">
+
+      <div class="ob-label">Phone number</div>
+      <input class="ob-input" id="ob-phone" type="tel" placeholder="+91 XXXXXXXXXX">
+
+      <div class="ob-label">Family member ka naam (optional)</div>
+      <input class="ob-input" id="ob-family" type="text" placeholder="Jaise: Priya, Rahul...">
+
+      <button class="ob-btn" id="startBtn">🙏 Sign Up — Start</button>
+    </div>
+    <div class="ob-skip" id="skipBtn">Skip — seedha shuru karein</div>
+  </div>
+
+  <div class="screen hidden" id="screen-main">
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="tb-avatar" id="tbAvatar">🙏</div>
+        <div>
+          <div class="tb-name">साथी AI</div>
+          <div class="tb-status" id="tbStatus"><div class="tb-dot"></div>हमेशा साथ हूं</div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-icon-btn" id="muteBtn">🔊</div>
+        <div class="tb-icon-btn" id="sosBtn">🆘</div>
+        <div class="tb-icon-btn" id="rxBtn" title="Prescription">📋</div>
+        <div class="tb-icon-btn" id="notesBtn">📝</div>
+        <div class="tb-icon-btn" id="settingsBtn">⚙️</div>
+      </div>
+    </div>
+    <!-- Plan banner — shown as floating pill above input, not in layout flow -->
+    <div class="quick-strip">
+      <button class="qa-btn" data-action="medicine">💊 दवाई</button>
+      <button class="qa-btn" data-action="date">📅 तारीख</button>
+      <button class="qa-btn" data-action="news">📰 खबर</button>
+      <button class="qa-btn" data-action="joke">😄 चुटकुला</button>
+      <button class="qa-btn" data-action="story">📖 कहानी</button>
+      <button class="qa-btn" data-action="quote">✨ सुविचार</button>
+      <button class="qa-btn" data-action="youtube">▶️ YouTube</button>
+      <button class="qa-btn" data-action="weather">🌤️ मौसम</button>
+      <button class="qa-btn" data-action="family">👨‍👩‍👧 परिवार</button>
+    </div>
+    <div class="chat-wrap" id="chatWrap">
+      <div class="date-div"><span id="dateLabel">आज</span></div>
+    </div>
+    <div class="input-bar">
+      <div class="input-row">
+        <button class="mic-btn" id="micBtn">🎤</button>
+        <textarea class="input-box" id="msgInput" placeholder="यहाँ लिखें या 🎤 बोलें..." rows="1"></textarea>
+        <button class="send-btn" id="sendBtn">➤</button>
+      </div>
+    </div>
+    <!-- Hidden banner elements — kept for JS, not shown -->
+    
+  </div>
+
+  <div class="screen hidden" id="screen-settings">
+    <div class="settings-head">
+      <button class="back-btn" id="settingsBack">←</button>
+      <div class="settings-title">⚙️ Settings</div>
+    </div>
+    <div class="settings-body">
+      <div>
+        <div class="sec-title">Profile</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div><label>आपका नाम</label><small>साथी इसी नाम से बुलाएगा</small></div>
+            <input class="s-input" id="s-name" placeholder="Dadi ji">
+          </div>
+          <div class="settings-row">
+            <div><label>Language</label></div>
+            <select class="s-input" id="s-lang">
+              <option value="hindi" selected>हिंदी</option>
+              <option value="hinglish">Hinglish</option>
+              <option value="english">English</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Voice Settings</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div><label>Speaking speed</label></div>
+            <select class="s-input" id="s-speed">
+              <option value="0.75">Slow (धीरे)</option>
+              <option value="0.9" selected>Normal</option>
+              <option value="1.1">Fast (तेज़)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div><label>Voice on/off</label><small>साथी बोले या सिर्फ लिखे</small></div>
+            <div class="toggle on" id="t-voice"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Daily Medicine Reminders</div>
+        <div class="med-list" id="medList"></div>
+        <div class="add-med-row">
+          <input class="add-med-input" id="newMedName" placeholder="Medicine name">
+          <input class="add-med-input" id="newMedTime" type="time" style="width:90px">
+          <button class="add-med-btn" id="addMedBtn">+ Add</button>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Emergency Contact</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div><label>Family member</label></div>
+            <input class="s-input" id="s-fam" placeholder="Priya (बेटी)">
+          </div>
+          <div class="settings-row">
+            <div><label>Phone number</label></div>
+            <input class="s-input" id="s-phone" type="tel" placeholder="+91...">
+          </div>
+        </div>
+      </div>
+      <button class="ob-btn" id="saveSettingsBtn">💾 Save Settings</button>
+    </div>
+  </div>
+
+  <div class="screen hidden" id="screen-notes">
+    <div class="settings-head">
+      <button class="back-btn" id="notesBack">←</button>
+      <div class="settings-title">📝 मेरी यादें — My Notes</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <textarea id="noteInput" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:11px 14px;font-family:'Baloo 2',sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:none;min-height:60px;max-height:120px;line-height:1.5" placeholder="कुछ important लिखें — कोई याद, कविता, नाम, काम..."></textarea>
+        <button id="saveNoteBtn" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;font-size:1.2rem;cursor:pointer;flex-shrink:0">+</button>
+      </div>
+      <div id="notesList" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+
+  <!-- PRESCRIPTION SCREEN -->
+  <div class="screen hidden" id="screen-rx">
+    <div class="settings-head">
+      <button class="back-btn" id="rxBack">←</button>
+      <div class="settings-title">📋 Doctor's Prescription</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:16px">
+
+      <div id="rx-upload-area" style="border:2px dashed rgba(245,158,11,0.35);border-radius:18px;padding:28px 20px;text-align:center;background:rgba(245,158,11,0.04)">
+        <div style="font-size:2.5rem;margin-bottom:10px">📄</div>
+        <div style="font-family:'Baloo 2';font-size:1rem;font-weight:700;color:var(--amber);margin-bottom:6px">Prescription upload karein</div>
+        <div style="font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:16px">Doctor ki parchi ki photo lein ya gallery se choose karein</div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <label style="background:linear-gradient(135deg,var(--amber),var(--saffron));color:#fff;padding:11px 22px;border-radius:24px;font-family:'Baloo 2';font-size:.88rem;font-weight:700;cursor:pointer;display:inline-block">
+            📷 Camera se lein
+            <input type="file" id="rx-camera-input" accept="image/*" capture="environment" style="display:none">
+          </label>
+          <label style="background:rgba(245,158,11,0.12);color:var(--amber-l);border:1px solid rgba(245,158,11,0.3);padding:11px 22px;border-radius:24px;font-family:'Baloo 2';font-size:.88rem;font-weight:600;cursor:pointer;display:inline-block">
+            🖼️ Gallery se chunein
+            <input type="file" id="rx-gallery-input" accept="image/*" style="display:none">
+          </label>
+        </div>
+      </div>
+
+      <div id="rx-preview-wrap" style="display:none">
+        <img id="rx-preview-img" style="width:100%;border-radius:14px;border:1px solid var(--border);max-height:260px;object-fit:contain;background:var(--card)">
+        <button id="rx-retake-btn" style="margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:8px 18px;border-radius:20px;font-family:'Baloo 2';font-size:.8rem;cursor:pointer;width:100%">📷 Doosri image lein</button>
+      </div>
+
+      <div id="rx-scanning" style="display:none;text-align:center;padding:20px">
+        <div class="typing-dots" style="margin:0 auto 14px;width:fit-content"><span></span><span></span><span></span></div>
+        <div style="font-family:'Baloo 2';color:var(--amber);font-size:.95rem">Prescription padh raha hoon...</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:5px">Thodi der mein medicines detect ho jaayengi</div>
+      </div>
+
+      <div id="rx-results" style="display:none;flex-direction:column;gap:12px">
+        <div style="font-family:'Baloo 2';font-size:.95rem;font-weight:700;color:var(--text)">✅ Medicines detect ho gayi!</div>
+        <div style="font-size:.8rem;color:var(--muted)">Check karo — time sahi lag raha hai toh reminder set kar sakte ho</div>
+        <div id="rx-med-list" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:16px;padding:16px;margin-top:4px">
+          <div style="font-family:'Baloo 2';font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:10px">⏰ Daily reminder chahiye?</div>
+          <div style="display:flex;gap:10px">
+            <button id="rx-yes-btn" style="flex:1;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;padding:13px;border-radius:12px;font-family:'Baloo 2';font-size:.9rem;font-weight:700;color:#fff;cursor:pointer">✓ Haan, set karo</button>
+            <button id="rx-no-btn" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);padding:13px;border-radius:12px;font-family:'Baloo 2';font-size:.9rem;color:var(--muted);cursor:pointer">Nahi, sirf dekh raha hoon</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="rx-error" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:18px;text-align:center">
+        <div style="font-size:1.8rem;margin-bottom:8px">😕</div>
+        <div style="font-family:'Baloo 2';color:#FCA5A5;font-size:.92rem;margin-bottom:4px">Prescription clearly nahi dikh rahi</div>
+        <div style="font-size:.78rem;color:rgba(252,165,165,0.7);margin-bottom:12px">Achhi roshni mein, seedhi photo lein</div>
+        <button id="rx-retry-btn" style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#FCA5A5;padding:8px 20px;border-radius:20px;font-family:'Baloo 2';font-size:.82rem;cursor:pointer">Dobara try karein</button>
+      </div>
+
+      <div id="rx-success" style="display:none;text-align:center;padding:16px">
+        <div style="font-size:2.5rem;margin-bottom:12px">🎉</div>
+        <div style="font-family:'Baloo 2';font-size:1.1rem;font-weight:700;color:var(--amber);margin-bottom:8px">Reminders set ho gaye!</div>
+        <div style="font-size:.85rem;color:var(--muted);line-height:1.6" id="rx-success-msg"></div>
+        <button id="rx-done-btn" style="margin-top:18px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;padding:12px 28px;border-radius:24px;font-family:'Baloo 2';font-size:.92rem;font-weight:700;color:#fff;cursor:pointer">Wapas jaayein →</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+
+// ── STATE ──
+var S = {
+  name:'', family:'', phone:'',
+  lang:'hindi', voiceOn:true, voiceSpeed:0.82,
+  medicines:[], onboarded:false, msgs:[],
+  userType:'family-setup'
+};
+try { var sv = localStorage.getItem('saathi_v1'); if(sv) S = Object.assign(S, JSON.parse(sv)); } catch(e){}
+function save() { try { localStorage.setItem('saathi_v1', JSON.stringify(S)); } catch(e){} }
+
+// ── REMINDER ENGINE ──
+var activeReminders = [];
+function parseReminderTag(text) {
+  var m = text.match(/\[REMINDER:(\{[^}]+\})\]/);
+  if(!m) return null;
+  try { return JSON.parse(m[1]); } catch(e) { return null; }
+}
+function parseCancelTag(text) { return /\[CANCEL_REMINDER\]/i.test(text); }
+function parseNoteTag(text) {
+  var m = text.match(/\[NOTE:([\s\S]*?)\]/);
+  return m ? m[1].trim() : null;
+}
+function stripAllTags(text) {
+  return text.replace(/\[REMINDER:\{[^}]+\}\]/g,'').replace(/\[CANCEL_REMINDER\]/gi,'').replace(/\[NOTE:[\s\S]*?\]/g,'').trim();
+}
+function msUntilTime(timeStr) {
+  var parts = timeStr.split(':').map(Number);
+  var h = parts[0], m = parts[1];
+  var now = new Date(), target = new Date();
+  target.setHours(h, m, 0, 0);
+  if(target <= now) target.setDate(target.getDate() + 1);
+  return target - now;
+}
+function fmt12(timeStr) {
+  var parts = timeStr.split(':').map(Number);
+  var h = parts[0], m = parts[1];
+  return (h>12?h-12:h||12) + ':' + String(m).padStart(2,'0') + ' ' + (h>=12?'PM':'AM');
+}
+function scheduleOneTimeReminder(timeStr, task) {
+  var ms = msUntilTime(timeStr);
+  if(ms <= 0 || ms > 86400000) return;
+  var tid = setTimeout(function() {
+    addBubble('ai', S.name + ', yaad dila doon!\n\n' + task, '', 'reminder', true);
+    speakText(S.name + ', yaad dila doon! ' + task);
+    var idx = activeReminders.indexOf(tid);
+    if(idx > -1) activeReminders.splice(idx, 1);
+  }, ms);
+  activeReminders.push(tid);
+}
+function cancelAllReminders() {
+  activeReminders.forEach(function(tid) { clearTimeout(tid); });
+  activeReminders.length = 0;
+}
+
+// ── TTS ──
+var isMuted = !S.voiceOn;
+function cleanForSpeech(text) {
+  return text
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
+    .replace(/[\u{2600}-\u{27BF}]/gu, '')
+    .replace(/[\u{FE00}-\u{FEFF}]/gu, '')
+    .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+    .replace(/#{1,6}\s/g, '').replace(/`[^`]*`/g, '')
+    .replace(/\[REMINDER:\{[^}]+\}\]/g, '').replace(/\[CANCEL_REMINDER\]/gi, '')
+    .replace(/\[NOTE:[\s\S]*?\]/g, '')
+    .replace(/<[^>]*>/g, ' ').replace(/https?:\/\/\S+/g, '')
+    .replace(/[✓✗✔✘★☆→←↑↓↗]/g, '')
+    // Natural pauses — commas and line breaks become short pauses
+    .replace(/\n/g, '... ')
+    .replace(/\. /g, '... ')
+    .replace(/! /g, '! ... ')
+    .replace(/\? /g, '? ... ')
+    .replace(/\.{4,}/g, '... ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+function getBestVoice(lang) {
+  var voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  if(!voices.length) return null;
+  if(lang === 'english') {
+    // Prefer Google Indian English — most natural for our users
+    return voices.find(function(v){ return v.lang==='en-IN' && v.name.includes('Google'); })
+      || voices.find(function(v){ return v.lang==='en-IN'; })
+      || voices.find(function(v){ return v.lang==='en-GB'; })
+      || voices.find(function(v){ return v.lang.startsWith('en'); }) || null;
+  }
+  // Hindi — Google hi-IN is the best available
+  return voices.find(function(v){ return v.lang==='hi-IN' && v.name.includes('Google'); })
+    || voices.find(function(v){ return v.lang==='hi-IN'; })
+    || voices.find(function(v){ return v.lang.startsWith('hi'); })
+    || voices.find(function(v){ return v.lang==='en-IN'; }) || null;
+}
+
+function speakText(text) {
+  if(isMuted || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var clean = cleanForSpeech(text);
+  if(!clean || clean.length < 2) return;
+
+  // Split into shorter chunks — sounds more human, avoids TTS monotone
+  var chunks = splitIntoChunks(clean);
+  speakChunks(chunks, 0);
+}
+
+function splitIntoChunks(text) {
+  // Split on natural pause points — max 120 chars per chunk
+  var parts = text.split(/(?<=[\.\?\!]\.\.\.)/);
+  var chunks = [];
+  parts.forEach(function(p) {
+    var t = p.trim();
+    if(t) chunks.push(t);
+  });
+  return chunks.length ? chunks : [text];
+}
+
+function speakChunks(chunks, idx) {
+  if(idx >= chunks.length) return;
+  var chunk = chunks[idx];
+  var u = new SpeechSynthesisUtterance(chunk);
+
+  // Language
+  if(S.lang === 'english') {
+    u.lang = 'en-IN';
+  } else {
+    u.lang = 'hi-IN';
+  }
+
+  // Human-like settings
+  // Slightly vary pitch per chunk for natural prosody
+  var pitchBase = 1.08;
+  u.pitch  = pitchBase + (Math.random() * 0.06 - 0.03); // tiny natural variation
+  u.rate   = (parseFloat(S.voiceSpeed) || 0.82);
+  u.volume = 1.0;
+
+  var voice = getBestVoice(S.lang === 'english' ? 'english' : 'hindi');
+  if(voice) u.voice = voice;
+
+  // Avatar speaking animation
+  u.onstart = function() {
+    var av = document.getElementById('tbAvatar');
+    var st = document.getElementById('tbStatus');
+    if(av) av.classList.add('speaking');
+    if(st) {
+      if(S.lang === 'hindi') {
+        st.innerHTML = '<div class="tb-dot" style="background:var(--amber)"></div>बोल रहा हूं...';
+      } else if(S.lang === 'english') {
+        st.innerHTML = '<div class="tb-dot" style="background:var(--amber)"></div>Speaking...';
+      } else {
+        st.innerHTML = '<div class="tb-dot" style="background:var(--amber)"></div>बोल रहा हूं...';
+      }
+    }
+  };
+
+  u.onend = function() {
+    // Small natural gap between chunks
+    setTimeout(function() {
+      speakChunks(chunks, idx + 1);
+    }, 80);
+    if(idx === chunks.length - 1) {
+      var av = document.getElementById('tbAvatar');
+      var st = document.getElementById('tbStatus');
+      if(av) av.classList.remove('speaking');
+      if(st) st.innerHTML = '<div class="tb-dot"></div>हमेशा साथ हूं';
+    }
+  };
+
+  u.onerror = function() {
+    var av = document.getElementById('tbAvatar');
+    var st = document.getElementById('tbStatus');
+    if(av) av.classList.remove('speaking');
+    if(st) st.innerHTML = '<div class="tb-dot"></div>हमेशा साथ हूं';
+  };
+
+  setTimeout(function() { window.speechSynthesis.speak(u); }, idx === 0 ? 120 : 0);
+}
+
+if(window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
+}
+
+// ── NOTES ──
+function loadNotes() { try { return JSON.parse(localStorage.getItem('saathi_notes') || '[]'); } catch(e) { return []; } }
+function saveNotes(notes) { try { localStorage.setItem('saathi_notes', JSON.stringify(notes)); } catch(e){} }
+function saveNoteFromChat(text) {
+  var notes = loadNotes();
+  notes.unshift({ text:text, date:new Date().toLocaleDateString('hi-IN',{day:'numeric',month:'short',year:'numeric'}), time:new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'}), id:Date.now() });
+  saveNotes(notes);
+}
+function renderNotes() {
+  var el = document.getElementById('notesList');
+  var notes = loadNotes();
+  if(!notes.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.88rem;padding:32px 0">Abhi koi note nahi hai.<br><br>Koi yaad, kavita, kaam — yahan save karo.</div>'; return; }
+  el.innerHTML = notes.map(function(n) {
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;position:relative">'
+      + '<div style="font-size:.92rem;color:var(--text);line-height:1.6;white-space:pre-wrap;padding-right:28px">' + n.text.replace(/</g,'&lt;') + '</div>'
+      + '<div style="font-size:.68rem;color:var(--muted);margin-top:8px">' + n.date + ' · ' + n.time + '</div>'
+      + '<button onclick="deleteNote(' + n.id + ')" style="position:absolute;top:12px;right:12px;background:transparent;border:none;color:rgba(239,68,68,.5);font-size:.9rem;cursor:pointer;padding:2px 6px">✕</button>'
+      + '</div>';
+  }).join('');
+}
+window.deleteNote = function(id) {
+  saveNotes(loadNotes().filter(function(n){ return n.id !== id; }));
+  renderNotes();
+};
+
+// ── SCREENS ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('hidden','slide-left');
+    if(s.id !== id) s.classList.add(s.id === 'screen-main' ? 'slide-left' : 'hidden');
+  });
+}
+
+// ── BUBBLES ──
+function addBubble(role, text, extraHtml, cssClass, skipHistory) {
+  var wrap = document.getElementById('chatWrap');
+  var time = new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
+  var div = document.createElement('div');
+  div.className = 'bubble-wrap ' + role;
+  var safe = text.replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  var bc = cssClass === 'reminder' ? 'bubble reminder-fire' : 'bubble ' + role;
+  extraHtml = extraHtml || '';
+  if(role === 'ai') {
+    div.innerHTML = '<div class="bubble-av">🙏</div><div><div class="' + bc + '">' + safe + extraHtml + '</div><div class="bubble-time">' + time + '</div></div>';
+  } else {
+    div.innerHTML = '<div><div class="' + bc + '">' + safe + '</div><div class="bubble-time">' + time + '</div></div>';
+  }
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  if(!skipHistory) {
+    S.msgs.push({role:role, text:text.replace(/<br>/g,'\n'), time:time});
+    if(S.msgs.length > 20) S.msgs.shift();
+  }
+}
+function showTyping() {
+  var wrap = document.getElementById('chatWrap');
+  var t = document.createElement('div');
+  t.id = 'typing'; t.className = 'typing-wrap';
+  t.innerHTML = '<div class="bubble-av">🙏</div><div class="typing-dots"><span></span><span></span><span></span></div>';
+  wrap.appendChild(t); wrap.scrollTop = wrap.scrollHeight;
+}
+function hideTyping() { var t = document.getElementById('typing'); if(t) t.remove(); }
+
+// ── APP OPENER ──
+function openApp(type, query) {
+  var q = encodeURIComponent(query || '');
+  var map = { youtube:'https://www.youtube.com/results?search_query='+q, maps:'https://maps.google.com/maps?q='+q };
+  if(map[type]) window.open(map[type], '_blank');
+}
+window.openApp = openApp;
+
+// ── SEND ──
+function sendMsg() {
+  var inp = document.getElementById('msgInput');
+  var text = inp.value.trim();
+  if(!text) return;
+
+  // Check plan limit
+  if(!canSendMessage()) {
+    var status = getPlanStatus();
+    showUpgradeModal(status.type === 'free' ? 'limit' : 'trial');
+    return;
+  }
+
+  inp.value = ''; inp.style.height = '';
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  addBubble('user', text);
+  incrementMsgCount();
+  updatePlanUI();
+  showTyping();
+  callAPI(text);
+}
+
+// ── QUICK ACTIONS ──
+var QA = {
+  medicine: function(){ return 'Aaj maine apni medicines li hain kya? ' + (S.medicines.map(function(m){return m.name;}).join(', ')||''); },
+  date: function(){ return 'Aaj ki date, din aur time kya hai?'; },
+  news: function(){ return 'Aaj ki 2-3 interesting khabren sunao — achhi wali.'; },
+  joke: function(){ return 'Ek mast Hinglish chutakula sunao!'; },
+  story: function(){ return 'Ek choti prerak kahani sunao — 5-6 lines mein.'; },
+  quote: function(){ return 'Ek sundar suvichar ya doha sunao aaj ke liye.'; },
+  youtube: function(){ return 'youtube'; },
+  weather: function(){ return 'Aaj ka mausam kaisa hai?'; },
+  family: function(){ return S.family + ' ki bahut yaad aa rahi hai...'; }
+};
+
+// ── API ──
+function callAPI(userMsg) {
+  var now = new Date();
+  var currentTime = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  // Age-aware persona based on user type
+  var userType = S.userType || 'family-setup';
+  var personaCtx = '';
+  if(userType === 'self-elderly') {
+    personaCtx = 'User ne khud yeh app set kiya hai — woh 30 se 70+ ke beech ke hain aur ek digital saathi chahte hain. Unke saath ek intelligent, respectful dost ki tarah baat karo — na zyada childish, na over-formal. Woh independent hain.';
+  } else {
+    personaCtx = 'Family member ne yeh buzurg ke liye set kiya hai. User ' + (S.name||'aap') + ' hain — likely 65 se 86+ ke beech. Unke saath warm, patient, caring baat karo jaise ek ghar ka pyaara saathi.';
+  }
+
+  // Language rule built first — goes to top of system prompt
+  var langRule, reactExamples, convExamples;
+
+  if(S.lang === 'english') {
+    langRule = '🔴 LANGUAGE RULE #1: Speak in Indian English — the warm, friendly English that educated Indians use naturally. Like a well-spoken Indian friend talking to you. Examples: "How are you doing?", "That is really nice!", "Shall we talk more about this?", "No worries at all!", "So what happened then?" — natural Indian English rhythm and warmth. No American slang. No British formality. Just warm Indian English.';
+    reactExamples = '  Surprise: "Oh really?! That is something!"\n'
+      + '  Happy news: "That is so nice to hear!"\n'
+      + '  Sad news: "Oh... that is really sad. I understand."\n'
+      + '  Interesting: "Hmm, I never thought of it that way."\n'
+      + '  Agree: "Absolutely, you are so right!"\n'
+      + '  Care: "You are doing wonderfully, no need to worry."\n';
+    convExamples = '  - Sometimes ask a question back — like a caring friend\n'
+      + '  - Share your own view — "I think..."\n'
+      + '  - Admit when you don\'t know — "I\'m not sure, but..."\n';
+  } else if(S.lang === 'hindi') {
+    langRule = '🔴 अनिवार्य नियम #1 — भाषा: आपको केवल और केवल शुद्ध हिंदी में बोलना है। एक भी अंग्रेजी शब्द नहीं — "OK", "fine", "good", "thanks" भी नहीं। पूरी तरह हिंदी।';
+    reactExamples = '  आश्चर्य पर: "सच में?!" या "अरे वाह!"\n'
+      + '  खुशी पर: "कितनी अच्छी बात है!"\n'
+      + '  दुख पर: "यह सुनकर मन भारी हो गया।"\n'
+      + '  दिलचस्प बात: "हम्म... यह तो मैंने सोचा नहीं था।"\n'
+      + '  सहमति: "बिल्कुल सही कहा आपने!"\n';
+    convExamples = '  - कभी-कभी एक सवाल वापस पूछें\n'
+      + '  - अपनी राय भी दें — "मुझे लगता है..."\n'
+      + '  - नहीं पता तो सच बोलें — "यह मुझे नहीं पता, पर..."\n';
+  } else {
+    langRule = '🔴 RULE #1 — LANGUAGE: Speak in Hinglish — natural Hindi-English mix as Indians speak daily. Not pure Hindi. Not pure English. Natural conversational mix.';
+    reactExamples = '  Surprise pe: "Sach mein?!" ya "Arre wah!"\n'
+      + '  Khushi pe: "Kitni achhi baat hai!"\n'
+      + '  Dukh pe: "Arey... yeh sun ke dil bhaari ho gaya."\n'
+      + '  Interesting: "Hmm... yeh toh socha hi nahi tha."\n'
+      + '  Agreement: "Bilkul sahi kaha aapne!"\n';
+    convExamples = '  - Kabhi kabhi ek sawaal wapas poochh\n'
+      + '  - Apna opinion bhi de — "Mujhe lagta hai..."\n'
+      + '  - Nahi pata toh honestly bol — "Yeh mujhe pata nahi, par..."\n';
+  }
+
+  var sys = langRule + '\n\n'
+    + 'Tu "Saathi AI" hai — India ka companion for people aged 30 to 86+.\n'
+    + 'User: ' + (S.name||'Aap') + (S.family ? ('. Trusted person: ' + S.family) : '') + '.\n'
+    + 'Time: ' + currentTime + '. Date: ' + now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '.\n'
+    + (S.medicines.length ? ('Medicines: ' + S.medicines.map(function(m){return m.name+' at '+m.time;}).join(', ') + '.\n') : '')
+    + '\nPERSONA: ' + personaCtx + '\n\n'
+
+    + 'REACT NATURALLY — pehle feel kar, phir bol:\n'
+    + reactExamples + '\n'
+
+    + 'CONVERSATION STYLE:\n'
+    + convExamples + '\n'
+
+    + 'VOICE KE LIYE LIKHO:\n'
+    + '  - Chhote sentences. Ek breath mein bol sakein.\n'
+    + '  - ZERO: ** ## bullets — arrows. Max 1 emoji (😊 ya 🙏 only).\n'
+    + '  - ZERO: clock/alarm/pill emojis — TTS inhe padh nahi sakti.\n\n'
+
+    + 'KNOWLEDGE: Web search available. News, cricket, weather — direct answer. Never say "Google karo".\n\n'
+    + 'WELLNESS (every 5-6 msgs, naturally): Water, walk, eyes rest.\n\n'
+    + 'NOTES: "note kar lo" → end mein [NOTE:text]\n'
+    + 'REMINDER: One-time default. End mein [REMINDER:{"time":"HH:MM","task":"..."}]. "1 ghante baad"=' + currentTime + '+60min. Cancel: [CANCEL_REMINDER]\n\n'
+    + 'LENGTH: 2-3 short lines only.';
+
+  var history = S.msgs.slice(-8).map(function(m){ return {role:m.role==='ai'?'assistant':'user', content:m.text}; });
+
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({system:sys, messages:history.concat([{role:'user',content:userMsg}])})
+  }).then(function(res){ return res.json(); }).then(function(data) {
+    hideTyping();
+    if(data.error) { addBubble('ai', 'Error: ' + data.error); return; }
+    var reply = data.reply || 'Maafi, kuch gadbad ho gayi. Dobara try karein.';
+
+    if(parseCancelTag(reply)) {
+      cancelAllReminders();
+      addBubble('ai', stripAllTags(reply) || 'Theek hai, yaad nahi dilaaunga.');
+      speakText(cleanForSpeech(stripAllTags(reply) || 'Theek hai'));
+      return;
+    }
+    var noteText = parseNoteTag(reply);
+    if(noteText) {
+      saveNoteFromChat(noteText);
+      var cleanR = stripAllTags(reply) || 'Note save kar liya!';
+      addBubble('ai', cleanR);
+      speakText(cleanForSpeech(cleanR));
+      return;
+    }
+    var rd = parseReminderTag(reply);
+    if(rd && rd.time && rd.task) {
+      var cleanR2 = stripAllTags(reply) || 'Bilkul!';
+      var confirm = 'Theek hai! ' + fmt12(rd.time) + ' pe yaad dila dunga.';
+      addBubble('ai', cleanR2 + '\n\n' + confirm);
+      speakText(cleanForSpeech(cleanR2 + ' ' + confirm));
+      scheduleOneTimeReminder(rd.time, rd.task);
+      return;
+    }
+    var extraHtml = '';
+    if(reply.toLowerCase().indexOf('youtube') !== -1) {
+      var sq = reply.match(/search[:\s]+["']?([^"'\n.]+)/i);
+      var q2 = sq ? sq[1].trim() : 'hindi songs old';
+      extraHtml = '<br><a class="app-link" onclick="openApp(\'youtube\',\'' + q2.replace(/'/g,'') + '\')">▶️ YouTube खोलें</a>';
+    }
+    addBubble('ai', reply, extraHtml);
+    speakText(reply);
+  }).catch(function() {
+    hideTyping();
+    addBubble('ai', 'Network mein thodi problem. Dobara try karein.');
+  });
+}
+
+// ── MIC ──
+var recog = null, isRec = false;
+function toggleMic() {
+  var btn = document.getElementById('micBtn');
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) { addBubble('ai','Voice Chrome mein kaam karta hai. Chrome use karein.'); return; }
+  if(isRec) { if(recog) recog.stop(); return; }
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  recog = new SR();
+  recog.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
+  recog.interimResults = false;
+  recog.onresult = function(e) { document.getElementById('msgInput').value = e.results[0][0].transcript; sendMsg(); };
+  recog.onend = function() { isRec = false; if(btn) btn.classList.remove('recording'); };
+  recog.onerror = function() { isRec = false; if(btn) btn.classList.remove('recording'); };
+  recog.start(); isRec = true; if(btn) btn.classList.add('recording');
+}
+
+// ── SOS ──
+function showSOS() {
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  var c = document.getElementById('sosContacts'); c.innerHTML = '';
+
+  // If family/contact exists
+  if(S.phone) {
+    var label = S.family || 'Emergency contact';
+    var call = document.createElement('button'); call.className = 'sos-contact-btn';
+    call.innerHTML = '📞 Call ' + label + ' — ' + S.phone;
+    call.onclick = function() { window.location.href = 'tel:' + S.phone; };
+    c.appendChild(call);
+
+    var wa = document.createElement('button'); wa.className = 'sos-contact-btn';
+    wa.innerHTML = '💬 WhatsApp ' + label;
+    wa.onclick = function() {
+      var msg = encodeURIComponent('🆘 EMERGENCY! ' + (S.name||'Main') + ' ko help chahiye! Turant call karein!');
+      window.open('https://wa.me/' + S.phone.replace(/\D/g,'') + '?text=' + msg);
+    };
+    c.appendChild(wa);
+  }
+
+  // ALWAYS show emergency services — critical for users without family
+  var emergency = document.createElement('button'); emergency.className = 'sos-contact-btn';
+  emergency.style.borderColor = 'rgba(234,88,12,.6)';
+  emergency.innerHTML = '🚨 Call 112 — National Emergency';
+  emergency.onclick = function() { window.location.href = 'tel:112'; };
+  c.appendChild(emergency);
+
+  var ambulance = document.createElement('button'); ambulance.className = 'sos-contact-btn';
+  ambulance.innerHTML = '🏥 Call 108 — Ambulance';
+  ambulance.onclick = function() { window.location.href = 'tel:108'; };
+  c.appendChild(ambulance);
+
+  if(!S.phone) {
+    var hint = document.createElement('p');
+    hint.style.cssText = 'color:rgba(255,255,255,.45);font-size:.8rem;text-align:center;margin-top:8px;font-family:Baloo 2';
+    hint.textContent = 'Settings mein trusted contact add karein — padosi, doctor, koi bhi.';
+    c.appendChild(hint);
+  }
+
+  document.getElementById('sos-overlay').classList.add('show');
+  // Play audio alert so user knows SOS is active
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 300, 600].forEach(function(delay) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay/1000);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay/1000 + 0.25);
+      osc.start(ctx.currentTime + delay/1000);
+      osc.stop(ctx.currentTime + delay/1000 + 0.25);
+    });
+  } catch(e) {}
+}
+
+// Hold-to-cancel — requires 3 second hold
+var sosCancelTimer = null;
+var sosCancelProgress = 0;
+window.closeSOS = function() { document.getElementById('sos-overlay').classList.remove('show'); };
+
+function initSOSCancel() {
+  var btn = document.getElementById('sosCancelBtn');
+  var bar = document.getElementById('sosCancelBar');
+  var txt = document.getElementById('sosCancelText');
+  if(!btn) return;
+  var interval = null;
+
+  function startHold() {
+    sosCancelProgress = 0;
+    interval = setInterval(function() {
+      sosCancelProgress += 3.4; // 100 / (3000ms / 100ms)
+      bar.style.width = Math.min(100, sosCancelProgress) + '%';
+      if(sosCancelProgress >= 100) {
+        clearInterval(interval);
+        window.closeSOS();
+        bar.style.width = '0%';
+        txt.textContent = 'Hold to Cancel — 3s';
+      }
+    }, 100);
+  }
+  function stopHold() {
+    clearInterval(interval);
+    sosCancelProgress = 0;
+    bar.style.width = '0%';
+  }
+  btn.addEventListener('mousedown',  startHold);
+  btn.addEventListener('touchstart', startHold, {passive:true});
+  btn.addEventListener('mouseup',    stopHold);
+  btn.addEventListener('mouseleave', stopHold);
+  btn.addEventListener('touchend',   stopHold);
+}
+
+// ── MEDICINE ──
+function scheduleDailyMedCheck() { checkDailyMeds(); setInterval(checkDailyMeds, 60000); }
+function checkDailyMeds() {
+  if(!S.medicines.length) return;
+  var now = new Date(), hr = now.getHours(), min = now.getMinutes();
+  var changed = false;
+  S.medicines.forEach(function(m, i) {
+    if(!m.time) return;
+    var parts = m.time.split(':').map(Number);
+    if(parts[0]===hr && parts[1]===min && !m.reminded) {
+      S.medicines[i].reminded = true; changed = true;
+      addBubble('ai', S.name + ', ' + m.name + ' lene ka waqt ho gaya!\nPaani zaroor pijiye.', '', '', true);
+      speakText(S.name + ', ' + m.name + ' lene ka waqt ho gaya! Paani zaroor pijiye.');
+    }
+  });
+  if(changed) save();
+}
+setInterval(function() {
+  var n = new Date();
+  if(n.getHours()===0 && n.getMinutes()===0) { S.medicines.forEach(function(m){ m.reminded=false; }); save(); }
+}, 60000);
+function renderMedList() {
+  var el = document.getElementById('medList');
+  if(!S.medicines.length) { el.innerHTML = '<div class="empty-med">Abhi koi medicine add nahi hai.</div>'; return; }
+  el.innerHTML = S.medicines.map(function(m,i) {
+    return '<div class="med-item"><span class="med-name">💊 '+m.name+'</span><span class="med-time">'+(m.time||'—')+'</span><button class="med-del" onclick="delMed('+i+')">✕</button></div>';
+  }).join('');
+}
+window.delMed = function(i) { S.medicines.splice(i,1); save(); renderMedList(); };
+
+// ── START MAIN ──
+function startMain() {
+  showScreen('screen-main');
+  var btn = document.getElementById('muteBtn');
+  if(btn) { btn.textContent = isMuted ? '🔇' : '🔊'; isMuted ? btn.classList.add('muted') : btn.classList.remove('muted'); }
+  var now = new Date(), hr = now.getHours();
+  var greet, greetMsg, greetSpeak;
+  if(S.lang === 'english') {
+    greet     = hr<12 ? 'Good Morning' : hr<17 ? 'Good Afternoon' : 'Good Evening';
+    greetMsg  = greet + ', ' + S.name + '! 😊\nI am your Saathi — always here with you.\nHow are you doing today?';
+    greetSpeak= greet + ', ' + S.name + '! I am your Saathi, always here with you. How are you doing today?';
+  } else if(S.lang === 'hindi') {
+    greet     = hr<12 ? 'सुप्रभात' : hr<17 ? 'नमस्कार' : 'शुभ संध्या';
+    greetMsg  = greet + ', ' + S.name + '! 🙏\nमैं आपका साथी हूं — हमेशा यहां हूं।\nआज कैसा महसूस कर रहे हैं आप?';
+    greetSpeak= greet + ', ' + S.name + '! Main aapka saathi hoon, hamesha yahan hoon. Aaj kaisa feel kar rahe hain aap?';
+  } else {
+    greet     = hr<12 ? 'Suprabhat! Good Morning' : hr<17 ? 'Namaskar' : 'Shubh Sandhya';
+    greetMsg  = greet + ', ' + S.name + '! 🙏\nMain aapka saathi hoon — hamesha yahan hoon.\nAaj kaisa feel kar rahe hain aap?';
+    greetSpeak= greet + ', ' + S.name + '! Main aapka saathi hoon, hamesha yahan hoon. Aaj kaisa feel kar rahe hain aap?';
+  }
+  var dl = document.getElementById('dateLabel');
+  if(dl) dl.textContent = now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  setTimeout(function() {
+    addBubble('ai', greetMsg);
+    speakText(greetSpeak);
+    scheduleDailyMedCheck();
+    updatePlanUI();
+  }, 600);
+}
+
+// ── PRESCRIPTION READER ──
+var rxExtractedMeds = [];
+
+function rxShow(sectionId) {
+  ['rx-upload-area','rx-preview-wrap','rx-scanning','rx-results','rx-error','rx-success'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.style.display = (id === sectionId) ? (id === 'rx-results' ? 'flex' : 'block') : 'none';
+  });
+}
+function resetRxScreen() {
+  rxExtractedMeds = [];
+  var img = document.getElementById('rx-preview-img'); if(img) img.src = '';
+  document.getElementById('rx-upload-area').style.display = 'block';
+  ['rx-preview-wrap','rx-scanning','rx-results','rx-error','rx-success'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display='none';
+  });
+}
+function handleRxUpload(event) {
+  var file = event.target.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    // Compress image client-side before sending — prevents serverless timeout
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX = 1200; // max dimension
+      var w = img.width, h = img.height;
+      if(w > MAX || h > MAX) {
+        if(w > h) { h = Math.round(h * MAX/w); w = MAX; }
+        else { w = Math.round(w * MAX/h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      var ctx2 = canvas.getContext('2d');
+      ctx2.drawImage(img, 0, 0, w, h);
+      var compressed = canvas.toDataURL('image/jpeg', 0.82); // 82% quality
+
+      document.getElementById('rx-preview-img').src = compressed;
+      document.getElementById('rx-preview-wrap').style.display = 'block';
+      document.getElementById('rx-upload-area').style.display = 'none';
+      rxShow('rx-scanning');
+      rxScanPrescription(compressed);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+function rxScanPrescription(dataUrl) {
+  var base64 = dataUrl.split(',')[1];
+  var mime   = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+  var prompt = 'You are reading a doctor\'s prescription image. Your FIRST job is to check if it is a formal PRINTED prescription.\n\n'
+
+    + 'STEP 1 — VALIDATE FORMAT:\n'
+    + 'A valid formal printed prescription has ALL of these:\n'
+    + '  ✓ Typed/printed text (not handwritten)\n'
+    + '  ✓ Doctor\'s clinic/hospital letterhead or printed header\n'
+    + '  ✓ Printed medicine names (may have handwritten dose/frequency added by doctor)\n'
+    + '  ✓ Looks like an official medical document\n\n'
+
+    + 'REJECT and return {"error":"handwritten"} if:\n'
+    + '  ✗ Entire prescription is handwritten on plain paper/notepad\n'
+    + '  ✗ No printed letterhead or clinic name visible\n'
+    + '  ✗ Looks like informal notes on a blank page\n'
+    + '  ✗ Just a list of medicine names scribbled on paper\n\n'
+
+    + 'NOTE: A printed prescription WITH some handwritten additions (like dose or duration written by doctor) is VALID — accept it.\n\n'
+
+    + 'STEP 2 — IF VALID PRINTED PRESCRIPTION, extract all medicines:\n\n'
+
+    + 'Timing codes commonly found on Indian prescriptions:\n'
+    + '  OD = once daily → ["08:00"]\n'
+    + '  BD or BID = twice daily → ["08:00","21:00"]\n'
+    + '  TDS or TID = thrice daily → ["08:00","14:00","21:00"]\n'
+    + '  QID = four times daily → ["08:00","13:00","18:00","21:00"]\n'
+    + '  HS = at bedtime → ["21:00"]\n'
+    + '  SOS = as needed → ["08:00"]\n'
+    + '  1-0-1 = morning + night → ["08:00","21:00"]\n'
+    + '  1-1-1 = thrice daily → ["08:00","14:00","21:00"]\n'
+    + '  0-0-1 = night only → ["21:00"]\n'
+    + '  1-0-0 = morning only → ["08:00"]\n'
+    + '  AF or PC = after food, BF or AC = before food\n\n'
+
+    + 'Medicine-specific defaults if timing not printed:\n'
+    + '  Pan D / Pantoprazole / Omeprazole → before breakfast: ["07:30"]\n'
+    + '  Ecosprin / Aspirin → morning: ["08:00"]\n'
+    + '  BP medicines (Telma, Amlodipine, Losartan) → morning: ["08:00"]\n'
+    + '  Metformin / Diabetes medicines → after meals: ["08:30","21:30"]\n'
+    + '  Vitamins / Calcium → after breakfast: ["08:30"]\n'
+    + '  Sleeping pills / Anxiety → night: ["21:00"]\n\n'
+
+    + 'RESPOND ONLY in one of these two JSON formats — no other text:\n\n'
+
+    + 'If REJECTED (handwritten/informal):\n'
+    + '{"error":"handwritten"}\n\n'
+
+    + 'If VALID printed prescription:\n'
+    + '{"medicines":[{"name":"Medicine Name","times":["08:00"],"frequency":"once daily","dose":"1 tablet","duration":"7 days","meal":"after food"}]}\n\n'
+
+    + 'STRICT RULES:\n'
+    + '- Return ONLY the JSON — absolutely no other text before or after\n'
+    + '- times must be 24hr HH:MM format\n'
+    + '- If blurry/unreadable: {"error":"unclear"}\n'
+    + '- Extract every medicine visible on the printed document';
+
+  fetch('/api/chat', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ rxMode:true, imageBase64:base64, imageMime:mime, prompt:prompt })
+  }).then(function(r){return r.json();}).then(function(d){
+    rxParseResponse(d.reply||d.error||'');
+  }).catch(function(){ rxShowError(); });
+}
+function rxParseResponse(text) {
+  try {
+    var clean = text.replace(/```json|```/g,'').trim();
+    var p = JSON.parse(clean);
+    if(p.error === 'handwritten') { rxShowHandwritten(); return; }
+    if(p.error || !p.medicines || !p.medicines.length) { rxShowError(); return; }
+    rxExtractedMeds = p.medicines;
+    rxRenderResults(p.medicines);
+  } catch(e) {
+    var m = text.match(/\{[\s\S]*\}/);
+    if(m) { try { var p2=JSON.parse(m[0]); if(p2.error==='handwritten'){rxShowHandwritten();return;} if(p2.medicines&&p2.medicines.length){rxExtractedMeds=p2.medicines;rxRenderResults(p2.medicines);return;} } catch(e2){} }
+    rxShowError();
+  }
+}
+function fmt12(t) {
+  var parts=t.split(':').map(Number),h=parts[0],m=parts[1];
+  return (h>12?h-12:h||12)+':'+String(m).padStart(2,'0')+(h>=12?' PM':' AM');
+}
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function rxUpdateTime(input,medIdx,timeIdx) {
+  if(rxExtractedMeds[medIdx]&&rxExtractedMeds[medIdx].times) rxExtractedMeds[medIdx].times[timeIdx]=input.value;
+}
+window.rxUpdateTime = rxUpdateTime;
+function rxRenderResults(medicines) {
+  var c = document.getElementById('rx-med-list'); c.innerHTML = '';
+  medicines.forEach(function(med,idx) {
+    var times = med.times&&med.times.length ? med.times : ['08:00'];
+    var card = document.createElement('div');
+    card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px';
+    var subInfo = [med.frequency||'', med.duration ? med.duration : '', med.meal ? med.meal : ''].filter(Boolean).join(' · ');
+    var timesHtml = times.map(function(t,ti){
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:6px">'
+        +'<span style="font-size:.75rem;color:var(--muted);width:58px">'+fmt12(t)+'</span>'
+        +'<input type="time" value="'+t+'" onchange="rxUpdateTime(this,'+idx+','+ti+')"'
+        +' style="flex:1;background:rgba(245,158,11,.08);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-family:Baloo 2,sans-serif;font-size:.85rem;color:var(--text);outline:none">'
+        +'</div>';
+    }).join('');
+    card.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
+      +'<div style="font-size:1.3rem">💊</div>'
+      +'<div><div style="font-family:Baloo 2,sans-serif;font-size:.95rem;font-weight:700;color:var(--text)">'+escHtml(med.name)+'</div>'
+      +'<div style="font-size:.73rem;color:var(--muted);margin-top:2px">'+escHtml(subInfo)+(med.dose?' · '+escHtml(med.dose):'')+'</div></div></div>'
+      + timesHtml;
+    c.appendChild(card);
+  });
+  rxShow('rx-results');
+  document.getElementById('rx-preview-wrap').style.display = 'block';
+}
+function rxConfirmReminders(setReminders) {
+  if(!setReminders) {
+    showScreen('screen-main');
+    addBubble('ai','Theek hai! Prescription dekh li. Agar baad mein reminder chahiye toh 📋 button se wapas aao.','','',true);
+    return;
+  }
+  var added = [];
+  rxExtractedMeds.forEach(function(med) {
+    var times = med.times&&med.times.length ? med.times : ['08:00'];
+    times.forEach(function(t) {
+      var exists = S.medicines.some(function(m){ return m.name.toLowerCase()===med.name.toLowerCase()&&m.time===t; });
+      if(!exists) { S.medicines.push({name:med.name,time:t,reminded:false}); added.push(med.name+' at '+fmt12(t)); }
+    });
+  });
+  save();
+  document.getElementById('rx-success-msg').textContent =
+    (added.length ? added.map(function(a){return '• '+a;}).join('\n') : 'Medicines already saved thi.') +
+    '\n\nSettings → Medicines mein dekh sakte ho.';
+  rxShow('rx-success');
+  document.getElementById('rx-preview-wrap').style.display = 'none';
+}
+function rxShowHandwritten() {
+  // Show a special error for handwritten prescriptions
+  var errEl = document.getElementById('rx-error');
+  errEl.innerHTML = '<div style="font-size:1.8rem;margin-bottom:10px">✍️</div>'
+    + '<div style="font-family:\'Baloo 2\',sans-serif;color:#FCA5A5;font-size:.95rem;font-weight:700;margin-bottom:6px">Handwritten prescription nahi chalegi</div>'
+    + '<div style="font-size:.8rem;color:rgba(252,165,165,0.75);line-height:1.6;margin-bottom:14px">Sirf printed / typed doctor prescription accept hogi — jaise hospital ya clinic se milti hai.<br><br>Handwritten parchi ke liye medicines manually Settings mein add karein.</div>'
+    + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
+    + '<button id="rx-retry-btn2" style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#FCA5A5;padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">📋 Printed prescription upload karein</button>'
+    + '<button id="rx-settings-btn" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--amber-l);padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">⚙️ Manually add karein</button>'
+    + '</div>';
+  rxShow('rx-error');
+  document.getElementById('rx-preview-wrap').style.display = 'block';
+  // Re-wire buttons inside dynamic HTML
+  var retry2 = document.getElementById('rx-retry-btn2');
+  if(retry2) retry2.addEventListener('click', resetRxScreen);
+  var settBtn = document.getElementById('rx-settings-btn');
+  if(settBtn) settBtn.addEventListener('click', function(){ showScreen('screen-settings'); });
+}
+function rxShowError() { rxShow('rx-error'); document.getElementById('rx-preview-wrap').style.display = 'block'; }
+
+// ══════════════════════════════════════════════════════
+//  BILLING & PLAN SYSTEM
+//  Plans: free (5msg/day) | trial (7 days full) | founding | pro
+// ══════════════════════════════════════════════════════
+
+var FREE_MSG_LIMIT = 5;
+
+// Plan data stored in localStorage
+function getPlan() {
+  try { return JSON.parse(localStorage.getItem('saathi_plan') || 'null'); } catch(e) { return null; }
+}
+function setPlan(data) {
+  try { localStorage.setItem('saathi_plan', JSON.stringify(data)); } catch(e) {}
+}
+
+function initPlan() {
+  var plan = getPlan();
+  if(!plan) {
+    // First time — start 7-day trial automatically
+    plan = {
+      type: 'trial',
+      trialStart: Date.now(),
+      trialEnd: Date.now() + (7 * 24 * 60 * 60 * 1000),
+      msgCount: 0,
+      msgDate: new Date().toDateString()
+    };
+    setPlan(plan);
+  }
+  // Reset daily count if new day
+  if(plan.msgDate !== new Date().toDateString()) {
+    plan.msgCount = 0;
+    plan.msgDate = new Date().toDateString();
+    setPlan(plan);
+  }
+  return plan;
+}
+
+function getPlanStatus() {
+  var plan = initPlan();
+  var now = Date.now();
+  // Trial active
+  if(plan.type === 'trial' && now < plan.trialEnd) {
+    var daysLeft = Math.ceil((plan.trialEnd - now) / (24*60*60*1000));
+    return { access: 'full', type: 'trial', daysLeft: daysLeft, msgCount: plan.msgCount };
+  }
+  // Paid plans
+  if(plan.type === 'founding' || plan.type === 'pro') {
+    return { access: 'full', type: plan.type, msgCount: plan.msgCount };
+  }
+  // Free (trial expired or never set)
+  return { access: 'limited', type: 'free', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
+}
+
+function canSendMessage() {
+  var status = getPlanStatus();
+  if(status.access === 'full') return true;
+  return status.msgCount < FREE_MSG_LIMIT;
+}
+
+function incrementMsgCount() {
+  var plan = initPlan();
+  plan.msgCount = (plan.msgCount || 0) + 1;
+  plan.msgDate = new Date().toDateString();
+  setPlan(plan);
+}
+
+function updatePlanUI() { /* banner removed */ }
+
+function showUpgradeModal(reason) {
+  var title = document.getElementById('upgradeTitle');
+  var sub = document.getElementById('upgradeSub');
+  if(reason === 'limit') {
+    title.textContent = '⚡ Aaj ka limit ho gaya';
+    sub.textContent = 'Free plan mein 5 messages/day milte hain. Unlimited ke liye upgrade karein — ₹99/month se shuru.';
+  } else if(reason === 'trial') {
+    title.textContent = '🎉 Trial khatam hua!';
+    sub.textContent = 'Aapka 7-day free trial khatam ho gaya. Saathi ke saath baat jaari rakhne ke liye upgrade karein.';
+  } else {
+    title.textContent = '🔓 Saathi Unlock karein';
+    sub.textContent = 'Unlimited conversations, reminders, prescription reader aur bahut kuch — sirf ₹99/month.';
+  }
+  document.getElementById('upgrade-overlay').classList.add('show');
+}
+
+// ── INSTAMOJO PAYMENT ──
+function startPayment(plan) {
+  var btn = plan === 'founding'
+    ? document.getElementById('payFounding')
+    : document.getElementById('payPro');
+  if(btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
+
+  fetch('/api/payment', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      plan:      plan,
+      userName:  S.name  || 'Saathi User',
+      userPhone: S.phone || ''
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if(data.error) {
+      alert('Payment error: ' + data.error);
+      if(btn) { btn.textContent = plan==='founding'?'🙏 ₹99 se Shuru Karen':'Choose Pro — ₹299/month'; btn.disabled=false; }
+      return;
+    }
+    // Instamojo opens payment page — redirect user
+    window.location.href = data.paymentUrl;
+  })
+  .catch(function() {
+    // API not configured yet — demo mode for testing
+    onPaymentSuccess(plan, {demo: true});
+    if(btn) { btn.disabled = false; }
+  });
+}
+
+function onPaymentSuccess(plan, response) {
+  var planData = getPlan() || {};
+  planData.type      = plan;
+  planData.paidAt    = Date.now();
+  planData.paymentId = (response && response.payment_id) || 'demo_' + Date.now();
+  if(plan === 'founding') {
+    planData.foundingEnd = Date.now() + (90 * 24 * 60 * 60 * 1000);
+  }
+  setPlan(planData);
+  document.getElementById('upgrade-overlay').classList.remove('show');
+  updatePlanUI();
+  var msg = plan === 'founding'
+    ? 'Bahut shukriya! Aap ab Saathi AI ke Founding Member hain! 3 mahine ₹99, phir ₹299. Sab kuch unlock ho gaya! 🎉'
+    : 'Welcome to Saathi Pro! Unlimited conversations aur sab kuch unlock ho gaya! 🎉';
+  addBubble('ai', msg, '', '', true);
+  speakText('Bahut shukriya! Aap ab Saathi ke premium member hain.');
+}
+
+// Check URL params on load — handle return from Instamojo payment page
+function checkPaymentReturn() {
+  var params = new URLSearchParams(window.location.search);
+  var payment = params.get('payment');
+  var plan    = params.get('plan');
+  var paymentId = params.get('payment_id');
+
+  if(payment === 'success' && plan) {
+    // Verify with backend if paymentId exists
+    if(paymentId) {
+      fetch('/api/payment', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({action:'verify', paymentId: paymentId})
+      }).then(function(r){return r.json();}).then(function(d){
+        if(d.verified) onPaymentSuccess(plan, {payment_id: paymentId});
+      }).catch(function(){
+        // Fallback — trust the redirect
+        onPaymentSuccess(plan, {});
+      });
+    } else {
+      onPaymentSuccess(plan, {});
+    }
+    // Clean URL
+    window.history.replaceState({}, '', '/');
+  }
+}
+
+// ── WIRE UP ALL BUTTONS (no inline onclick) ──
+window.addEventListener('DOMContentLoaded', function() {
+
+  // Onboarding — simple Sign Up
+  document.getElementById('startBtn').addEventListener('click', function() {
+    S.name      = document.getElementById('ob-name').value.trim()   || 'Aap';
+    S.phone     = document.getElementById('ob-phone').value.trim()  || '';
+    S.family    = document.getElementById('ob-family').value.trim() || '';
+    S.onboarded = true; save();
+    if(window.speechSynthesis) { var u=new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(u); }
+    startMain();
+  });
+  document.getElementById('skipBtn').addEventListener('click', function() {
+    S.onboarded = true; save();
+    if(window.speechSynthesis) { var u=new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(u); }
+    startMain();
+  });
+
+  // Top bar
+  document.getElementById('muteBtn').addEventListener('click', function() {
+    isMuted = !isMuted; S.voiceOn = !isMuted; save();
+    if(isMuted) { this.textContent='🔇'; this.classList.add('muted'); if(window.speechSynthesis) window.speechSynthesis.cancel(); }
+    else { this.textContent='🔊'; this.classList.remove('muted'); speakText('Awaaz chalu ho gayi'); }
+  });
+  document.getElementById('sosBtn').addEventListener('click', showSOS);
+  document.getElementById('notesBtn').addEventListener('click', function() { renderNotes(); showScreen('screen-notes'); });
+  document.getElementById('settingsBtn').addEventListener('click', function() {
+    document.getElementById('s-name').value = S.name;
+    document.getElementById('s-lang').value = S.lang;
+    document.getElementById('s-fam').value  = S.family;
+    document.getElementById('s-phone').value= S.phone;
+    document.getElementById('s-speed').value= S.voiceSpeed || 0.9;
+    var tv = document.getElementById('t-voice');
+    if(tv) { isMuted ? tv.classList.remove('on') : tv.classList.add('on'); }
+    renderMedList(); showScreen('screen-settings');
+  });
+
+  // Quick actions
+  document.querySelectorAll('.qa-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var action = this.getAttribute('data-action');
+      if(action === 'youtube') {
+        addBubble('ai','YouTube pe aaj kya dekhna chahte hain?','','',true);
+        speakText('YouTube pe aaj kya dekhna chahte hain?');
+        var wrap = document.getElementById('chatWrap');
+        var div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 4px 38px';
+        div.innerHTML = '<a class="app-link" onclick="openApp(\'youtube\',\'bhajan hindi old\')">▶️ Bhajan</a>'
+          + '<a class="app-link" onclick="openApp(\'youtube\',\'hindi comedy\')">😄 Comedy</a>'
+          + '<a class="app-link" onclick="openApp(\'youtube\',\'yoga for elderly hindi\')">🧘 Yoga</a>'
+          + '<a class="app-link" onclick="openApp(\'youtube\',\'aaj ki khabar\')">📰 News</a>';
+        wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
+        return;
+      }
+      var fn = QA[action];
+      if(fn) { document.getElementById('msgInput').value = fn(); sendMsg(); }
+    });
+  });
+
+  // Send + mic + textarea
+  document.getElementById('sendBtn').addEventListener('click', sendMsg);
+  document.getElementById('micBtn').addEventListener('click', toggleMic);
+  document.getElementById('msgInput').addEventListener('keydown', function(e) {
+    if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+  });
+  document.getElementById('msgInput').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  // Settings
+  document.getElementById('settingsBack').addEventListener('click', function() { showScreen('screen-main'); });
+  document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+    S.name       = document.getElementById('s-name').value.trim()  || S.name;
+    S.lang       = document.getElementById('s-lang').value;
+    S.family     = document.getElementById('s-fam').value.trim()   || S.family;
+    S.phone      = document.getElementById('s-phone').value.trim();
+    S.voiceSpeed = parseFloat(document.getElementById('s-speed').value) || 0.9;
+    save(); showScreen('screen-main');
+    setTimeout(function() { addBubble('ai','Settings save ho gayi!','','',true); speakText('Settings save ho gayi'); }, 300);
+  });
+  document.getElementById('t-voice').addEventListener('click', function() {
+    this.classList.toggle('on'); isMuted = !this.classList.contains('on'); S.voiceOn = !isMuted; save();
+    var btn2 = document.getElementById('muteBtn');
+    if(btn2) { btn2.textContent = isMuted?'🔇':'🔊'; isMuted?btn2.classList.add('muted'):btn2.classList.remove('muted'); }
+  });
+  document.getElementById('addMedBtn').addEventListener('click', function() {
+    var n = document.getElementById('newMedName').value.trim(); if(!n) return;
+    var t = document.getElementById('newMedTime').value;
+    if(!t) { alert('Please set a time for this medicine reminder.'); return; }
+    S.medicines.push({name:n, time:t, reminded:false});
+    document.getElementById('newMedName').value = '';
+    document.getElementById('newMedTime').value = '';
+    save(); renderMedList();
+  });
+
+  // Prescription tab button
+  document.getElementById('rxBtn').addEventListener('click', function() {
+    resetRxScreen();
+    showScreen('screen-rx');
+  });
+  document.getElementById('rxBack').addEventListener('click', function() { showScreen('screen-main'); });
+  document.getElementById('rx-retry-btn').addEventListener('click', resetRxScreen);
+  document.getElementById('rx-done-btn').addEventListener('click', function() { showScreen('screen-main'); });
+  document.getElementById('rx-retake-btn').addEventListener('click', function() {
+    document.getElementById('rx-camera-input').click();
+  });
+
+  // File inputs
+  document.getElementById('rx-camera-input').addEventListener('change', handleRxUpload);
+  document.getElementById('rx-gallery-input').addEventListener('change', handleRxUpload);
+
+  // Reminder buttons
+  document.getElementById('rx-yes-btn').addEventListener('click', function() { rxConfirmReminders(true); });
+  document.getElementById('rx-no-btn').addEventListener('click', function() { rxConfirmReminders(false); });
+  document.getElementById('saveNoteBtn').addEventListener('click', function() {
+    var inp = document.getElementById('noteInput');
+    var text = inp.value.trim(); if(!text) return;
+    saveNoteFromChat(text); inp.value = ''; renderNotes(); speakText('Note save ho gaya');
+  });
+
+  // Upgrade modal
+  document.getElementById('upgradeClose').addEventListener('click', function() {
+    document.getElementById('upgrade-overlay').classList.remove('show');
+  });
+  
+  document.getElementById('payFounding').addEventListener('click', function() { startPayment('founding'); });
+  document.getElementById('payPro').addEventListener('click', function() { startPayment('pro'); });
+
+  // Install banner
+  document.getElementById('installBtn').addEventListener('click', function() {
+    if(!deferredPrompt) {
+      addBubble('ai','iOS pe install:\n1. Safari mein open karein\n2. Share button dabayen\n3. Add to Home Screen\n\nDone!','','',true);
+      document.getElementById('install-banner').classList.remove('show'); return;
+    }
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r) {
+      deferredPrompt = null;
+      document.getElementById('install-banner').classList.remove('show');
+      if(r.outcome==='accepted') { addBubble('ai','App install ho gaya!','','',true); speakText('Saathi AI install ho gaya!'); }
+    });
+  });
+  document.getElementById('installClose').addEventListener('click', function() {
+    document.getElementById('install-banner').classList.remove('show');
+  });
+
+  // Init
+  isMuted = !S.voiceOn;
+  initPlan();
+  checkPaymentReturn();
+  initSOSCancel();
+  if(S.onboarded) { startMain(); updatePlanUI(); }
+
+  // FIX: Mobile keyboard jump — VisualViewport API
+  if(window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+      var app = document.getElementById('app');
+      if(app) {
+        app.style.height = window.visualViewport.height + 'px';
+      }
+    });
+  }
+});
+
+// ── PWA INSTALL ──
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault(); deferredPrompt = e;
+  setTimeout(function() { document.getElementById('install-banner').classList.add('show'); }, 30000);
+});
+
+})();
+
+// ── SERVICE WORKER REGISTRATION ──
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      console.log('SW registered');
+    }).catch(function(err) {
+      console.log('SW registration failed:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
