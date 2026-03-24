@@ -193,7 +193,10 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
   <div class="sos-title">Emergency Alert</div>
   <div class="sos-sub">आपके family members को तुरंत message भेजा जाएगा।</div>
   <div class="sos-contacts" id="sosContacts"></div>
-  <button class="sos-cancel" onclick="closeSOS()">रद्द करें — Cancel</button>
+  <button class="sos-cancel" id="sosCancelBtn">
+    <span id="sosCancelText">Hold to Cancel — 3s</span>
+    <div id="sosCancelBar" style="height:3px;background:rgba(255,255,255,0.4);border-radius:2px;margin-top:6px;width:0%;transition:width 0.1s linear"></div>
+  </button>
 </div>
 
 <div id="upgrade-overlay">
@@ -948,8 +951,58 @@ function showSOS() {
   }
 
   document.getElementById('sos-overlay').classList.add('show');
+  // Play audio alert so user knows SOS is active
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 300, 600].forEach(function(delay) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay/1000);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay/1000 + 0.25);
+      osc.start(ctx.currentTime + delay/1000);
+      osc.stop(ctx.currentTime + delay/1000 + 0.25);
+    });
+  } catch(e) {}
 }
+
+// Hold-to-cancel — requires 3 second hold
+var sosCancelTimer = null;
+var sosCancelProgress = 0;
 window.closeSOS = function() { document.getElementById('sos-overlay').classList.remove('show'); };
+
+function initSOSCancel() {
+  var btn = document.getElementById('sosCancelBtn');
+  var bar = document.getElementById('sosCancelBar');
+  var txt = document.getElementById('sosCancelText');
+  if(!btn) return;
+  var interval = null;
+
+  function startHold() {
+    sosCancelProgress = 0;
+    interval = setInterval(function() {
+      sosCancelProgress += 3.4; // 100 / (3000ms / 100ms)
+      bar.style.width = Math.min(100, sosCancelProgress) + '%';
+      if(sosCancelProgress >= 100) {
+        clearInterval(interval);
+        window.closeSOS();
+        bar.style.width = '0%';
+        txt.textContent = 'Hold to Cancel — 3s';
+      }
+    }, 100);
+  }
+  function stopHold() {
+    clearInterval(interval);
+    sosCancelProgress = 0;
+    bar.style.width = '0%';
+  }
+  btn.addEventListener('mousedown',  startHold);
+  btn.addEventListener('touchstart', startHold, {passive:true});
+  btn.addEventListener('mouseup',    stopHold);
+  btn.addEventListener('mouseleave', stopHold);
+  btn.addEventListener('touchend',   stopHold);
+}
 
 // ── MEDICINE ──
 function scheduleDailyMedCheck() { checkDailyMeds(); setInterval(checkDailyMeds, 60000); }
@@ -1033,11 +1086,28 @@ function handleRxUpload(event) {
   var file = event.target.files[0]; if(!file) return;
   var reader = new FileReader();
   reader.onload = function(e) {
-    document.getElementById('rx-preview-img').src = e.target.result;
-    document.getElementById('rx-preview-wrap').style.display = 'block';
-    document.getElementById('rx-upload-area').style.display = 'none';
-    rxShow('rx-scanning');
-    rxScanPrescription(e.target.result);
+    // Compress image client-side before sending — prevents serverless timeout
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX = 1200; // max dimension
+      var w = img.width, h = img.height;
+      if(w > MAX || h > MAX) {
+        if(w > h) { h = Math.round(h * MAX/w); w = MAX; }
+        else { w = Math.round(w * MAX/h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      var ctx2 = canvas.getContext('2d');
+      ctx2.drawImage(img, 0, 0, w, h);
+      var compressed = canvas.toDataURL('image/jpeg', 0.82); // 82% quality
+
+      document.getElementById('rx-preview-img').src = compressed;
+      document.getElementById('rx-preview-wrap').style.display = 'block';
+      document.getElementById('rx-upload-area').style.display = 'none';
+      rxShow('rx-scanning');
+      rxScanPrescription(compressed);
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
   event.target.value = '';
@@ -1546,7 +1616,18 @@ window.addEventListener('DOMContentLoaded', function() {
   isMuted = !S.voiceOn;
   initPlan();
   checkPaymentReturn();
+  initSOSCancel();
   if(S.onboarded) { startMain(); updatePlanUI(); }
+
+  // FIX: Mobile keyboard jump — VisualViewport API
+  if(window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+      var app = document.getElementById('app');
+      if(app) {
+        app.style.height = window.visualViewport.height + 'px';
+      }
+    });
+  }
 });
 
 // ── PWA INSTALL ──
@@ -1557,6 +1638,17 @@ window.addEventListener('beforeinstallprompt', function(e) {
 });
 
 })();
+
+// ── SERVICE WORKER REGISTRATION ──
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      console.log('SW registered');
+    }).catch(function(err) {
+      console.log('SW registration failed:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
