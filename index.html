@@ -1329,42 +1329,11 @@ function incrementMsgCount() {
 }
 
 function updatePlanUI() {
-  var status = getPlanStatus();
+  // Banner removed — upgrade modal handles limit notifications
   var banner = document.getElementById('planBanner');
-  var bannerText = document.getElementById('planBannerText');
   var counter = document.getElementById('msgCounter');
-  if(!banner || !counter) return;
-
-  if(status.type === 'trial') {
-    banner.style.display = 'flex';
-    bannerText.textContent = '🎉 Free Trial — ' + status.daysLeft + ' din baaki hain';
-    counter.style.display = 'none';
-    document.getElementById('planBannerBtn').textContent = 'Upgrade ₹99 →';
-  } else if(status.type === 'founding' || status.type === 'pro') {
-    banner.style.display = 'none';
-    counter.style.display = 'none';
-  } else {
-    // Free plan
-    var used = status.msgCount || 0;
-    var left = FREE_MSG_LIMIT - used;
-    banner.style.display = 'flex';
-    counter.style.display = 'block';
-    if(left <= 0) {
-      bannerText.textContent = '⚠️ Aaj ke 5 messages ho gaye — upgrade karein';
-      counter.textContent = 'Daily limit reached';
-      counter.className = 'msg-counter limit';
-      document.getElementById('planBannerBtn').textContent = 'Unlock ₹99 →';
-    } else if(left <= 2) {
-      bannerText.textContent = 'Free plan: sirf ' + left + ' message baaki hain aaj';
-      counter.textContent = used + ' / ' + FREE_MSG_LIMIT + ' messages used today';
-      counter.className = 'msg-counter warn';
-      document.getElementById('planBannerBtn').textContent = 'Upgrade ₹99 →';
-    } else {
-      bannerText.textContent = 'Free plan: ' + left + ' messages baaki hain aaj';
-      counter.textContent = used + ' / ' + FREE_MSG_LIMIT + ' messages used today';
-      counter.className = 'msg-counter';
-    }
-  }
+  if(banner) banner.style.display = 'none';
+  if(counter) counter.style.display = 'none';
 }
 
 function showUpgradeModal(reason) {
