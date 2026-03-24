@@ -513,4 +513,17 @@ window.addEventListener('DOMContentLoaded', function() {
   var gated = localStorage.getItem('saathi_gated_email');
   if(gated) {
     var name = localStorage.getItem('saathi_gated_name') || '';
-    document.getElementById('gateFormWra
+    document.getElementById('gateFormWrap').style.display = 'none';
+    var subText = document.getElementById('gateSubText');
+    if(subText) subText.textContent = 'Welcome back' + (name ? ', ' + name : '') + '! 🙏';
+    var succ = document.getElementById('gateSuccess');
+    if(succ) {
+      succ.style.display = 'block';
+      var p = succ.querySelector('p');
+      if(p) p.textContent = 'Click below to open Saathi AI';
+    }
+  }
+});
+</script>
+</body>
+</html>
