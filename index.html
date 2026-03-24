@@ -25,9 +25,10 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--dark)}
 body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);overscroll-behavior:none}
-#app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto;background:var(--dark);overflow:hidden;position:relative}
+#app{display:flex;flex-direction:column;height:100vh;height:100svh;max-width:430px;margin:0 auto;background:var(--dark);overflow:hidden;position:relative}
 .status-bar{height:env(safe-area-inset-top,0px);background:var(--dark2);flex-shrink:0}
-.screen{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .38s;height:100%}
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .38s;height:100%;overflow:hidden}
+#screen-main{display:flex;flex-direction:column;overflow:hidden}
 .screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
 .screen.slide-left{transform:translateX(-100%);opacity:0;pointer-events:none}
 
@@ -69,7 +70,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .qa-btn:active,.qa-btn:hover{background:rgba(245,158,11,.18);border-color:var(--amber);color:var(--amber-l)}
 
 /* CHAT */
-.chat-wrap{flex:1;overflow-y:auto;padding:12px 14px 6px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;overscroll-behavior:contain;min-height:0}
+.chat-wrap{flex:1 1 0;overflow-y:auto;padding:12px 14px 6px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;overscroll-behavior:contain;min-height:0}
 .date-div{text-align:center;margin:4px 0}
 .date-div span{background:rgba(245,158,11,.08);color:var(--muted);font-size:.67rem;padding:3px 12px;border-radius:20px;font-family:'Baloo 2'}
 .bubble-wrap{display:flex;gap:8px;max-width:90%}
