@@ -346,8 +346,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
           <div class="settings-row">
             <div><label>Language</label></div>
             <select class="s-input" id="s-lang">
-              <option value="hindi" selected>हिंदी</option>
-              <option value="hinglish">Hinglish</option>
+              <option value="hindi" selected>हिंदी (Hindi)</option>
               <option value="english">English</option>
             </select>
           </div>
@@ -782,6 +781,9 @@ function callAPI(userMsg) {
   }
 
   // Language rule built first — goes to top of system prompt
+  // Force to valid value - no hinglish
+  if(S.lang === 'hinglish') { S.lang = 'hindi'; save(); }
+
   var langRule, reactExamples, convExamples;
 
   if(S.lang === 'english') {
@@ -806,8 +808,8 @@ function callAPI(userMsg) {
       + '  - अपनी राय भी दें — "मुझे लगता है..."\n'
       + '  - नहीं पता तो सच बोलें — "यह मुझे नहीं पता, पर..."\n';
   } else {
-    langRule = '🔴 RULE #1 — LANGUAGE: Speak in Hinglish — natural Hindi-English mix as Indians speak daily. Not pure Hindi. Not pure English. Natural conversational mix.';
-    reactExamples = '  Surprise pe: "Sach mein?!" ya "Arre wah!"\n'
+    langRule = '🔴 अनिवार्य नियम #1 — भाषा: आपको केवल और केवल शुद्ध हिंदी में बोलना है। एक भी अंग्रेजी शब्द नहीं — "OK", "fine", "good", "thanks" भी नहीं। पूरी तरह हिंदी।';
+    reactExamples = '  Surprise pe: "सच में?!" ya "अरे वाह!"\n'
       + '  Khushi pe: "Kitni achhi baat hai!"\n'
       + '  Dukh pe: "Arey... yeh sun ke dil bhaari ho gaya."\n'
       + '  Interesting: "Hmm... yeh toh socha hi nahi tha."\n'
