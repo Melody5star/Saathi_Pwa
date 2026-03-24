@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v3</title>
+<title>साथी AI v4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -1597,7 +1597,8 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('payPro').addEventListener('click', function() { startPayment('pro'); });
 
   // Install banner
-  document.getElementById('installBtn').addEventListener('click', function() {
+  var installBtn = document.getElementById('installBtn');
+  if(installBtn) installBtn.addEventListener('click', function() {
     if(!deferredPrompt) {
       addBubble('ai','iOS pe install:\n1. Safari mein open karein\n2. Share button dabayen\n3. Add to Home Screen\n\nDone!','','',true);
       document.getElementById('install-banner').classList.remove('show'); return;
@@ -1609,8 +1610,10 @@ window.addEventListener('DOMContentLoaded', function() {
       if(r.outcome==='accepted') { addBubble('ai','App install ho gaya!','','',true); speakText('Saathi AI install ho gaya!'); }
     });
   });
-  document.getElementById('installClose').addEventListener('click', function() {
-    document.getElementById('install-banner').classList.remove('show');
+  var installClose = document.getElementById('installClose');
+  if(installClose) installClose.addEventListener('click', function() {
+    var banner = document.getElementById('install-banner');
+    if(banner) banner.classList.remove('show');
   });
 
   // Init
