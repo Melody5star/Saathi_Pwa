@@ -422,39 +422,11 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
 <script>
 // ── PAYMENT FROM LANDING ──
 function landingPay(plan) {
-  var btn = document.getElementById(plan === 'founding' ? 'landingPay99' : 'landingPay299');
-  if(btn) { btn.textContent = '⏳ Processing...'; btn.disabled = true; }
-
-  fetch('https://saathiai.health/api/payment', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      plan: plan,
-      userName: localStorage.getItem('saathi_gated_name') || 'Saathi User',
-      userPhone: ''
-    })
-  })
-  .then(function(r) {
-    if(!r.ok) return r.text().then(function(t){ throw new Error('Server error: ' + t.substring(0,150)); });
-    return r.json();
-  })
-  .then(function(data) {
-    if(data.error) {
-      alert('Payment error: ' + (typeof data.error==='string' ? data.error : JSON.stringify(data.error)));
-      if(btn) { btn.textContent = plan==='founding'?'🙏 Start ₹99/month':'Start ₹299/month'; btn.disabled=false; }
-      return;
-    }
-    if(data.paymentUrl) {
-      window.location.href = data.paymentUrl;
-    } else {
-      alert('No payment URL. Please try again.');
-      if(btn) { btn.disabled=false; }
-    }
-  })
-  .catch(function(err) {
-    alert('Payment failed: ' + err.message);
-    if(btn) { btn.textContent = plan==='founding'?'🙏 Start ₹99/month':'Start ₹299/month'; btn.disabled=false; }
-  });
+  var links = {
+    founding: 'https://imjo.in/EzXA7R',
+    pro:      'https://imjo.in/rRUujn'
+  };
+  window.location.href = links[plan] || links.founding;
 }
 
 // ── EMAIL GATE ──
