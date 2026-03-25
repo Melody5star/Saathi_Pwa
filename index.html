@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v13</title>
+<title>साथी AI v14</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -279,22 +279,22 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div class="ob-section-title">👤 Your Details</div>
         <div class="ob-field">
           <label class="ob-label">Name *</label>
-          <input class="ob-input" id="ob-name" type="text" placeholder="Your full name" oninput="obCheck('ob-name','err-name',this.value.trim().length>=2,'Name must be at least 2 characters')">
+          <input class="ob-input" id="ob-name" type="text" placeholder="Your full name">
           <div class="ob-err" id="err-name">Name must be at least 2 characters</div>
         </div>
         <div class="ob-field">
           <label class="ob-label">Email *</label>
-          <input class="ob-input" id="ob-email" type="email" placeholder="your@email.com" oninput="obCheck('ob-email','err-email',/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(this.value),'Enter valid email — e.g. name@gmail.com')">
+          <input class="ob-input" id="ob-email" type="email" placeholder="your@email.com">
           <div class="ob-err" id="err-email">Please enter a valid email address</div>
         </div>
         <div class="ob-field">
           <label class="ob-label">Date of Birth *</label>
-          <input class="ob-input" id="ob-dob" type="date" onchange="var d=new Date(this.value),age=(Date.now()-d)/31557600000;obCheck('ob-dob','err-dob',age>=1&&age<=110,'Enter a valid date of birth')">
+          <input class="ob-input" id="ob-dob" type="date">
           <div class="ob-err" id="err-dob">Please enter a valid date of birth</div>
         </div>
         <div class="ob-field">
           <label class="ob-label">Phone Number *</label>
-          <input class="ob-input" id="ob-phone" type="tel" placeholder="10-digit mobile number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10);var d=this.value.length;obCheck('ob-phone','err-phone',/^[6-9]\d{9}$/.test(this.value),d>0&&d<10?(d+' of 10 digits'):'Enter 10-digit number starting with 6,7,8 or 9')">
+          <input class="ob-input" id="ob-phone" type="tel" placeholder="10-digit mobile number" maxlength="10">
           <div class="ob-err" id="err-phone">Please enter a valid 10-digit mobile number</div>
         </div>
       </div>
@@ -308,7 +308,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         </div>
         <div class="ob-field">
           <label class="ob-label">Family member phone</label>
-          <input class="ob-input" id="ob-fam-phone" type="tel" placeholder="10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10);if(this.value.length>0)obCheck('ob-fam-phone','err-fam-phone',/^[6-9]\d{9}$/.test(this.value),'Enter valid 10-digit number')">
+          <input class="ob-input" id="ob-fam-phone" type="tel" placeholder="10-digit number" maxlength="10">
           <div class="ob-err" id="err-fam-phone">Please enter a valid 10-digit number</div>
         </div>
       </div>
@@ -1521,29 +1521,6 @@ function checkPaymentReturn() {
 }
 
 // ── WIRE UP ALL BUTTONS (no inline onclick) ──
-// ── INLINE VALIDATION HELPER ──
-function obCheck(inputId, errId, isValid, errMsg) {
-  var inp = document.getElementById(inputId);
-  var err = document.getElementById(errId);
-  if(!inp || !err) return;
-  if(inp.value.length === 0) {
-    inp.style.borderColor = '';
-    inp.style.background = '';
-    err.style.display = 'none';
-    return;
-  }
-  if(isValid) {
-    inp.style.borderColor = '#22c55e';
-    inp.style.background = 'rgba(34,197,94,0.06)';
-    err.style.display = 'none';
-  } else {
-    inp.style.borderColor = '#ef4444';
-    inp.style.background = 'rgba(239,68,68,0.06)';
-    err.textContent = '⚠ ' + errMsg;
-    err.style.display = 'block';
-  }
-}
-
 window.addEventListener('DOMContentLoaded', function() {
 
   // ── ONBOARDING VALIDATION ──
@@ -1691,43 +1668,29 @@ window.addEventListener('DOMContentLoaded', function() {
   attachFieldListeners();
 
   document.getElementById('startBtn').addEventListener('click', function() {
-    // Validate all required fields
-    var nameOk  = validateField('ob-name',  'err-name',  function(v){ return v.length >= 2; }, 'Name is required', 'At least 2 characters required');
-    var emailOk = validateField('ob-email', 'err-email', isValidEmail, 'Email is required', 'Enter a valid email — e.g. name@gmail.com');
-    var dobOk   = validateField('ob-dob',   'err-dob',   isValidDOB,   'Date of birth is required', 'Enter a valid date of birth');
-    var phoneOk = validateField('ob-phone', 'err-phone', isValidPhone, 'Phone number is required', 'Enter valid 10-digit number (starting 6,7,8 or 9)');
+    var nameOk  = checkField('ob-name',  'err-name',  function(v){ return v.length>=2; }, 'Name is required', 'Enter your full name');
+    var emailOk = checkField('ob-email', 'err-email', function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }, 'Email is required', 'Enter valid email — e.g. name@gmail.com');
+    var dobOk   = checkField('ob-dob',   'err-dob',   function(v){ var d=new Date(v),a=(Date.now()-d)/31557600000; return a>=1&&a<=110; }, 'Date of birth is required', 'Enter valid date of birth');
+    var phoneOk = checkField('ob-phone', 'err-phone', function(v){ return /^[6-9]\d{9}$/.test(v.replace(/\D/g,'')); }, 'Phone number is required', 'Enter 10-digit number starting with 6,7,8 or 9');
 
-    // Optional family phone
-    var famPhone = (document.getElementById('ob-fam-phone') || {}).value || '';
-    var famPhoneOk = !famPhone.trim() || isValidPhone(famPhone.trim());
-    if (!famPhoneOk) {
-      markField('ob-fam-phone', 'error');
-      showErr('err-fam-phone', 'Enter a valid 10-digit number');
-    }
-
-    if (!nameOk || !emailOk || !dobOk || !phoneOk || !famPhoneOk) {
-      // Scroll to first red field
-      var first = document.querySelector('#screen-onboard .ob-input.error');
-      if (first) {
-        first.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        first.style.animation = 'shake 0.4s ease';
-        setTimeout(function() { first.style.animation = ''; }, 500);
-      }
+    if(!nameOk || !emailOk || !dobOk || !phoneOk) {
+      var first = document.querySelector('#screen-onboard .ob-input[style*="ef4444"]');
+      if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
       return;
     }
 
-    // All valid — save and start
-    S.name     = document.getElementById('ob-name').value.trim();
-    S.email    = document.getElementById('ob-email').value.trim();
-    S.dob      = document.getElementById('ob-dob').value;
-    S.phone    = document.getElementById('ob-phone').value.trim();
-    S.family   = (document.getElementById('ob-family').value || '').trim();
-    S.famPhone = (document.getElementById('ob-fam-phone').value || '').trim();
+    S.name      = document.getElementById('ob-name').value.trim();
+    S.email     = document.getElementById('ob-email').value.trim();
+    S.dob       = document.getElementById('ob-dob').value;
+    S.phone     = document.getElementById('ob-phone').value.trim();
+    S.family    = (document.getElementById('ob-family').value||'').trim();
+    S.famPhone  = (document.getElementById('ob-fam-phone').value||'').trim();
     S.onboarded = true;
     save();
-    if (window.speechSynthesis) { window.speechSynthesis.speak(new SpeechSynthesisUtterance('')); }
+    if(window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
     startMain();
   });
+
 
 
 
