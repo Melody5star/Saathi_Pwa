@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v10</title>
+<title>साथी AI v11</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -46,8 +46,8 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .ob-input:focus{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.09)}
 .ob-input::placeholder{color:rgba(254,243,199,.25)}
 .ob-input.error{border-color:#ef4444;background:rgba(239,68,68,.06)}
-.ob-err{font-size:.75rem;color:#fca5a5;margin-top:6px;display:none;padding:6px 10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;line-height:1.4}
-.ob-err.visible{display:block}
+.ob-err{font-size:.75rem;color:#fca5a5;margin-top:6px;display:none;padding:6px 10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:8px;line-height:1.5;font-weight:600}
+.ob-err.visible{display:block !important}
 .ob-input.success{border-color:#22c55e !important;background:rgba(34,197,94,.05) !important}
 .ob-input.error{border-color:#ef4444 !important;background:rgba(239,68,68,.06) !important}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
@@ -1431,19 +1431,31 @@ function startPayment(plan) {
       userPhone: S.phone || ''
     })
   })
-  .then(function(r) { return r.json(); })
+    .then(function(r) {
+    if(!r.ok) {
+      return r.text().then(function(t) {
+        throw new Error('HTTP ' + r.status + ': ' + t.substring(0,200));
+      });
+    }
+    return r.json();
+  })
   .then(function(data) {
     if(data.error) {
-      alert('API Error: ' + JSON.stringify(data.error) + '\n\nDebug: ' + JSON.stringify(data));
-      if(btn) { btn.textContent = plan==='founding'?'🙏 ₹99 se Shuru Karen':'Choose Pro — ₹299/month'; btn.disabled=false; }
+      var msg = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+      alert('Payment failed: ' + msg);
+      if(btn) { btn.textContent = plan==='founding'?'Start at ₹99/month':'Choose Pro — ₹299/month'; btn.disabled=false; }
       return;
     }
-    // Instamojo opens payment page — redirect user
+    if(!data.paymentUrl) {
+      alert('No payment URL returned. Check Vercel logs.');
+      if(btn) { btn.disabled=false; }
+      return;
+    }
     window.location.href = data.paymentUrl;
   })
   .catch(function(err) {
-    alert('Payment error: ' + err.message + '\nCheck Vercel env variables: INSTAMOJO_API_KEY, INSTAMOJO_AUTH_TOKEN');
-    if(btn) { btn.textContent = plan==='founding'?'🙏 ₹99 se Shuru Karen':'Choose Pro — ₹299/month'; btn.disabled=false; }
+    alert('Payment error:\n' + err.message);
+    if(btn) { btn.textContent = plan==='founding'?'Start at ₹99/month':'Choose Pro — ₹299/month'; btn.disabled=false; }
   });
 }
 
@@ -1501,9 +1513,11 @@ window.addEventListener('DOMContentLoaded', function() {
     var el = document.getElementById(id);
     if (!el) return;
     if (msg) {
-      el.textContent = msg;
+      el.textContent = '⚠ ' + msg;
+      el.classList.add('visible');
       el.style.display = 'block';
     } else {
+      el.classList.remove('visible');
       el.style.display = 'none';
     }
   }
