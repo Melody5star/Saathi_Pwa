@@ -51,6 +51,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .ob-err.visible{display:block}
 .ob-input.error{border-color:#ef4444;background:rgba(239,68,68,.06)}
 .ob-input.success{border-color:#22c55e;background:rgba(34,197,94,.05)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:14px;font-family:'Baloo 2',sans-serif;font-size:1.05rem;font-weight:800;color:#fff;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 6px 20px rgba(245,158,11,.3)}
 .ob-btn:active{transform:scale(.97);opacity:.9}
 .ob-btn:disabled{opacity:.6;cursor:not-allowed}
@@ -1610,7 +1611,14 @@ window.addEventListener('DOMContentLoaded', function() {
     if(!valid) {
       // Scroll to first error field
       var firstErr = document.querySelector('.ob-input.error');
-      if(firstErr) firstErr.scrollIntoView({behavior:'smooth', block:'center'});
+      if(firstErr) {
+        firstErr.scrollIntoView({behavior:'smooth', block:'center'});
+        // Shake animation on all error fields
+        document.querySelectorAll('.ob-input.error').forEach(function(el) {
+          el.style.animation = 'shake 0.4s ease';
+          setTimeout(function() { el.style.animation = ''; }, 400);
+        });
+      }
       return;
     }
 
