@@ -1,20 +1,5 @@
-// ══════════════════════════════════════════════════════
-//  साथी AI — Instamojo Payment API
-//  File: api/payment.js
-//  Env vars in Vercel:
-//    INSTAMOJO_API_KEY
-//    INSTAMOJO_AUTH_TOKEN
-//    INSTAMOJO_PRIVATE_SALT
-// ══════════════════════════════════════════════════════
-
-// Auto-detect test vs live mode from API key
-// Test keys start with 'test_' — live keys start with different prefix
-function getBase(apiKey) {
-  if(apiKey && apiKey.startsWith('test_')) {
-    return 'https://test.instamojo.com/api/1.1';
-  }
-  return 'https://api.instamojo.com/api/1.1';
-}
+// साथी AI — Payment API (Instamojo)
+// Vercel env vars needed: INSTAMOJO_API_KEY, INSTAMOJO_AUTH_TOKEN
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,84 +8,82 @@ module.exports = async function handler(req, res) {
   if(req.method === 'OPTIONS') return res.status(200).end();
   if(req.method !== 'POST') return res.status(405).json({error:'Method not allowed'});
 
+  const API_KEY   = process.env.INSTAMOJO_API_KEY;
+  const AUTH_TOKEN = process.env.INSTAMOJO_AUTH_TOKEN;
+
+  if(!API_KEY || !AUTH_TOKEN) {
+    return res.status(500).json({error:'Instamojo keys not configured in Vercel Environment Variables'});
+  }
+
+  // Correct URLs — test vs live
+  const isTest = API_KEY.startsWith('test_');
+  const BASE = isTest
+    ? 'https://test.instamojo.com/api/1.1'
+    : 'https://www.instamojo.com/api/1.1';
+
   const { action, plan, userName, userPhone, paymentId } = req.body;
 
-  // ── VERIFY PAYMENT (webhook / confirm after payment) ──
+  // ── VERIFY PAYMENT after redirect ──
   if(action === 'verify' && paymentId) {
     try {
-      const base = getBase(process.env.INSTAMOJO_API_KEY);
-      const r = await fetch(`${base}/payments/${paymentId}/`, {
-        headers: {
-          'X-Api-Key':    process.env.INSTAMOJO_API_KEY,
-          'X-Auth-Token': process.env.INSTAMOJO_AUTH_TOKEN
-        }
+      const r = await fetch(`${BASE}/payments/${paymentId}/`, {
+        headers: { 'X-Api-Key': API_KEY, 'X-Auth-Token': AUTH_TOKEN }
       });
       const data = await r.json();
-      if(data.payment && data.payment.status === 'Credit') {
-        return res.status(200).json({ verified: true, payment: data.payment });
-      }
-      return res.status(200).json({ verified: false });
+      const verified = data.payment && data.payment.status === 'Credit';
+      return res.status(200).json({ verified, payment: data.payment });
     } catch(err) {
-      return res.status(500).json({error: 'Verification error: ' + err.message});
+      return res.status(500).json({error: err.message});
     }
   }
 
   // ── CREATE PAYMENT REQUEST ──
-  if(!process.env.INSTAMOJO_API_KEY) {
-    return res.status(500).json({error:'INSTAMOJO_API_KEY not set in Vercel'});
-  }
-
-  // Plan config
   const plans = {
-    founding: {
-      amount: '99',
-      name:   'Saathi AI — Founding Member',
-      desc:   '3 months at Rs.99/month, then Rs.299/month. Unlimited conversations, reminders, prescription reader, SOS.'
-    },
-    pro: {
-      amount: '299',
-      name:   'Saathi AI Pro',
-      desc:   'Monthly subscription — unlimited conversations, all features unlocked.'
-    }
+    founding: { amount: '99',  name: 'Saathi AI Basic',  desc: 'Saathi AI — 3 months at Rs.99/month, then Rs.299/month' },
+    pro:      { amount: '299', name: 'Saathi AI Pro',     desc: 'Saathi AI Pro — Monthly subscription, all features' }
   };
   const selected = plans[plan] || plans.founding;
-
-  // Redirect URL — after payment Instamojo sends user here
-  const redirectUrl = 'https://saathiai.health?payment=success&plan=' + (plan||'founding');
+  const redirectUrl = 'https://saathiai.health/app?payment=success&plan=' + (plan || 'founding');
 
   try {
-    // Build form data
-    const formData = new URLSearchParams();
-    formData.append('purpose',      selected.name);
-    formData.append('amount',       selected.amount);
-    formData.append('description',  selected.desc);
-    formData.append('redirect_url', redirectUrl);
-    formData.append('allow_repeated_payments', 'True');
-    if(userName)  formData.append('buyer_name', userName);
-    if(userPhone) formData.append('phone',      userPhone);
+    const body = new URLSearchParams();
+    body.append('purpose',      selected.name);
+    body.append('amount',       selected.amount);
+    body.append('description',  selected.desc);
+    body.append('redirect_url', redirectUrl);
+    body.append('allow_repeated_payments', 'True');
+    body.append('send_email', 'False');
+    body.append('send_sms', 'False');
+    if(userName && userName !== 'Saathi User') body.append('buyer_name', userName);
+    if(userPhone && userPhone.length === 10) body.append('phone', userPhone);
 
-    const base2 = getBase(process.env.INSTAMOJO_API_KEY);
-    const r = await fetch(`${base2}/payment-requests/`, {
+    const r = await fetch(`${BASE}/payment-requests/`, {
       method: 'POST',
       headers: {
-        'X-Api-Key':    process.env.INSTAMOJO_API_KEY,
-        'X-Auth-Token': process.env.INSTAMOJO_AUTH_TOKEN,
+        'X-Api-Key':    API_KEY,
+        'X-Auth-Token': AUTH_TOKEN,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: formData.toString()
+      body: body.toString()
     });
 
-    const data = await r.json();
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e) { return res.status(500).json({error: 'Invalid response from Instamojo: ' + text.substring(0,200)}); }
 
     if(!data.success) {
-      return res.status(400).json({error: JSON.stringify(data.message || data) || 'Payment request failed', debug: data});
+      return res.status(400).json({
+        error: data.message || JSON.stringify(data),
+        debug: data
+      });
     }
 
     return res.status(200).json({
       paymentUrl: data.payment_request.longurl,
       paymentId:  data.payment_request.id,
-      plan:       plan,
-      amount:     selected.amount
+      amount:     selected.amount,
+      plan:       plan
     });
 
   } catch(err) {
