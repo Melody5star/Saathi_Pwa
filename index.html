@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v5</title>
+<title>साथी AI v9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -37,14 +37,21 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .ob-logo-icon{width:88px;height:88px;margin:0 auto 14px;display:block}
 .ob-title{font-size:2.6rem;font-weight:800;color:var(--amber);line-height:1}
 .ob-sub{font-size:1rem;color:var(--muted);margin-top:5px}
-.ob-form{width:100%;max-width:320px;margin-top:32px;display:flex;flex-direction:column;gap:12px}
-.ob-label{font-size:.75rem;color:var(--muted);letter-spacing:1px;text-align:left;margin-bottom:-4px}
-.ob-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;font-family:'Baloo 2',sans-serif;font-size:1rem;color:var(--text);outline:none;transition:border-color .2s}
-.ob-input:focus{border-color:var(--amber)}
-.ob-input::placeholder{color:var(--muted)}
-.ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:var(--r);font-family:'Baloo 2',sans-serif;font-size:1.05rem;font-weight:800;color:#fff;cursor:pointer;margin-top:6px;transition:opacity .2s,transform .15s}
+.ob-form{width:100%;max-width:340px;margin-top:24px;display:flex;flex-direction:column;gap:0}
+.ob-section{margin-bottom:20px}
+.ob-section-title{font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ob-field{margin-bottom:12px}
+.ob-label{font-size:.78rem;color:rgba(254,243,199,.6);margin-bottom:5px;display:block;font-weight:600}
+.ob-input{width:100%;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.15);border-radius:12px;padding:13px 16px;font-family:'Baloo 2',sans-serif;font-size:.97rem;color:var(--text);outline:none;transition:border-color .2s,background .2s}
+.ob-input:focus{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.09)}
+.ob-input::placeholder{color:rgba(254,243,199,.25)}
+.ob-input.error{border-color:#ef4444;background:rgba(239,68,68,.06)}
+.ob-err{font-size:.72rem;color:#ef4444;margin-top:4px;display:none}
+.ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:14px;font-family:'Baloo 2',sans-serif;font-size:1.05rem;font-weight:800;color:#fff;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 6px 20px rgba(245,158,11,.3)}
 .ob-btn:active{transform:scale(.97);opacity:.9}
-.ob-skip{font-size:.82rem;color:var(--muted);margin-top:12px;cursor:pointer;text-decoration:underline}
+.ob-btn:disabled{opacity:.6;cursor:not-allowed}
+.ob-skip{font-size:.8rem;color:var(--muted);margin-top:14px;cursor:pointer;text-decoration:underline;text-align:center}
+.ob-trial-note{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;font-size:.78rem;color:var(--amber-l);line-height:1.6;margin-top:4px;margin-bottom:14px;text-align:center}
 .ob-who-btn{width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);font-family:'Baloo 2',sans-serif;font-size:.9rem;color:var(--text);cursor:pointer;text-align:left;transition:all .2s}
 .ob-who-btn:hover,.ob-who-btn.selected{background:rgba(245,158,11,.15);border-color:var(--amber);color:var(--amber-l)}
 
@@ -123,15 +130,15 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .sos-cancel{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:10px 28px;border-radius:24px;font-family:'Baloo 2',sans-serif;font-size:.9rem;cursor:pointer;margin-top:4px}
 
 /* INSTALL */
-#install-banner{position:fixed;bottom:0;left:0;right:0;z-index:500;transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1)}
-#install-banner.show{transform:translateY(0)}
-.install-inner{background:var(--dark2);border-top:1px solid var(--border);padding:8px 14px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;max-width:430px;margin:0 auto}
-.install-icon{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--amber-d),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
-.install-text{flex:1}
-.install-text strong{font-size:.78rem;color:var(--text);display:block}
-.install-text span{font-size:.68rem;color:var(--muted)}
-.install-btn{background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;padding:6px 14px;border-radius:20px;font-family:'Baloo 2',sans-serif;font-size:.75rem;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap}
-.install-x{background:transparent;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px}
+
+
+
+
+
+
+
+
+
 
 /* SETTINGS + NOTES */
 #screen-settings,#screen-notes{background:var(--dark)}
@@ -205,88 +212,105 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 <div id="upgrade-overlay">
   <div class="upgrade-sheet">
     <button class="upgrade-close" id="upgradeClose">✕</button>
-    <div class="upgrade-title" id="upgradeTitle">🔓 Saathi Unlock karein</div>
-    <div class="upgrade-sub" id="upgradeSub">Aaj ka free limit ho gaya. Aage baat karne ke liye upgrade karein.</div>
+    <div class="upgrade-title" id="upgradeTitle">🔓 Unlock Saathi</div>
+    <div class="upgrade-sub" id="upgradeSub">Daily free limit reached. Upgrade to continue.</div>
 
-    <!-- Founding Member Plan -->
+    <!-- Plan 1: Basic ₹99 -->
     <div class="plan-card featured" id="planFounding">
-      <div class="plan-popular">⭐ Founding Member — Limited Offer</div>
+      <div class="plan-popular">⭐ Most Popular</div>
       <div style="margin-top:10px">
-        <div class="plan-name">साथी Founding Plan</div>
-        <div class="plan-price">₹99 <span>/ month for 3 months</span></div>
-        <div class="plan-desc" style="color:var(--amber-l)">Phir sirf ₹299/month — aur founding members ko hamesha special support milega</div>
+        <div class="plan-name">साथी Basic</div>
+        <div class="plan-price">₹99 <span>/ month</span></div>
+        <div class="plan-desc" style="color:var(--amber-l)">First 3 months at ₹99 — founding member special price</div>
         <div class="plan-feats">
-          ✓ Unlimited conversations<br>
-          ✓ Unlimited reminders<br>
-          ✓ Prescription reader<br>
-          ✓ Voice + Notes + SOS<br>
-          ✓ Early access to new features
+          ✓ Unlimited baat-cheet (chat + voice)<br>
+          ✓ Medicine reminders<br>
+          ✓ Memory notes<br>
+          ✓ SOS emergency button<br>
+          ✓ Hindi + English support
         </div>
       </div>
-      <button class="pay-btn" id="payFounding">🙏 ₹99 se Shuru Karen — Abhi</button>
+      <button class="pay-btn" id="payFounding">🙏 Start at ₹99/month</button>
     </div>
 
-    <!-- Pro Plan -->
-    <div class="plan-card" id="planPro" style="opacity:.8">
+    <!-- Plan 2: Pro ₹299 -->
+    <div class="plan-card" id="planPro">
       <div class="plan-name">साथी Pro</div>
       <div class="plan-price">₹299 <span>/ month</span></div>
-      <div class="plan-desc">Standard plan — sab kuch unlimited</div>
-      <button class="pay-btn" style="background:rgba(245,158,11,.15);color:var(--amber);box-shadow:none;border:1px solid rgba(245,158,11,.3)" id="payPro">Choose Pro — ₹299/month</button>
+      <div class="plan-desc">Most features — including doctor visit support</div>
+      <div class="plan-feats" style="font-size:.8rem;color:var(--muted);line-height:1.8;margin:8px 0">
+        ✓ All Basic features +<br>
+        ✓ Prescription scanner (read doctor documents)<br>
+        ✓ AI health insights from reports<br>
+        ✓ Auto medicine reminder from prescription<br>
+        ✓ 30-day BP/Sugar report (PDF)
+      </div>
+      <button class="pay-btn" style="background:rgba(245,158,11,.12);color:var(--amber);box-shadow:none;border:1.5px solid rgba(245,158,11,.35)" id="payPro">Choose Pro — ₹299/month</button>
     </div>
 
     <div class="upgrade-free-note">
-      🔒 Secure payment via Razorpay · UPI, Card, NetBanking accepted<br>
+      🔒 Secure payment via Instamojo · UPI, Card, NetBanking<br>
       Cancel anytime · No hidden charges
     </div>
   </div>
 </div>
-  <div class="install-inner">
-    <div class="install-icon">🙏</div>
-    <div class="install-text">
-      <strong>साथी AI — Install करें</strong>
-      <span>Home screen पर add करें — हमेशा ready</span>
-    </div>
-    <button class="install-btn" id="installBtn">Install</button>
-    <button class="install-x" id="installClose" onclick="document.getElementById('install-banner').style.transform='translateY(100%)';return false;">✕</button>
-  </div>
-</div>
+  
 
 <div id="app">
   <div class="status-bar"></div>
 
   <div class="screen" id="screen-onboard">
-    <svg class="ob-logo-icon" viewBox="0 0 90 90" fill="none">
-      <defs>
-        <linearGradient id="og" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#FDE68A"/><stop offset="100%" stop-color="#D97706"/>
-        </linearGradient>
-        <filter id="gf"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <circle cx="45" cy="45" r="42" fill="#1E1408" stroke="url(#og)" stroke-width="1.5" opacity="0.6"/>
-      <path d="M38 10 A35 35 0 0 0 38 80" stroke="#F59E0B" stroke-width="7" stroke-linecap="round" fill="none"/>
-      <path d="M52 10 A35 35 0 0 1 52 80" stroke="#D97706" stroke-width="7" stroke-linecap="round" fill="none"/>
-      <path d="M45 55 C31 45 24 35 30 26 C34 20 41 23 45 31 C49 23 56 20 60 26 C66 35 59 45 45 55Z" fill="url(#og)" filter="url(#gf)"/>
-      <circle cx="57" cy="18" r="3" fill="#FDE68A" opacity="0.9"/>
-      <circle cx="62" cy="35" r="2.5" fill="#F59E0B" opacity="0.7"/>
-      <circle cx="62" cy="55" r="2.5" fill="#F59E0B" opacity="0.7"/>
-      <circle cx="57" cy="72" r="3" fill="#FDE68A" opacity="0.9"/>
-    </svg>
-    <div class="ob-title">साथी AI</div>
-    <div class="ob-sub">Aapka apna digital saathi 🙏</div>
+    <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#D97706,#EA580C);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 10px;box-shadow:0 8px 24px rgba(245,158,11,.35)">🙏</div>
+    <div class="ob-title" style="font-size:1.9rem">साथी AI</div>
+    <div class="ob-sub" style="font-size:.88rem;margin-top:4px">Your personal AI companion</div>
+
+    <div class="ob-trial-note">
+      ✨ 7 din FREE — unlimited baat karo, koi limit nahi<br>
+      Phir sirf ₹99/month se shuru
+    </div>
 
     <div class="ob-form">
-      <div class="ob-label">Naam / Name</div>
-      <input class="ob-input" id="ob-name" type="text" placeholder="Aapka naam...">
+      <!-- Personal Details -->
+      <div class="ob-section">
+        <div class="ob-section-title">👤 Your Details</div>
+        <div class="ob-field">
+          <label class="ob-label">Name *</label>
+          <input class="ob-input" id="ob-name" type="text" placeholder="Your full name">
+          <div class="ob-err" id="err-name">Name must be at least 2 characters</div>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Email *</label>
+          <input class="ob-input" id="ob-email" type="email" placeholder="aap@example.com">
+          <div class="ob-err" id="err-email">Please enter a valid email address</div>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Date of Birth *</label>
+          <input class="ob-input" id="ob-dob" type="date" placeholder="DD/MM/YYYY">
+          <div class="ob-err" id="err-dob">Please enter a valid date of birth</div>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Phone Number *</label>
+          <input class="ob-input" id="ob-phone" type="tel" placeholder="10-digit mobile number" maxlength="10">
+          <div class="ob-err" id="err-phone">Please enter a valid 10-digit mobile number</div>
+        </div>
+      </div>
 
-      <div class="ob-label">Phone number</div>
-      <input class="ob-input" id="ob-phone" type="tel" placeholder="+91 XXXXXXXXXX">
+      <!-- Family Details -->
+      <div class="ob-section">
+        <div class="ob-section-title">👨‍👩‍👧 Family Member (Emergency Contact)</div>
+        <div class="ob-field">
+          <label class="ob-label">Family member name</label>
+          <input class="ob-input" id="ob-family" type="text" placeholder="e.g. Priya, Rahul.">
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Family member phone</label>
+          <input class="ob-input" id="ob-fam-phone" type="tel" placeholder="10-digit number" maxlength="10">
+          <div class="ob-err" id="err-fam-phone">Please enter a valid 10-digit number</div>
+        </div>
+      </div>
 
-      <div class="ob-label">Family member ka naam (optional)</div>
-      <input class="ob-input" id="ob-family" type="text" placeholder="Jaise: Priya, Rahul...">
-
-      <button class="ob-btn" id="startBtn">🙏 Sign Up — Start</button>
+      <button class="ob-btn" id="startBtn">🚀 Start 7-Day Free Trial</button>
     </div>
-    <div class="ob-skip" id="skipBtn">Skip — seedha shuru karein</div>
   </div>
 
   <div class="screen hidden" id="screen-main">
@@ -422,8 +446,8 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 
       <div id="rx-upload-area" style="border:2px dashed rgba(245,158,11,0.35);border-radius:18px;padding:28px 20px;text-align:center;background:rgba(245,158,11,0.04)">
         <div style="font-size:2.5rem;margin-bottom:10px">📄</div>
-        <div style="font-family:'Baloo 2';font-size:1rem;font-weight:700;color:var(--amber);margin-bottom:6px">Prescription upload karein</div>
-        <div style="font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:16px">Doctor ki parchi ki photo lein ya gallery se choose karein</div>
+        <div style="font-family:'Baloo 2';font-size:1rem;font-weight:700;color:var(--amber);margin-bottom:6px">Upload Prescription</div>
+        <div style="font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:16px">Take a photo of your doctor's prescription or choose from gallery</div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <label style="background:linear-gradient(135deg,var(--amber),var(--saffron));color:#fff;padding:11px 22px;border-radius:24px;font-family:'Baloo 2';font-size:.88rem;font-weight:700;cursor:pointer;display:inline-block">
             📷 Camera se lein
@@ -449,12 +473,12 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 
       <div id="rx-results" style="display:none;flex-direction:column;gap:12px">
         <div style="font-family:'Baloo 2';font-size:.95rem;font-weight:700;color:var(--text)">✅ Medicines detect ho gayi!</div>
-        <div style="font-size:.8rem;color:var(--muted)">Check karo — time sahi lag raha hai toh reminder set kar sakte ho</div>
+        <div style="font-size:.8rem;color:var(--muted)">Verify the details — set reminders if everything looks correct</div>
         <div id="rx-med-list" style="display:flex;flex-direction:column;gap:10px"></div>
         <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:16px;padding:16px;margin-top:4px">
           <div style="font-family:'Baloo 2';font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:10px">⏰ Daily reminder chahiye?</div>
           <div style="display:flex;gap:10px">
-            <button id="rx-yes-btn" style="flex:1;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;padding:13px;border-radius:12px;font-family:'Baloo 2';font-size:.9rem;font-weight:700;color:#fff;cursor:pointer">✓ Haan, set karo</button>
+            <button id="rx-yes-btn" style="flex:1;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;padding:13px;border-radius:12px;font-family:'Baloo 2';font-size:.9rem;font-weight:700;color:#fff;cursor:pointer">✓ Yes, set reminders</button>
             <button id="rx-no-btn" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);padding:13px;border-radius:12px;font-family:'Baloo 2';font-size:.9rem;color:var(--muted);cursor:pointer">Nahi, sirf dekh raha hoon</button>
           </div>
         </div>
@@ -464,7 +488,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div style="font-size:1.8rem;margin-bottom:8px">😕</div>
         <div style="font-family:'Baloo 2';color:#FCA5A5;font-size:.92rem;margin-bottom:4px">Prescription clearly nahi dikh rahi</div>
         <div style="font-size:.78rem;color:rgba(252,165,165,0.7);margin-bottom:12px">Achhi roshni mein, seedhi photo lein</div>
-        <button id="rx-retry-btn" style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#FCA5A5;padding:8px 20px;border-radius:20px;font-family:'Baloo 2';font-size:.82rem;cursor:pointer">Dobara try karein</button>
+        <button id="rx-retry-btn" style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#FCA5A5;padding:8px 20px;border-radius:20px;font-family:'Baloo 2';font-size:.82rem;cursor:pointer">Try again</button>
       </div>
 
       <div id="rx-success" style="display:none;text-align:center;padding:16px">
@@ -675,7 +699,7 @@ function saveNoteFromChat(text) {
 function renderNotes() {
   var el = document.getElementById('notesList');
   var notes = loadNotes();
-  if(!notes.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.88rem;padding:32px 0">Abhi koi note nahi hai.<br><br>Koi yaad, kavita, kaam — yahan save karo.</div>'; return; }
+  if(!notes.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.88rem;padding:32px 0">No notes yet.<br><br>Save memories, poems, tasks — anything here.</div>'; return; }
   el.innerHTML = notes.map(function(n) {
     return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;position:relative">'
       + '<div style="font-size:.92rem;color:var(--text);line-height:1.6;white-space:pre-wrap;padding-right:28px">' + n.text.replace(/</g,'&lt;') + '</div>'
@@ -855,7 +879,7 @@ function callAPI(userMsg) {
   }).then(function(res){ return res.json(); }).then(function(data) {
     hideTyping();
     if(data.error) { addBubble('ai', 'Error: ' + data.error); return; }
-    var reply = data.reply || 'Maafi, kuch gadbad ho gayi. Dobara try karein.';
+    var reply = data.reply || 'Maafi, kuch gadbad ho gayi. Try again.';
 
     if(parseCancelTag(reply)) {
       cancelAllReminders();
@@ -890,7 +914,7 @@ function callAPI(userMsg) {
     speakText(reply);
   }).catch(function() {
     hideTyping();
-    addBubble('ai', 'Network mein thodi problem. Dobara try karein.');
+    addBubble('ai', 'Network mein thodi problem. Try again.');
   });
 }
 
@@ -917,10 +941,13 @@ function showSOS() {
   var c = document.getElementById('sosContacts'); c.innerHTML = '';
 
   // If family/contact exists
-  if(S.phone) {
-    var label = S.family || 'Emergency contact';
+  // Use famPhone if available, else fall back to S.phone
+  var sosPhone = S.famPhone || S.phone;
+  var sosLabel = S.family || 'Emergency contact';
+  if(sosPhone) {
+    var label = sosLabel;
     var call = document.createElement('button'); call.className = 'sos-contact-btn';
-    call.innerHTML = '📞 Call ' + label + ' — ' + S.phone;
+    call.innerHTML = '📞 Call ' + label + ' — ' + sosPhone;
     call.onclick = function() { window.location.href = 'tel:' + S.phone; };
     c.appendChild(call);
 
@@ -1251,10 +1278,10 @@ function rxShowHandwritten() {
   var errEl = document.getElementById('rx-error');
   errEl.innerHTML = '<div style="font-size:1.8rem;margin-bottom:10px">✍️</div>'
     + '<div style="font-family:\'Baloo 2\',sans-serif;color:#FCA5A5;font-size:.95rem;font-weight:700;margin-bottom:6px">Handwritten prescription nahi chalegi</div>'
-    + '<div style="font-size:.8rem;color:rgba(252,165,165,0.75);line-height:1.6;margin-bottom:14px">Sirf printed / typed doctor prescription accept hogi — jaise hospital ya clinic se milti hai.<br><br>Handwritten parchi ke liye medicines manually Settings mein add karein.</div>'
+    + '<div style="font-size:.8rem;color:rgba(252,165,165,0.75);line-height:1.6;margin-bottom:14px">Only printed/typed doctor prescriptions accepted — from hospital or clinic.<br><br>For handwritten prescriptions, add medicines manually in Settings.</div>'
     + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
-    + '<button id="rx-retry-btn2" style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#FCA5A5;padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">📋 Printed prescription upload karein</button>'
-    + '<button id="rx-settings-btn" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--amber-l);padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">⚙️ Manually add karein</button>'
+    + '<button id="rx-retry-btn2" style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#FCA5A5;padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">📋 Upload printed prescription</button>'
+    + '<button id="rx-settings-btn" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--amber-l);padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">⚙️ Add manually in Settings</button>'
     + '</div>';
   rxShow('rx-error');
   document.getElementById('rx-preview-wrap').style.display = 'block';
@@ -1319,6 +1346,12 @@ function getPlanStatus() {
   return { access: 'limited', type: 'free', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
 }
 
+// Check if feature is available on current plan
+function canUsePrescription() {
+  var status = getPlanStatus();
+  return status.type === 'pro';
+}
+
 function canSendMessage() {
   var status = getPlanStatus();
   if(status.access === 'full') return true;
@@ -1367,12 +1400,12 @@ function showUpgradeModal(reason) {
   var sub = document.getElementById('upgradeSub');
   if(reason === 'limit') {
     title.textContent = '⚡ Aaj ka limit ho gaya';
-    sub.textContent = 'Free plan mein 5 messages/day milte hain. Unlimited ke liye upgrade karein — ₹99/month se shuru.';
+    sub.textContent = 'Free plan: 5 messages/day. Upgrade from ₹99/month for unlimited.';
   } else if(reason === 'trial') {
-    title.textContent = '🎉 Trial khatam hua!';
-    sub.textContent = 'Aapka 7-day free trial khatam ho gaya. Saathi ke saath baat jaari rakhne ke liye upgrade karein.';
+    title.textContent = '🎉 Free trial ended!';
+    sub.textContent = 'Your 7-day free trial has ended. Upgrade to continue with Saathi.';
   } else {
-    title.textContent = '🔓 Saathi Unlock karein';
+    title.textContent = '🔓 Unlock Saathi';
     sub.textContent = 'Unlimited conversations, reminders, prescription reader aur bahut kuch — sirf ₹99/month.';
   }
   document.getElementById('upgrade-overlay').classList.add('show');
@@ -1397,17 +1430,16 @@ function startPayment(plan) {
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if(data.error) {
-      alert('Payment error: ' + data.error);
+      alert('API Error: ' + JSON.stringify(data.error) + '\n\nDebug: ' + JSON.stringify(data));
       if(btn) { btn.textContent = plan==='founding'?'🙏 ₹99 se Shuru Karen':'Choose Pro — ₹299/month'; btn.disabled=false; }
       return;
     }
     // Instamojo opens payment page — redirect user
     window.location.href = data.paymentUrl;
   })
-  .catch(function() {
-    // API not configured yet — demo mode for testing
-    onPaymentSuccess(plan, {demo: true});
-    if(btn) { btn.disabled = false; }
+  .catch(function(err) {
+    alert('Payment error: ' + err.message + '\nCheck Vercel env variables: INSTAMOJO_API_KEY, INSTAMOJO_AUTH_TOKEN');
+    if(btn) { btn.textContent = plan==='founding'?'🙏 ₹99 se Shuru Karen':'Choose Pro — ₹299/month'; btn.disabled=false; }
   });
 }
 
@@ -1460,20 +1492,76 @@ function checkPaymentReturn() {
 // ── WIRE UP ALL BUTTONS (no inline onclick) ──
 window.addEventListener('DOMContentLoaded', function() {
 
-  // Onboarding — simple Sign Up
+  // ── ONBOARDING VALIDATION ──
+  function showErr(id, show) {
+    var el = document.getElementById(id);
+    if(el) el.style.display = show ? 'block' : 'none';
+  }
+  function markField(inputId, valid) {
+    var el = document.getElementById(inputId);
+    if(el) { el.classList.toggle('error', !valid); }
+  }
+  function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+  function validatePhone(v) { return /^[6-9]\d{9}$/.test(v.replace(/[\s\-+]/g,'')); }
+  function validateDOB(v) {
+    if(!v) return false;
+    var d = new Date(v);
+    if(isNaN(d.getTime())) return false;
+    var now = new Date();
+    var age = (now - d) / (365.25 * 24 * 3600 * 1000);
+    return age >= 1 && age <= 120; // age between 1 and 120
+  }
+
   document.getElementById('startBtn').addEventListener('click', function() {
-    S.name      = document.getElementById('ob-name').value.trim()   || 'Aap';
-    S.phone     = document.getElementById('ob-phone').value.trim()  || '';
-    S.family    = document.getElementById('ob-family').value.trim() || '';
-    S.onboarded = true; save();
+    var name     = document.getElementById('ob-name').value.trim();
+    var email    = document.getElementById('ob-email').value.trim();
+    var dob      = document.getElementById('ob-dob').value;
+    var phone    = document.getElementById('ob-phone').value.trim().replace(/[\s\-+]/g,'');
+    var family   = document.getElementById('ob-family').value.trim();
+    var famPhone = document.getElementById('ob-fam-phone').value.trim().replace(/[\s\-+]/g,'');
+
+    var valid = true;
+
+    // Validate name (mandatory)
+    var nameOk = name.length >= 2;
+    markField('ob-name', nameOk); showErr('err-name', !nameOk);
+    if(!nameOk) { valid = false; }
+
+    // Validate email (mandatory)
+    var emailOk = validateEmail(email);
+    markField('ob-email', emailOk); showErr('err-email', !emailOk);
+    if(!emailOk) valid = false;
+
+    // Validate DOB (mandatory)
+    var dobOk = validateDOB(dob);
+    markField('ob-dob', dobOk); showErr('err-dob', !dobOk);
+    if(!dobOk) valid = false;
+
+    // Validate phone (mandatory)
+    var phoneOk = validatePhone(phone);
+    markField('ob-phone', phoneOk); showErr('err-phone', !phoneOk);
+    if(!phoneOk) valid = false;
+
+    // Validate family phone (optional but if filled must be valid)
+    var famPhoneOk = !famPhone || validatePhone(famPhone);
+    if(famPhone) { markField('ob-fam-phone', famPhoneOk); showErr('err-fam-phone', !famPhoneOk); }
+    if(famPhone && !famPhoneOk) valid = false;
+
+    if(!valid) return;
+
+    S.name       = name || 'Aap';
+    S.email      = email;
+    S.dob        = dob;
+    S.phone      = phone || '';
+    S.family     = family || '';
+    S.famPhone   = famPhone || '';
+    S.onboarded  = true;
+    save();
     if(window.speechSynthesis) { var u=new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(u); }
     startMain();
   });
-  document.getElementById('skipBtn').addEventListener('click', function() {
-    S.onboarded = true; save();
-    if(window.speechSynthesis) { var u=new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(u); }
-    startMain();
-  });
+
+
 
   // Top bar
   document.getElementById('muteBtn').addEventListener('click', function() {
@@ -1597,24 +1685,9 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('payPro').addEventListener('click', function() { startPayment('pro'); });
 
   // Install banner
-  var installBtn = document.getElementById('installBtn');
-  if(installBtn) installBtn.addEventListener('click', function() {
-    if(!deferredPrompt) {
-      addBubble('ai','iOS pe install:\n1. Safari mein open karein\n2. Share button dabayen\n3. Add to Home Screen\n\nDone!','','',true);
-      document.getElementById('install-banner').classList.remove('show'); return;
-    }
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(r) {
-      deferredPrompt = null;
-      document.getElementById('install-banner').classList.remove('show');
-      if(r.outcome==='accepted') { addBubble('ai','App install ho gaya!','','',true); speakText('Saathi AI install ho gaya!'); }
-    });
+  
   });
-  var installClose = document.getElementById('installClose');
-  if(installClose) installClose.addEventListener('click', function() {
-    var banner = document.getElementById('install-banner');
-    if(banner) banner.classList.remove('show');
-  });
+  
 
   // Init
   isMuted = !S.voiceOn;
@@ -1636,11 +1709,7 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 
 // ── PWA INSTALL ──
-var deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault(); deferredPrompt = e;
-  setTimeout(function() { document.getElementById('install-banner').classList.add('show'); }, 30000);
-});
+
 
 })();
 
