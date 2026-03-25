@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v14</title>
+<title>साथी AI v15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -32,25 +32,30 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
 .screen.slide-left{transform:translateX(-100%);opacity:0;pointer-events:none}
 
-/* ONBOARDING */
-#screen-onboard{background:var(--dark);justify-content:center;align-items:center;padding:32px 28px;text-align:center;overflow-y:auto}
-.ob-logo-icon{width:88px;height:88px;margin:0 auto 14px;display:block}
-.ob-title{font-size:2.6rem;font-weight:800;color:var(--amber);line-height:1}
-.ob-sub{font-size:1rem;color:var(--muted);margin-top:5px}
-.ob-form{width:100%;max-width:340px;margin-top:24px;display:flex;flex-direction:column;gap:0}
-.ob-section{margin-bottom:20px}
-.ob-section-title{font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.ob-field{margin-bottom:12px}
-.ob-label{font-size:.78rem;color:rgba(254,243,199,.6);margin-bottom:5px;display:block;font-weight:600}
-.ob-input{width:100%;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.15);border-radius:12px;padding:13px 16px;font-family:'Baloo 2',sans-serif;font-size:.97rem;color:var(--text);outline:none;transition:border-color .2s,background .2s}
-.ob-input:focus{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.09)}
-.ob-input::placeholder{color:rgba(254,243,199,.25)}
-.ob-input.error{border-color:#ef4444;background:rgba(239,68,68,.06)}
-.ob-err{font-size:.75rem;color:#fca5a5;margin-top:6px;display:none;padding:6px 10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:8px;line-height:1.5;font-weight:600}
-.ob-err.visible{display:block !important}
-.ob-input.success{border-color:#22c55e !important;background:rgba(34,197,94,.05) !important}
-.ob-input.error{border-color:#ef4444 !important;background:rgba(239,68,68,.06) !important}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+/* ONBOARDING — Clean white card style */
+#screen-onboard{background:#f5f5f5;justify-content:flex-start;align-items:center;padding:0;overflow-y:auto;display:flex;flex-direction:column}
+.ob-card{background:#fff;width:100%;max-width:430px;min-height:100vh;padding:32px 24px 40px;display:flex;flex-direction:column;align-items:center}
+.ob-avatar{width:72px;height:72px;border-radius:50%;background:#7C3AED;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.ob-avatar svg{width:36px;height:36px;fill:#fff}
+.ob-title{font-family:'Baloo 2';font-size:1.6rem;font-weight:800;color:#1a1a2e;margin-bottom:4px}
+.ob-sub{font-size:.85rem;color:#666;margin-bottom:28px}
+.ob-form{width:100%;display:flex;flex-direction:column;gap:0}
+.ob-field{margin-bottom:16px;position:relative}
+.ob-label{font-size:.82rem;font-weight:600;color:#333;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ob-label svg{width:14px;height:14px;opacity:.5}
+.ob-input{width:100%;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:13px 16px;font-family:'DM Sans','Baloo 2',sans-serif;font-size:.95rem;color:#1a1a2e;outline:none;transition:all .2s}
+.ob-input:focus{border-color:#7C3AED;box-shadow:0 0 0 3px rgba(124,58,237,.08)}
+.ob-input::placeholder{color:#aaa}
+.ob-input.ob-error{border-color:#ef4444 !important;background:#fff8f8 !important;box-shadow:0 0 0 3px rgba(239,68,68,.08) !important}
+.ob-input.ob-ok{border-color:#22c55e !important;background:#f0fdf4 !important}
+.ob-err-msg{font-size:.75rem;color:#ef4444;margin-top:5px;display:none;padding:5px 10px;background:#fff1f1;border-left:3px solid #ef4444;border-radius:0 6px 6px 0;font-weight:500}
+.ob-trial-note{width:100%;background:linear-gradient(135deg,#7C3AED11,#4F46E511);border:1px solid #7C3AED33;border-radius:12px;padding:12px 16px;font-size:.82rem;color:#5B21B6;text-align:center;line-height:1.5;margin-bottom:20px}
+.ob-section-title{font-size:.7rem;font-weight:700;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 14px;display:flex;align-items:center;gap:6px}
+.ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none;border-radius:12px;font-family:'Baloo 2',sans-serif;font-size:1rem;font-weight:800;color:#fff;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 6px 20px rgba(124,58,237,.3)}
+.ob-btn:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(124,58,237,.35)}
+.ob-btn:active{transform:scale(.98)}
+.ob-free-note{font-size:.75rem;color:#999;text-align:center;margin-top:10px}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:14px;font-family:'Baloo 2',sans-serif;font-size:1.05rem;font-weight:800;color:#fff;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 6px 20px rgba(245,158,11,.3)}
 .ob-btn:active{transform:scale(.97);opacity:.9}
 .ob-btn:disabled{opacity:.6;cursor:not-allowed}
@@ -264,60 +269,75 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
   <div class="status-bar"></div>
 
   <div class="screen" id="screen-onboard">
-    <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#D97706,#EA580C);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 10px;box-shadow:0 8px 24px rgba(245,158,11,.35)">🙏</div>
-    <div class="ob-title" style="font-size:1.9rem">साथी AI</div>
-    <div class="ob-sub" style="font-size:.88rem;margin-top:4px">Your personal AI companion</div>
+  <div class="ob-card">
+    <div class="ob-avatar">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+    </div>
+    <div class="ob-title">YourSathi</div>
+    <div class="ob-sub">Your caring companion for better health</div>
 
     <div class="ob-trial-note">
-      ✨ 7 days FREE — unlimited conversations, no limits<br>
-      Then just ₹99/month
+      ✨ 7 days FREE — unlimited conversations<br>
+      Free for 7 days, then ₹99 for 3 months
     </div>
 
     <div class="ob-form">
-      <!-- Personal Details -->
-      <div class="ob-section">
-        <div class="ob-section-title">👤 Your Details</div>
-        <div class="ob-field">
-          <label class="ob-label">Name *</label>
-          <input class="ob-input" id="ob-name" type="text" placeholder="Your full name">
-          <div class="ob-err" id="err-name">Name must be at least 2 characters</div>
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Email *</label>
-          <input class="ob-input" id="ob-email" type="email" placeholder="your@email.com">
-          <div class="ob-err" id="err-email">Please enter a valid email address</div>
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Date of Birth *</label>
-          <input class="ob-input" id="ob-dob" type="date">
-          <div class="ob-err" id="err-dob">Please enter a valid date of birth</div>
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Phone Number *</label>
-          <input class="ob-input" id="ob-phone" type="tel" placeholder="10-digit mobile number" maxlength="10">
-          <div class="ob-err" id="err-phone">Please enter a valid 10-digit mobile number</div>
-        </div>
+      <div class="ob-field">
+        <label class="ob-label">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          Email Address
+        </label>
+        <input class="ob-input" id="ob-email" type="email" placeholder="your@email.com"
+          onblur="obValidate(this,'ob-email','err-email',function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);},'Enter valid email — e.g. name@gmail.com')">
+        <div class="ob-err-msg" id="err-email"></div>
       </div>
 
-      <!-- Family Details -->
-      <div class="ob-section">
-        <div class="ob-section-title">👨‍👩‍👧 Family Member (Emergency Contact)</div>
-        <div class="ob-field">
-          <label class="ob-label">Family member name</label>
-          <input class="ob-input" id="ob-family" type="text" placeholder="e.g. Priya, Rahul.">
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Family member phone</label>
-          <input class="ob-input" id="ob-fam-phone" type="tel" placeholder="10-digit number" maxlength="10">
-          <div class="ob-err" id="err-fam-phone">Please enter a valid 10-digit number</div>
-        </div>
+      <div class="ob-field">
+        <label class="ob-label">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+          Date of Birth
+        </label>
+        <input class="ob-input" id="ob-dob" type="date"
+          onblur="obValidate(this,'ob-dob','err-dob',function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;},'Enter a valid date of birth')">
+        <div class="ob-err-msg" id="err-dob"></div>
+      </div>
+
+      <div class="ob-field">
+        <label class="ob-label">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+          Phone Number
+        </label>
+        <input class="ob-input" id="ob-phone" type="tel" placeholder="10-digit number" maxlength="10"
+          oninput="this.value=this.value.replace(/\D/g,'').slice(0,10);obLivePhone(this)"
+          onblur="obValidate(this,'ob-phone','err-phone',function(v){return /^[6-9]\d{9}$/.test(v);},'Enter 10-digit number starting with 6,7,8 or 9')">
+        <div class="ob-err-msg" id="err-phone"></div>
+      </div>
+
+      <div class="ob-section-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#999"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        Family Member Details
+      </div>
+
+      <div class="ob-field">
+        <label class="ob-label">Name</label>
+        <input class="ob-input" id="ob-family" type="text" placeholder="Family member name">
+      </div>
+
+      <div class="ob-field">
+        <label class="ob-label">Phone Number</label>
+        <input class="ob-input" id="ob-fam-phone" type="tel" placeholder="10-digit number" maxlength="10"
+          oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)"
+          onblur="if(this.value)obValidate(this,'ob-fam-phone','err-fam-phone',function(v){return /^[6-9]\d{9}$/.test(v);},'Enter valid 10-digit number')">
+        <div class="ob-err-msg" id="err-fam-phone"></div>
       </div>
 
       <button class="ob-btn" id="startBtn">🚀 Start 7-Day Free Trial</button>
+      <div class="ob-free-note">Free for 7 days, then ₹99 for 3 months</div>
     </div>
   </div>
+</div>
 
-  <div class="screen hidden" id="screen-main">
+  <div class="screen hidden" id="screen-main"><div class="screen hidden" id="screen-main">
     <div class="topbar">
       <div class="tb-left">
         <div class="tb-avatar" id="tbAvatar">🙏</div>
@@ -1520,6 +1540,38 @@ function checkPaymentReturn() {
   }
 }
 
+// ── ONBOARDING VALIDATION — bulletproof global functions ──
+function obValidate(inp, inputId, errId, checkFn, badMsg) {
+  var err = document.getElementById(errId);
+  var val = inp.value.trim();
+  if (!val) {
+    inp.className = inp.className.replace(/ob-ok|ob-error/g, '').trim() + ' ob-error';
+    if (err) { err.textContent = '⚠ This field is required'; err.style.display = 'block'; }
+    return false;
+  }
+  if (!checkFn(val)) {
+    inp.className = inp.className.replace(/ob-ok|ob-error/g, '').trim() + ' ob-error';
+    if (err) { err.textContent = '⚠ ' + badMsg; err.style.display = 'block'; }
+    return false;
+  }
+  inp.className = inp.className.replace(/ob-ok|ob-error/g, '').trim() + ' ob-ok';
+  if (err) err.style.display = 'none';
+  return true;
+}
+
+function obLivePhone(inp) {
+  var err = document.getElementById('err-phone');
+  if (!err) return;
+  var len = inp.value.length;
+  if (len > 0 && len < 10) {
+    err.textContent = '⚠ ' + len + ' of 10 digits entered';
+    err.style.display = 'block';
+    inp.className = inp.className.replace(/ob-ok|ob-error/g, '').trim();
+  } else if (len === 0) {
+    err.style.display = 'none';
+  }
+}
+
 // ── WIRE UP ALL BUTTONS (no inline onclick) ──
 window.addEventListener('DOMContentLoaded', function() {
 
@@ -1668,26 +1720,37 @@ window.addEventListener('DOMContentLoaded', function() {
   attachFieldListeners();
 
   document.getElementById('startBtn').addEventListener('click', function() {
-    var nameOk  = checkField('ob-name',  'err-name',  function(v){ return v.length>=2; }, 'Name is required', 'Enter your full name');
-    var emailOk = checkField('ob-email', 'err-email', function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }, 'Email is required', 'Enter valid email — e.g. name@gmail.com');
-    var dobOk   = checkField('ob-dob',   'err-dob',   function(v){ var d=new Date(v),a=(Date.now()-d)/31557600000; return a>=1&&a<=110; }, 'Date of birth is required', 'Enter valid date of birth');
-    var phoneOk = checkField('ob-phone', 'err-phone', function(v){ return /^[6-9]\d{9}$/.test(v.replace(/\D/g,'')); }, 'Phone number is required', 'Enter 10-digit number starting with 6,7,8 or 9');
+    var emailOk = obValidate(
+      document.getElementById('ob-email'), 'ob-email', 'err-email',
+      function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); },
+      'Enter valid email — e.g. name@gmail.com'
+    );
+    var dobOk = obValidate(
+      document.getElementById('ob-dob'), 'ob-dob', 'err-dob',
+      function(v){ var d=new Date(v),a=(Date.now()-d)/31557600000; return !isNaN(a)&&a>=1&&a<=110; },
+      'Enter a valid date of birth'
+    );
+    var phoneOk = obValidate(
+      document.getElementById('ob-phone'), 'ob-phone', 'err-phone',
+      function(v){ return /^[6-9]\d{9}$/.test(v); },
+      'Enter 10-digit number starting with 6, 7, 8 or 9'
+    );
 
-    if(!nameOk || !emailOk || !dobOk || !phoneOk) {
-      var first = document.querySelector('#screen-onboard .ob-input[style*="ef4444"]');
-      if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+    if (!emailOk || !dobOk || !phoneOk) {
+      var first = document.querySelector('.ob-input.ob-error');
+      if (first) first.scrollIntoView({behavior:'smooth', block:'center'});
       return;
     }
 
-    S.name      = document.getElementById('ob-name').value.trim();
+    S.name      = 'User';
     S.email     = document.getElementById('ob-email').value.trim();
     S.dob       = document.getElementById('ob-dob').value;
     S.phone     = document.getElementById('ob-phone').value.trim();
-    S.family    = (document.getElementById('ob-family').value||'').trim();
-    S.famPhone  = (document.getElementById('ob-fam-phone').value||'').trim();
+    S.family    = (document.getElementById('ob-family')||{value:''}).value.trim();
+    S.famPhone  = (document.getElementById('ob-fam-phone')||{value:''}).value.trim();
     S.onboarded = true;
     save();
-    if(window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
     startMain();
   });
 
