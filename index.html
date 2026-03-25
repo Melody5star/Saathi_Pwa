@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v11</title>
+<title>साथी AI v13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -279,22 +279,22 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div class="ob-section-title">👤 Your Details</div>
         <div class="ob-field">
           <label class="ob-label">Name *</label>
-          <input class="ob-input" id="ob-name" type="text" placeholder="Your full name">
+          <input class="ob-input" id="ob-name" type="text" placeholder="Your full name" oninput="obCheck('ob-name','err-name',this.value.trim().length>=2,'Name must be at least 2 characters')">
           <div class="ob-err" id="err-name">Name must be at least 2 characters</div>
         </div>
         <div class="ob-field">
           <label class="ob-label">Email *</label>
-          <input class="ob-input" id="ob-email" type="email" placeholder="your@email.com">
+          <input class="ob-input" id="ob-email" type="email" placeholder="your@email.com" oninput="obCheck('ob-email','err-email',/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(this.value),'Enter valid email — e.g. name@gmail.com')">
           <div class="ob-err" id="err-email">Please enter a valid email address</div>
         </div>
         <div class="ob-field">
           <label class="ob-label">Date of Birth *</label>
-          <input class="ob-input" id="ob-dob" type="date" placeholder="DD/MM/YYYY">
+          <input class="ob-input" id="ob-dob" type="date" onchange="var d=new Date(this.value),age=(Date.now()-d)/31557600000;obCheck('ob-dob','err-dob',age>=1&&age<=110,'Enter a valid date of birth')">
           <div class="ob-err" id="err-dob">Please enter a valid date of birth</div>
         </div>
         <div class="ob-field">
           <label class="ob-label">Phone Number *</label>
-          <input class="ob-input" id="ob-phone" type="tel" placeholder="10-digit mobile number" maxlength="10">
+          <input class="ob-input" id="ob-phone" type="tel" placeholder="10-digit mobile number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10);var d=this.value.length;obCheck('ob-phone','err-phone',/^[6-9]\d{9}$/.test(this.value),d>0&&d<10?(d+' of 10 digits'):'Enter 10-digit number starting with 6,7,8 or 9')">
           <div class="ob-err" id="err-phone">Please enter a valid 10-digit mobile number</div>
         </div>
       </div>
@@ -308,7 +308,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         </div>
         <div class="ob-field">
           <label class="ob-label">Family member phone</label>
-          <input class="ob-input" id="ob-fam-phone" type="tel" placeholder="10-digit number" maxlength="10">
+          <input class="ob-input" id="ob-fam-phone" type="tel" placeholder="10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10);if(this.value.length>0)obCheck('ob-fam-phone','err-fam-phone',/^[6-9]\d{9}$/.test(this.value),'Enter valid 10-digit number')">
           <div class="ob-err" id="err-fam-phone">Please enter a valid 10-digit number</div>
         </div>
       </div>
@@ -331,6 +331,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div class="tb-icon-btn" id="sosBtn">🆘</div>
         <div class="tb-icon-btn" id="rxBtn" title="Prescription">📋</div>
         <div class="tb-icon-btn" id="notesBtn">📝</div>
+        <div class="tb-icon-btn" id="upgradeBtn" title="Upgrade Plan" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);font-size:.7rem;font-weight:800;color:var(--amber)">PRO</div>
         <div class="tb-icon-btn" id="settingsBtn">⚙️</div>
       </div>
     </div>
@@ -1400,9 +1401,23 @@ function applyLangUI() {
 }
 
 function showUpgradeModal(reason) {
+  // Hide PRO button if already paid
+  var planStatus = getPlanStatus();
+  var upgradeBtn = document.getElementById('upgradeBtn');
+  if(upgradeBtn) {
+    if(planStatus.type === 'pro') {
+      upgradeBtn.style.display = 'none';
+    } else if(planStatus.type === 'founding') {
+      upgradeBtn.textContent = '★';
+      upgradeBtn.title = 'Founding Member';
+    }
+  }
   var title = document.getElementById('upgradeTitle');
   var sub = document.getElementById('upgradeSub');
-  if(reason === 'limit') {
+  if(reason === 'upgrade') {
+    title.textContent = '⭐ Upgrade Saathi';
+    sub.textContent = 'Get unlimited access, medicine reminders, prescription reader and more.';
+  } else if(reason === 'limit') {
     title.textContent = '⚡ Aaj ka limit ho gaya';
     sub.textContent = 'Free plan: 5 messages/day. Upgrade from ₹99/month for unlimited.';
   } else if(reason === 'trial') {
@@ -1506,6 +1521,29 @@ function checkPaymentReturn() {
 }
 
 // ── WIRE UP ALL BUTTONS (no inline onclick) ──
+// ── INLINE VALIDATION HELPER ──
+function obCheck(inputId, errId, isValid, errMsg) {
+  var inp = document.getElementById(inputId);
+  var err = document.getElementById(errId);
+  if(!inp || !err) return;
+  if(inp.value.length === 0) {
+    inp.style.borderColor = '';
+    inp.style.background = '';
+    err.style.display = 'none';
+    return;
+  }
+  if(isValid) {
+    inp.style.borderColor = '#22c55e';
+    inp.style.background = 'rgba(34,197,94,0.06)';
+    err.style.display = 'none';
+  } else {
+    inp.style.borderColor = '#ef4444';
+    inp.style.background = 'rgba(239,68,68,0.06)';
+    err.textContent = '⚠ ' + errMsg;
+    err.style.display = 'block';
+  }
+}
+
 window.addEventListener('DOMContentLoaded', function() {
 
   // ── ONBOARDING VALIDATION ──
@@ -1701,6 +1739,9 @@ window.addEventListener('DOMContentLoaded', function() {
   });
   document.getElementById('sosBtn').addEventListener('click', showSOS);
   document.getElementById('notesBtn').addEventListener('click', function() { renderNotes(); showScreen('screen-notes'); });
+  document.getElementById('upgradeBtn').addEventListener('click', function() {
+    showUpgradeModal('upgrade');
+  });
   document.getElementById('settingsBtn').addEventListener('click', function() {
     document.getElementById('s-name').value = S.name;
     document.getElementById('s-lang').value = S.lang;
