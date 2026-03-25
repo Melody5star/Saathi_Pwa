@@ -46,7 +46,11 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .ob-input:focus{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.09)}
 .ob-input::placeholder{color:rgba(254,243,199,.25)}
 .ob-input.error{border-color:#ef4444;background:rgba(239,68,68,.06)}
-.ob-err{font-size:.72rem;color:#ef4444;margin-top:4px;display:none}
+.ob-err{font-size:.75rem;color:#fca5a5;margin-top:6px;display:none;padding:6px 10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;line-height:1.4}
+.ob-err::before{content:'⚠ ';font-size:.8rem}
+.ob-err.visible{display:block}
+.ob-input.error{border-color:#ef4444;background:rgba(239,68,68,.06)}
+.ob-input.success{border-color:#22c55e;background:rgba(34,197,94,.05)}
 .ob-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:14px;font-family:'Baloo 2',sans-serif;font-size:1.05rem;font-weight:800;color:#fff;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 6px 20px rgba(245,158,11,.3)}
 .ob-btn:active{transform:scale(.97);opacity:.9}
 .ob-btn:disabled{opacity:.6;cursor:not-allowed}
@@ -265,8 +269,8 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
     <div class="ob-sub" style="font-size:.88rem;margin-top:4px">Your personal AI companion</div>
 
     <div class="ob-trial-note">
-      ✨ 7 din FREE — unlimited baat karo, koi limit nahi<br>
-      Phir sirf ₹99/month se shuru
+      ✨ 7 days FREE — unlimited conversations, no limits<br>
+      Then just ₹99/month
     </div>
 
     <div class="ob-form">
@@ -1495,11 +1499,61 @@ window.addEventListener('DOMContentLoaded', function() {
   // ── ONBOARDING VALIDATION ──
   function showErr(id, show) {
     var el = document.getElementById(id);
-    if(el) el.style.display = show ? 'block' : 'none';
+    if(el) { el.classList.toggle('visible', show); }
   }
   function markField(inputId, valid) {
     var el = document.getElementById(inputId);
-    if(el) { el.classList.toggle('error', !valid); }
+    if(!el) return;
+    el.classList.toggle('error', !valid);
+    el.classList.toggle('success', valid && el.value.trim().length > 0);
+  }
+
+  // Real-time validation on blur (when user leaves each field)
+  function addBlurValidation() {
+    var nameEl = document.getElementById('ob-name');
+    if(nameEl) nameEl.addEventListener('blur', function() {
+      var ok = this.value.trim().length >= 2;
+      markField('ob-name', ok); showErr('err-name', !ok && this.value.length > 0);
+    });
+
+    var emailEl = document.getElementById('ob-email');
+    if(emailEl) emailEl.addEventListener('blur', function() {
+      var ok = validateEmail(this.value.trim());
+      markField('ob-email', ok); showErr('err-email', !ok && this.value.length > 0);
+    });
+
+    var dobEl = document.getElementById('ob-dob');
+    if(dobEl) dobEl.addEventListener('change', function() {
+      var ok = validateDOB(this.value);
+      markField('ob-dob', ok); showErr('err-dob', !ok && this.value.length > 0);
+    });
+
+    var phoneEl = document.getElementById('ob-phone');
+    if(phoneEl) phoneEl.addEventListener('blur', function() {
+      var v = this.value.trim().replace(/[\s\-+]/g,'');
+      var ok = validatePhone(v);
+      markField('ob-phone', ok); showErr('err-phone', !ok && this.value.length > 0);
+    });
+    // Show character count hint while typing phone
+    if(phoneEl) phoneEl.addEventListener('input', function() {
+      var len = this.value.replace(/[^\d]/g,'').length;
+      var errEl = document.getElementById('err-phone');
+      if(errEl && len > 0 && len < 10) {
+        errEl.textContent = len + ' digits entered — need 10 digits starting with 6, 7, 8, or 9';
+        errEl.classList.add('visible');
+        this.classList.remove('error','success');
+      } else if(len === 0) {
+        errEl.classList.remove('visible');
+      }
+    });
+
+    var famPhoneEl = document.getElementById('ob-fam-phone');
+    if(famPhoneEl) famPhoneEl.addEventListener('blur', function() {
+      if(!this.value.trim()) return; // optional field
+      var v = this.value.trim().replace(/[\s\-+]/g,'');
+      var ok = validatePhone(v);
+      markField('ob-fam-phone', ok); showErr('err-fam-phone', !ok && this.value.length > 0);
+    });
   }
   function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
   function validatePhone(v) { return /^[6-9]\d{9}$/.test(v.replace(/[\s\-+]/g,'')); }
@@ -1511,6 +1565,8 @@ window.addEventListener('DOMContentLoaded', function() {
     var age = (now - d) / (365.25 * 24 * 3600 * 1000);
     return age >= 1 && age <= 120; // age between 1 and 120
   }
+
+  addBlurValidation();
 
   document.getElementById('startBtn').addEventListener('click', function() {
     var name     = document.getElementById('ob-name').value.trim();
@@ -1524,21 +1580,25 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // Validate name (mandatory)
     var nameOk = name.length >= 2;
+    if(!nameOk) { var errEl = document.getElementById('err-name'); if(errEl) errEl.textContent = name.length === 0 ? '⚠ Name is required' : '⚠ Name must be at least 2 characters'; }
     markField('ob-name', nameOk); showErr('err-name', !nameOk);
     if(!nameOk) { valid = false; }
 
     // Validate email (mandatory)
     var emailOk = validateEmail(email);
+    if(!emailOk) { var emailErrEl = document.getElementById('err-email'); if(emailErrEl) emailErrEl.textContent = email.length === 0 ? '⚠ Email is required' : '⚠ Please enter a valid email — e.g. name@gmail.com'; }
     markField('ob-email', emailOk); showErr('err-email', !emailOk);
     if(!emailOk) valid = false;
 
     // Validate DOB (mandatory)
     var dobOk = validateDOB(dob);
+    if(!dobOk) { var dobErrEl = document.getElementById('err-dob'); if(dobErrEl) dobErrEl.textContent = !dob ? '⚠ Date of birth is required' : '⚠ Please enter a valid date of birth'; }
     markField('ob-dob', dobOk); showErr('err-dob', !dobOk);
     if(!dobOk) valid = false;
 
     // Validate phone (mandatory)
     var phoneOk = validatePhone(phone);
+    if(!phoneOk) { var phErrEl = document.getElementById('err-phone'); if(phErrEl) phErrEl.textContent = !phone ? '⚠ Phone number is required' : '⚠ Enter a valid 10-digit number starting with 6, 7, 8, or 9'; }
     markField('ob-phone', phoneOk); showErr('err-phone', !phoneOk);
     if(!phoneOk) valid = false;
 
@@ -1547,7 +1607,12 @@ window.addEventListener('DOMContentLoaded', function() {
     if(famPhone) { markField('ob-fam-phone', famPhoneOk); showErr('err-fam-phone', !famPhoneOk); }
     if(famPhone && !famPhoneOk) valid = false;
 
-    if(!valid) return;
+    if(!valid) {
+      // Scroll to first error field
+      var firstErr = document.querySelector('.ob-input.error');
+      if(firstErr) firstErr.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
 
     S.name       = name || 'Aap';
     S.email      = email;
