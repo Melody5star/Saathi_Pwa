@@ -7,7 +7,14 @@
 //    INSTAMOJO_PRIVATE_SALT
 // ══════════════════════════════════════════════════════
 
-const INSTAMOJO_BASE = 'https://www.instamojo.com/api/1.1';
+// Auto-detect test vs live mode from API key
+// Test keys start with 'test_' — live keys start with different prefix
+function getBase(apiKey) {
+  if(apiKey && apiKey.startsWith('test_')) {
+    return 'https://test.instamojo.com/api/1.1';
+  }
+  return 'https://api.instamojo.com/api/1.1';
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -21,7 +28,8 @@ module.exports = async function handler(req, res) {
   // ── VERIFY PAYMENT (webhook / confirm after payment) ──
   if(action === 'verify' && paymentId) {
     try {
-      const r = await fetch(`${INSTAMOJO_BASE}/payments/${paymentId}/`, {
+      const base = getBase(process.env.INSTAMOJO_API_KEY);
+      const r = await fetch(`${base}/payments/${paymentId}/`, {
         headers: {
           'X-Api-Key':    process.env.INSTAMOJO_API_KEY,
           'X-Auth-Token': process.env.INSTAMOJO_AUTH_TOKEN
@@ -71,7 +79,8 @@ module.exports = async function handler(req, res) {
     if(userName)  formData.append('buyer_name', userName);
     if(userPhone) formData.append('phone',      userPhone);
 
-    const r = await fetch(`${INSTAMOJO_BASE}/payment-requests/`, {
+    const base2 = getBase(process.env.INSTAMOJO_API_KEY);
+    const r = await fetch(`${base2}/payment-requests/`, {
       method: 'POST',
       headers: {
         'X-Api-Key':    process.env.INSTAMOJO_API_KEY,
@@ -84,7 +93,7 @@ module.exports = async function handler(req, res) {
     const data = await r.json();
 
     if(!data.success) {
-      return res.status(400).json({error: JSON.stringify(data) || 'Payment request failed'});
+      return res.status(400).json({error: JSON.stringify(data.message || data) || 'Payment request failed', debug: data});
     }
 
     return res.status(200).json({
