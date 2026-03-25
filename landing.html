@@ -332,7 +332,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
           <li>Priority support</li>
           <li>Founding Member badge</li>
         </ul>
-        <button class="price-btn primary" onclick="window.location.href='https://saathiai.health/app'">Start ₹99/month</button>
+        <button class="price-btn primary" id="landingPay99" onclick="landingPay('founding')">🙏 Start ₹99/month</button>
       </div>
       <div class="price-card">
         <div class="price-tag-label">B2B — Care Homes / HR</div>
@@ -346,7 +346,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
           <li>White label option</li>
           <li>Dedicated support</li>
         </ul>
-        <button class="price-btn secondary" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Contact Us</button>
+        <button class="price-btn secondary" id="landingPay299" onclick="landingPay('pro')">Start ₹299/month</button>
       </div>
     </div>
   </div>
@@ -420,6 +420,43 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
 </footer>
 
 <script>
+// ── PAYMENT FROM LANDING ──
+function landingPay(plan) {
+  var btn = document.getElementById(plan === 'founding' ? 'landingPay99' : 'landingPay299');
+  if(btn) { btn.textContent = '⏳ Processing...'; btn.disabled = true; }
+
+  fetch('https://saathiai.health/api/payment', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      plan: plan,
+      userName: localStorage.getItem('saathi_gated_name') || 'Saathi User',
+      userPhone: ''
+    })
+  })
+  .then(function(r) {
+    if(!r.ok) return r.text().then(function(t){ throw new Error('Server error: ' + t.substring(0,150)); });
+    return r.json();
+  })
+  .then(function(data) {
+    if(data.error) {
+      alert('Payment error: ' + (typeof data.error==='string' ? data.error : JSON.stringify(data.error)));
+      if(btn) { btn.textContent = plan==='founding'?'🙏 Start ₹99/month':'Start ₹299/month'; btn.disabled=false; }
+      return;
+    }
+    if(data.paymentUrl) {
+      window.location.href = data.paymentUrl;
+    } else {
+      alert('No payment URL. Please try again.');
+      if(btn) { btn.disabled=false; }
+    }
+  })
+  .catch(function(err) {
+    alert('Payment failed: ' + err.message);
+    if(btn) { btn.textContent = plan==='founding'?'🙏 Start ₹99/month':'Start ₹299/month'; btn.disabled=false; }
+  });
+}
+
 // ── EMAIL GATE ──
 var FORMSPREE_ID = 'YOUR_FORM_ID'; // Replace with your Formspree ID
 
