@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v15</title>
+<title>साथी AI v16</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -1458,22 +1458,43 @@ function showUpgradeModal(reason) {
 
 // ── INSTAMOJO PAYMENT ──
 function startPayment(plan) {
-  // Direct payment links — no API needed
-  // Replace these URLs with your actual Instamojo payment links
-  var links = {
-    founding: 'https://imjo.in/EzXA7R',
-    pro:      'https://imjo.in/rRUujn',
-  };
+  var amount = plan === 'pro' ? '299' : '99';
+  var desc   = plan === 'pro' ? 'Saathi AI Pro Plan' : 'Saathi AI Basic — 3 months';
+  var upiId  = 'anamikabajpai1991@oksbi'; // ← replace with your UPI ID
+  var whatsapp = '9044941203'; // ← replace with your WhatsApp number
 
-  var url = links[plan] || links.founding;
+  // UPI deep link — opens GPay/PhonePe/Paytm on mobile
+  var upiUrl = 'upi://pay?pa=' + upiId
+    + '&pn=SaathiAI'
+    + '&am=' + amount
+    + '&cu=INR'
+    + '&tn=' + encodeURIComponent(desc + ' | ' + (S.email || S.phone || 'user'));
 
-  if(url.indexOf('INSTAMOJO_LINK') !== -1) {
-    // Links not set yet — show message
-    alert('Payment setup in progress. Please contact us at hello@saathiai.health to subscribe.');
-    return;
-  }
+  // Remove old overlay if exists
+  var old = document.getElementById('upi-overlay');
+  if(old) old.remove();
 
-  window.location.href = url;
+  var ov = document.createElement('div');
+  ov.id = 'upi-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0';
+  ov.innerHTML =
+    '<div style="background:var(--dark2);border:1px solid rgba(245,158,11,.25);border-radius:24px 24px 0 0;padding:28px 24px 40px;max-width:430px;width:100%;text-align:center">'
+    + '<div style="width:40px;height:4px;background:rgba(245,158,11,.2);border-radius:2px;margin:0 auto 20px"></div>'
+    + '<div style="font-size:2.5rem;margin-bottom:8px">💸</div>'
+    + '<div style="font-family:Baloo 2;font-size:1.3rem;font-weight:800;color:var(--amber);margin-bottom:4px">Pay ₹' + amount + ' via UPI</div>'
+    + '<div style="font-size:.82rem;color:rgba(254,243,199,.5);margin-bottom:20px">' + desc + '</div>'
+    + '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left">'
+    + '<div style="font-size:.68rem;color:var(--muted);letter-spacing:1px;margin-bottom:4px">UPI ID</div>'
+    + '<div style="font-family:Baloo 2;font-weight:800;color:#FEF9F0;font-size:1.05rem">' + upiId + '</div>'
+    + '</div>'
+    + '<a href="' + upiUrl + '" style="display:block;background:linear-gradient(135deg,var(--amber),var(--saffron));color:#fff;padding:14px;border-radius:12px;font-family:Baloo 2;font-weight:800;font-size:1rem;text-decoration:none;margin-bottom:10px;box-shadow:0 6px 20px rgba(245,158,11,.3)">📱 Open UPI App — Pay ₹' + amount + '</a>'
+    + '<div style="font-size:.72rem;color:rgba(254,243,199,.35);margin-bottom:16px">GPay · PhonePe · Paytm · BHIM · Any UPI app</div>'
+    + '<div style="font-size:.8rem;color:rgba(254,243,199,.55);background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.1);border-radius:10px;padding:12px 14px;margin-bottom:16px;line-height:1.7;text-align:left">'
+    + '📸 <strong style="color:var(--amber-l)">After paying:</strong> Send payment screenshot on WhatsApp to <strong style="color:var(--amber-l)">+91 ' + whatsapp + '</strong><br>'
+    + '⚡ Your account will be activated within 2 hours.</div>'
+    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);padding:10px 28px;border-radius:20px;font-family:Baloo 2;cursor:pointer;font-size:.85rem;width:100%">Cancel</button>'
+    + '</div>';
+  document.body.appendChild(ov);
 }
 
 function onPaymentSuccess(plan, response) {
