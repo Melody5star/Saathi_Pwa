@@ -1579,6 +1579,7 @@ function obValidate(inp, inputId, errId, checkFn, badMsg) {
   if (err) err.style.display = 'none';
   return true;
 }
+window.obValidate = obValidate;
 
 function obLivePhone(inp) {
   var err = document.getElementById('err-phone');
@@ -1592,6 +1593,7 @@ function obLivePhone(inp) {
     err.style.display = 'none';
   }
 }
+window.obLivePhone = obLivePhone;
 
 // ── WIRE UP ALL BUTTONS (no inline onclick) ──
 window.addEventListener('DOMContentLoaded', function() {
