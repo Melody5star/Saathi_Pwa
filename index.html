@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v16</title>
+<title>साथी AI v17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -1458,43 +1458,47 @@ function showUpgradeModal(reason) {
 
 // ── INSTAMOJO PAYMENT ──
 function startPayment(plan) {
-  var amount = plan === 'pro' ? '299' : '99';
-  var desc   = plan === 'pro' ? 'Saathi AI Pro Plan' : 'Saathi AI Basic — 3 months';
-  var upiId  = 'anamikabajpai1991@oksbi'; // ← replace with your UPI ID
-  var whatsapp = '9044941203'; // ← replace with your WhatsApp number
+  var amount   = plan === 'pro' ? '299' : '99';
+  var desc     = plan === 'pro' ? 'Saathi AI Pro Plan' : 'Saathi AI Basic 3 months';
+  var upiId    = 'anamikabajpai1991@oksbi';
+  var whatsapp = '9044941203';
+  var upiData  = 'upi://pay?pa=' + upiId + '&pn=SaathiAI&am=' + amount + '&cu=INR&tn=' + encodeURIComponent(desc);
+  var qrUrl    = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiData);
+  var waMsg    = 'Hi! I paid Rs.' + amount + ' for Saathi AI. Please activate my account. Email: ' + (S.email||'');
+  var waUrl    = 'https://wa.me/91' + whatsapp + '?text=' + encodeURIComponent(waMsg);
 
-  // UPI deep link — opens GPay/PhonePe/Paytm on mobile
-  var upiUrl = 'upi://pay?pa=' + upiId
-    + '&pn=SaathiAI'
-    + '&am=' + amount
-    + '&cu=INR'
-    + '&tn=' + encodeURIComponent(desc + ' | ' + (S.email || S.phone || 'user'));
-
-  // Remove old overlay if exists
   var old = document.getElementById('upi-overlay');
   if(old) old.remove();
 
   var ov = document.createElement('div');
   ov.id = 'upi-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0;font-family:Baloo 2,sans-serif';
   ov.innerHTML =
-    '<div style="background:var(--dark2);border:1px solid rgba(245,158,11,.25);border-radius:24px 24px 0 0;padding:28px 24px 40px;max-width:430px;width:100%;text-align:center">'
-    + '<div style="width:40px;height:4px;background:rgba(245,158,11,.2);border-radius:2px;margin:0 auto 20px"></div>'
-    + '<div style="font-size:2.5rem;margin-bottom:8px">💸</div>'
-    + '<div style="font-family:Baloo 2;font-size:1.3rem;font-weight:800;color:var(--amber);margin-bottom:4px">Pay ₹' + amount + ' via UPI</div>'
-    + '<div style="font-size:.82rem;color:rgba(254,243,199,.5);margin-bottom:20px">' + desc + '</div>'
-    + '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left">'
-    + '<div style="font-size:.68rem;color:var(--muted);letter-spacing:1px;margin-bottom:4px">UPI ID</div>'
-    + '<div style="font-family:Baloo 2;font-weight:800;color:#FEF9F0;font-size:1.05rem">' + upiId + '</div>'
+    '<div style="background:#1a1000;border:1px solid rgba(245,158,11,.25);border-radius:24px 24px 0 0;padding:24px 20px 36px;max-width:430px;width:100%;text-align:center">'
+    + '<div style="width:40px;height:4px;background:rgba(245,158,11,.2);border-radius:2px;margin:0 auto 16px"></div>'
+    + '<div style="font-size:1.2rem;font-weight:800;color:#F59E0B;margin-bottom:2px">Pay ₹' + amount + ' — Saathi AI</div>'
+    + '<div style="font-size:.78rem;color:rgba(254,243,199,.4);margin-bottom:16px">' + desc + '</div>'
+    + '<div style="background:#fff;border-radius:16px;padding:10px;display:inline-block;margin-bottom:8px">'
+    + '<img src="' + qrUrl + '" width="160" height="160" alt="UPI QR" style="display:block">'
     + '</div>'
-    + '<a href="' + upiUrl + '" style="display:block;background:linear-gradient(135deg,var(--amber),var(--saffron));color:#fff;padding:14px;border-radius:12px;font-family:Baloo 2;font-weight:800;font-size:1rem;text-decoration:none;margin-bottom:10px;box-shadow:0 6px 20px rgba(245,158,11,.3)">📱 Open UPI App — Pay ₹' + amount + '</a>'
-    + '<div style="font-size:.72rem;color:rgba(254,243,199,.35);margin-bottom:16px">GPay · PhonePe · Paytm · BHIM · Any UPI app</div>'
-    + '<div style="font-size:.8rem;color:rgba(254,243,199,.55);background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.1);border-radius:10px;padding:12px 14px;margin-bottom:16px;line-height:1.7;text-align:left">'
-    + '📸 <strong style="color:var(--amber-l)">After paying:</strong> Send payment screenshot on WhatsApp to <strong style="color:var(--amber-l)">+91 ' + whatsapp + '</strong><br>'
-    + '⚡ Your account will be activated within 2 hours.</div>'
-    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);padding:10px 28px;border-radius:20px;font-family:Baloo 2;cursor:pointer;font-size:.85rem;width:100%">Cancel</button>'
+    + '<div style="font-size:.7rem;color:rgba(254,243,199,.4);margin-bottom:14px">Scan QR with GPay · PhonePe · Paytm · BHIM</div>'
+    + '<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
+    + '<div style="text-align:left"><div style="font-size:.65rem;color:#888;margin-bottom:2px">UPI ID (manual)</div>'
+    + '<div style="font-weight:800;color:#FEF9F0;font-size:.9rem">' + upiId + '</div></div>'
+    + '<button id="copyUpiBtn" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#F59E0B;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:.72rem">Copy</button>'
+    + '</div>'
+    + '<div style="font-size:.75rem;color:rgba(254,243,199,.4);margin-bottom:14px">Enter amount <strong style="color:#F59E0B">₹' + amount + '</strong> if not auto-filled</div>'
+    + '<a href="' + waUrl + '" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:13px;border-radius:12px;font-weight:800;font-size:.95rem;text-decoration:none;margin-bottom:8px">📲 Send Screenshot on WhatsApp</a>'
+    + '<div style="font-size:.7rem;color:rgba(254,243,199,.3);margin-bottom:12px">After paying — tap above to notify us. Activated within 2 hours.</div>'
+    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:10px;border-radius:12px;cursor:pointer;font-size:.82rem;width:100%">Cancel</button>'
     + '</div>';
   document.body.appendChild(ov);
+  // Wire copy button after DOM insert
+  var copyBtn = document.getElementById('copyUpiBtn');
+  if(copyBtn) copyBtn.onclick = function() {
+    navigator.clipboard.writeText('anamikabajpai1991@oksbi');
+    this.textContent = 'Copied ✓';
+  };
 }
 
 function onPaymentSuccess(plan, response) {
