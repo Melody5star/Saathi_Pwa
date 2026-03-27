@@ -1743,7 +1743,7 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('startBtn').addEventListener('click', function() {
     var nameOk  = obValidate(document.getElementById('ob-name'),  'ob-name',  'err-name',  function(v){return v.length>=2;}, 'Please enter your full name');
     var emailOk = obValidate(document.getElementById('ob-email'), 'ob-email', 'err-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);}, 'Enter valid email — e.g. name@gmail.com');
-    var dobOk   = obValidate(document.getElementById('ob-dob'),   'ob-dob',   'err-dob',   function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;}, 'Enter a valid date of birth');
+    var dobEl = document.getElementById('ob-dob'); var dobOk = obValidate(dobEl, 'ob-dob', 'err-dob', function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;}, 'Select complete date of birth — day, month and year');
     var phoneOk = obValidate(document.getElementById('ob-phone'), 'ob-phone', 'err-phone', function(v){return /^[6-9]\d{9}$/.test(v);}, 'Enter 10-digit number starting with 6,7,8 or 9');
 
     if(!nameOk || !emailOk || !dobOk || !phoneOk) {
