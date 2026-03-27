@@ -423,37 +423,36 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
 // ── PAYMENT FROM LANDING ──
 function landingPay(plan) {
   var amount   = plan === 'pro' ? '299' : '99';
-  var desc     = plan === 'pro' ? 'Saathi AI Pro Plan' : 'Saathi AI Basic 3 months';
+  var planName = plan === 'pro' ? 'Saathi AI Pro' : 'Saathi AI Basic';
   var upiId    = 'anamikabajpai1991@oksbi';
-  var whatsapp = '9044941203';
-  var upiData  = 'upi://pay?pa=' + upiId + '&pn=SaathiAI&am=' + amount + '&cu=INR&tn=' + encodeURIComponent(desc);
-  var qrUrl    = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiData);
-  var waMsg    = 'Hi! I paid Rs.' + amount + ' for Saathi AI. Please activate my account.';
-  var waUrl    = 'https://wa.me/91' + whatsapp + '?text=' + encodeURIComponent(waMsg);
+  var waMsg    = 'Hi! I paid Rs.' + amount + ' for ' + planName + '. Please activate my account.';
+  var waUrl    = 'https://wa.me/919044941203?text=' + encodeURIComponent(waMsg);
 
-  var old = document.getElementById('landing-upi-overlay');
-  if(old) old.remove();
+  var old = document.getElementById('l-upi-ov');
+  if (old) old.remove();
 
   var ov = document.createElement('div');
-  ov.id = 'landing-upi-overlay';
+  ov.id = 'l-upi-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Baloo 2,sans-serif';
   ov.innerHTML = '<div style="background:#1a0e00;border:1px solid rgba(245,158,11,.3);border-radius:20px;padding:24px 20px 28px;max-width:360px;width:100%;text-align:center">'
-    + '<div style="font-size:1.2rem;font-weight:800;color:#F59E0B;margin-bottom:4px">Pay \u20b9' + amount + ' — Saathi AI</div>'
-    + '<div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-bottom:16px">' + desc + '</div>'
-    + '<div style="background:#fff;border-radius:14px;padding:10px;display:inline-block;margin-bottom:8px">'
-    + '<img src="' + qrUrl + '" width="160" height="160" alt="UPI QR" style="display:block">'
+    + '<div style="font-size:1.15rem;font-weight:800;color:#F59E0B;margin-bottom:4px">Pay &#8377;' + amount + ' &mdash; ' + planName + '</div>'
+    + '<div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-bottom:18px">3 easy steps</div>'
+    + '<div style="text-align:left;margin-bottom:18px">'
+    + '<div style="display:flex;gap:10px;margin-bottom:12px"><div style="min-width:24px;height:24px;border-radius:50%;background:#F59E0B;color:#000;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div><div style="color:#fff;font-size:.85rem;padding-top:2px">Open GPay / PhonePe / Paytm</div></div>'
+    + '<div style="display:flex;gap:10px;margin-bottom:12px"><div style="min-width:24px;height:24px;border-radius:50%;background:#F59E0B;color:#000;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>'
+    + '<div style="flex:1"><div style="color:#fff;font-size:.85rem;margin-bottom:5px">Pay &#8377;' + amount + ' to UPI ID:</div>'
+    + '<div style="background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.35);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="color:#FEF9F0;font-weight:800;font-size:.88rem">' + upiId + '</span>'
+    + '<button id="lCopyBtn" style="background:#F59E0B;border:none;color:#000;padding:4px 8px;border-radius:5px;font-weight:700;cursor:pointer;font-size:.7rem">Copy</button>'
+    + '</div></div></div>'
+    + '<div style="display:flex;gap:10px"><div style="min-width:24px;height:24px;border-radius:50%;background:#22c55e;color:#000;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div><div style="color:#fff;font-size:.85rem;padding-top:2px">Send screenshot on WhatsApp &mdash; activated in 2 hrs</div></div>'
     + '</div>'
-    + '<div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-bottom:12px">Scan with GPay · PhonePe · Paytm · BHIM</div>'
-    + '<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;margin-bottom:8px">'
-    + '<div style="font-size:.65rem;color:#888;margin-bottom:3px">OR PAY TO UPI ID</div>'
-    + '<div style="font-weight:800;color:#FEF9F0;font-size:.95rem">' + upiId + '</div>'
-    + '</div>'
-    + '<div style="font-size:.72rem;color:rgba(255,255,255,.35);margin-bottom:12px">Enter amount <strong style="color:#F59E0B">\u20b9' + amount + '</strong> if not auto-filled</div>'
-    + '<a href="' + waUrl + '" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:12px;border-radius:12px;font-weight:800;font-size:.9rem;text-decoration:none;margin-bottom:8px">📲 Send Payment Screenshot on WhatsApp</a>'
-    + '<div style="font-size:.68rem;color:rgba(255,255,255,.25);margin-bottom:12px">Account activated within 2 hours of payment</div>'
-    + '<button onclick="document.getElementById(\'landing-upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:8px;border-radius:10px;cursor:pointer;font-size:.8rem;width:100%">Cancel</button>'
+    + '<a href="' + waUrl + '" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:12px;border-radius:10px;font-weight:800;font-size:.88rem;text-decoration:none;margin-bottom:8px">&#128242; Confirm on WhatsApp</a>'
+    + '<button onclick="document.getElementById(\'l-upi-ov\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:8px;border-radius:8px;cursor:pointer;width:100%;font-size:.8rem">Cancel</button>'
     + '</div>';
   document.body.appendChild(ov);
+  var cb = document.getElementById('lCopyBtn');
+  if (cb) cb.onclick = function(){ navigator.clipboard.writeText(upiId).then(function(){ cb.textContent='Copied!'; cb.style.background='#22c55e'; }); };
 }
 
 // ── EMAIL GATE ──
