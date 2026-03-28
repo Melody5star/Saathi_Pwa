@@ -811,7 +811,11 @@ function sendMsg() {
   // Check plan limit
   if(!canSendMessage()) {
     var status = getPlanStatus();
-    showUpgradeModal(status.type === 'founding_expired' ? 'founding_expired' : status.type === 'free' ? 'limit' : 'trial');
+    showUpgradeModal(
+      status.type === 'founding_expired' ? 'founding_expired' :
+      status.type === 'trial_expired'    ? 'trial' :
+      status.type === 'free'             ? 'limit' : 'trial'
+    );
     return;
   }
 
@@ -1383,10 +1387,14 @@ function getPlanStatus() {
     return { access: 'full', type: 'trial', daysLeft: daysLeft, msgCount: plan.msgCount };
   }
 
+  // Trial expired — show specific message, not generic 'free'
+  if(plan.type === 'trial' && now >= plan.trialEnd) {
+    return { access: 'limited', type: 'trial_expired', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
+  }
+
   // Founding member — check 90-day expiry
   if(plan.type === 'founding') {
     if(plan.foundingEnd && now > plan.foundingEnd) {
-      // Founding period over — drop to free until they upgrade to Pro
       return { access: 'limited', type: 'founding_expired', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
     }
     var daysLeftFounding = plan.foundingEnd ? Math.ceil((plan.foundingEnd - now) / (24*60*60*1000)) : 90;
@@ -1398,7 +1406,7 @@ function getPlanStatus() {
     return { access: 'full', type: 'pro', msgCount: plan.msgCount };
   }
 
-  // Free / trial expired
+  // Free (never started trial)
   return { access: 'limited', type: 'free', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
 }
 
@@ -1411,7 +1419,6 @@ function canUsePrescription() {
 function canSendMessage() {
   var status = getPlanStatus();
   if(status.access === 'full') return true;
-  if(status.type === 'founding_expired') return status.msgCount < FREE_MSG_LIMIT;
   return status.msgCount < FREE_MSG_LIMIT;
 }
 
@@ -1453,6 +1460,12 @@ function applyLangUI() {
 }
 
 function showUpgradeModal(reason) {
+  // Reset card state on every open
+  var fc0 = document.getElementById('planFounding');
+  var pc0 = document.getElementById('planPro');
+  if(fc0) { fc0.style.display = ''; fc0.classList.remove('featured'); }
+  if(pc0) { pc0.classList.remove('featured'); pc0.querySelector('.plan-name').textContent = 'साथी Pro'; }
+
   // Hide PRO button if already paid
   var planStatus = getPlanStatus();
   var upgradeBtn = document.getElementById('upgradeBtn');
