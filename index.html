@@ -219,44 +219,56 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 <div id="upgrade-overlay">
   <div class="upgrade-sheet">
     <button class="upgrade-close" id="upgradeClose">✕</button>
-    <div class="upgrade-title" id="upgradeTitle">🔓 Unlock Saathi</div>
-    <div class="upgrade-sub" id="upgradeSub">Daily free limit reached. Upgrade to continue.</div>
+
+    <!-- Beta Banner -->
+    <div style="background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(234,88,12,.1));border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:12px 16px;margin-bottom:16px;text-align:center">
+      <div style="font-size:.7rem;font-weight:700;color:var(--amber);letter-spacing:2px;margin-bottom:4px">🚀 BETA LAUNCH OFFER</div>
+      <div style="font-size:.88rem;color:#FEF9F0;font-weight:600">First 100 Founding Members only</div>
+      <div style="font-size:.75rem;color:rgba(254,243,199,.5);margin-top:2px"><span id="betaCounter">87</span> spots remaining</div>
+    </div>
+
+    <div class="upgrade-title" id="upgradeTitle">Join as Founding Member</div>
+    <div class="upgrade-sub" id="upgradeSub">Lock in your lifetime discount before we launch publicly.</div>
 
     <!-- Plan 1: Basic ₹99 -->
     <div class="plan-card featured" id="planFounding">
-      <div class="plan-popular">⭐ Most Popular</div>
+      <div class="plan-popular">⭐ Founding Member Special</div>
       <div style="margin-top:10px">
         <div class="plan-name">साथी Basic</div>
-        <div class="plan-price">₹99 <span>/ month</span></div>
-        <div class="plan-desc" style="color:var(--amber-l)">First 3 months at ₹99 — founding member special price</div>
-        <div class="plan-feats">
-          ✓ Unlimited baat-cheet (chat + voice)<br>
-          ✓ Medicine reminders<br>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <div class="plan-price">₹99<span>/month</span></div>
+          <div style="font-size:.72rem;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3);padding:3px 8px;border-radius:20px;font-weight:700">67% OFF</div>
+        </div>
+        <div class="plan-desc" style="color:rgba(254,243,199,.5);text-decoration:line-through;font-size:.78rem">Regular price ₹299/month</div>
+        <div class="plan-feats" style="margin-top:8px">
+          ✓ Unlimited conversations — Hindi &amp; English<br>
+          ✓ Medicine reminders + SOS button<br>
           ✓ Memory notes<br>
-          ✓ SOS emergency button<br>
-          ✓ Hindi + English support
+          ✓ Prescription reader<br>
+          ✓ Founding Member badge forever<br>
+          ✓ Price locked — never increases
         </div>
       </div>
-      <button class="pay-btn" id="payFounding">🙏 Start at ₹99/month</button>
+      <button class="pay-btn" id="payFounding">🙏 Claim Founding Member — ₹99/month</button>
+      <div style="font-size:.72rem;color:rgba(254,243,199,.35);text-align:center;margin-top:8px">Pay via UPI · Activated within 2 hours</div>
     </div>
 
     <!-- Plan 2: Pro ₹299 -->
     <div class="plan-card" id="planPro">
       <div class="plan-name">साथी Pro</div>
       <div class="plan-price">₹299 <span>/ month</span></div>
-      <div class="plan-desc">Most features — including doctor visit support</div>
+      <div class="plan-desc">Full health suite — dietician, prescriptions, reports</div>
       <div class="plan-feats" style="font-size:.8rem;color:var(--muted);line-height:1.8;margin:8px 0">
-        ✓ All Basic features +<br>
-        ✓ Prescription scanner (read doctor documents)<br>
-        ✓ AI health insights from reports<br>
-        ✓ Auto medicine reminder from prescription<br>
-        ✓ 30-day BP/Sugar report (PDF)
+        ✓ Everything in Basic<br>
+        ✓ 🥗 AI Dietician + weekly meal calendar<br>
+        ✓ Prescription scanner<br>
+        ✓ 30-day BP/Sugar PDF report
       </div>
       <button class="pay-btn" style="background:rgba(245,158,11,.12);color:var(--amber);box-shadow:none;border:1.5px solid rgba(245,158,11,.35)" id="payPro">Choose Pro — ₹299/month</button>
     </div>
 
     <div class="upgrade-free-note">
-      🔒 Secure payment via Instamojo · UPI, Card, NetBanking<br>
+      🔒 Pay via UPI · WhatsApp confirmation · Activated in 2 hrs<br>
       Cancel anytime · No hidden charges
     </div>
   </div>
@@ -799,7 +811,7 @@ function sendMsg() {
   // Check plan limit
   if(!canSendMessage()) {
     var status = getPlanStatus();
-    showUpgradeModal(status.type === 'free' ? 'limit' : 'trial');
+    showUpgradeModal(status.type === 'founding_expired' ? 'founding_expired' : status.type === 'free' ? 'limit' : 'trial');
     return;
   }
 
@@ -1364,16 +1376,29 @@ function initPlan() {
 function getPlanStatus() {
   var plan = initPlan();
   var now = Date.now();
+
   // Trial active
   if(plan.type === 'trial' && now < plan.trialEnd) {
     var daysLeft = Math.ceil((plan.trialEnd - now) / (24*60*60*1000));
     return { access: 'full', type: 'trial', daysLeft: daysLeft, msgCount: plan.msgCount };
   }
-  // Paid plans
-  if(plan.type === 'founding' || plan.type === 'pro') {
-    return { access: 'full', type: plan.type, msgCount: plan.msgCount };
+
+  // Founding member — check 90-day expiry
+  if(plan.type === 'founding') {
+    if(plan.foundingEnd && now > plan.foundingEnd) {
+      // Founding period over — drop to free until they upgrade to Pro
+      return { access: 'limited', type: 'founding_expired', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
+    }
+    var daysLeftFounding = plan.foundingEnd ? Math.ceil((plan.foundingEnd - now) / (24*60*60*1000)) : 90;
+    return { access: 'full', type: 'founding', daysLeft: daysLeftFounding, msgCount: plan.msgCount };
   }
-  // Free (trial expired or never set)
+
+  // Pro — full access, no expiry
+  if(plan.type === 'pro') {
+    return { access: 'full', type: 'pro', msgCount: plan.msgCount };
+  }
+
+  // Free / trial expired
   return { access: 'limited', type: 'free', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
 }
 
@@ -1386,6 +1411,7 @@ function canUsePrescription() {
 function canSendMessage() {
   var status = getPlanStatus();
   if(status.access === 'full') return true;
+  if(status.type === 'founding_expired') return status.msgCount < FREE_MSG_LIMIT;
   return status.msgCount < FREE_MSG_LIMIT;
 }
 
@@ -1440,18 +1466,43 @@ function showUpgradeModal(reason) {
   }
   var title = document.getElementById('upgradeTitle');
   var sub = document.getElementById('upgradeSub');
-  if(reason === 'upgrade') {
+  if(reason === 'founding_expired') {
+    title.textContent = '⏰ Founding Period Ended';
+    sub.textContent = 'Your 3-month founding plan is complete. Upgrade to Pro ₹299/month to continue unlimited access.';
+    // Hide ₹99 founding card, highlight Pro
+    var foundingCard = document.getElementById('planFounding');
+    var proCard = document.getElementById('planPro');
+    if(foundingCard) foundingCard.style.display = 'none';
+    if(proCard) { proCard.classList.add('featured'); proCard.querySelector('.plan-name').textContent = '🌟 Continue with Saathi Pro'; }
+
+  } else if(reason === 'trial') {
+    title.textContent = '⏰ Free Trial Ended';
+    sub.textContent = 'Your 7 days are up! Become a Founding Member at just ₹99/month — 67% off regular price.';
+    // Show ₹99 card prominently, reset pro card
+    var fc = document.getElementById('planFounding');
+    var pc = document.getElementById('planPro');
+    if(fc) { fc.style.display = ''; fc.classList.add('featured'); }
+    if(pc) { pc.classList.remove('featured'); }
+
+  } else if(reason === 'upgrade') {
     title.textContent = '⭐ Upgrade Saathi';
     sub.textContent = 'Get unlimited access, medicine reminders, prescription reader and more.';
+    var fc2 = document.getElementById('planFounding');
+    var pc2 = document.getElementById('planPro');
+    if(fc2) fc2.style.display = '';
+    if(pc2) pc2.classList.remove('featured');
+
   } else if(reason === 'limit') {
-    title.textContent = '⚡ Aaj ka limit ho gaya';
-    sub.textContent = 'Free plan: 5 messages/day. Upgrade from ₹99/month for unlimited.';
-  } else if(reason === 'trial') {
-    title.textContent = '🎉 Free trial ended!';
-    sub.textContent = 'Your 7-day free trial has ended. Upgrade to continue with Saathi.';
+    title.textContent = '⚡ Daily Limit Reached';
+    sub.textContent = 'Free plan: 5 messages/day. Upgrade from ₹99/month for unlimited access.';
+    var fc3 = document.getElementById('planFounding');
+    if(fc3) fc3.style.display = '';
+
   } else {
-    title.textContent = '🔓 Unlock Saathi';
-    sub.textContent = 'Unlimited conversations, reminders, prescription reader aur bahut kuch — sirf ₹99/month.';
+    title.textContent = 'Join as Founding Member';
+    sub.textContent = 'Lock in ₹99/month before we launch publicly.';
+    var fc4 = document.getElementById('planFounding');
+    if(fc4) fc4.style.display = '';
   }
   document.getElementById('upgrade-overlay').classList.add('show');
 }
