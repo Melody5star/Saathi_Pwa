@@ -257,6 +257,12 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
         <p class="feat-p">"Saathi, mera BP aaj 130/80 hai" — logs readings, generates 30-day PDF report for doctor.</p>
         <div class="feat-badge">Coming Soon</div>
       </div>
+      <div class="feat-card" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
+        <div class="feat-icon">🥗</div>
+        <div class="feat-h">AI Dietician</div>
+        <p class="feat-p">Personalised weekly meal calendar based on your age, health conditions &amp; medicines. Know what to eat, what to avoid — every day.</p>
+        <div class="feat-badge" style="background:rgba(245,158,11,.2);color:#F59E0B;border-color:rgba(245,158,11,.4)">Pro Feature</div>
+      </div>
     </div>
   </div>
 </section>
@@ -305,35 +311,54 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
       <h2 class="sec-h2">Simple, honest pricing</h2>
       <p class="sec-sub" style="margin:0 auto">Start free. Upgrade when you're ready.</p>
     </div>
-    <div class="price-grid">
+    <div class="price-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
       <div class="price-card">
-        <div class="price-tag-label">B2C — Individual</div>
+        <div class="price-tag-label">Individual</div>
         <div class="price-name">Saathi Free</div>
         <div class="price-amount">₹0 <span>/ always</span></div>
-        <div class="price-desc">5 messages/day. 7-day full trial included. No credit card.</div>
+        <div class="price-desc">7-day full trial. 5 messages/day after. No credit card.</div>
         <ul class="price-feats">
-          <li>7-day full access trial</li>
+          <li>7-day unlimited trial</li>
           <li>5 messages/day free forever</li>
           <li>Medicine reminders</li>
           <li>SOS emergency button</li>
         </ul>
         <button class="price-btn secondary" onclick="window.location.href='https://saathiai.health/app'">Try Free Now</button>
       </div>
+
       <div class="price-card featured">
         <div class="price-popular">⭐ Most Popular</div>
-        <div class="price-tag-label">B2C — Founding Member</div>
-        <div class="price-name">Saathi Pro</div>
-        <div class="price-amount">₹99 <span>/ month × 3, then ₹299</span></div>
-        <div class="price-desc">For families who want full peace of mind. Unlimited everything.</div>
+        <div class="price-tag-label">Founding Member</div>
+        <div class="price-name">Saathi Basic</div>
+        <div class="price-amount">₹99 <span>/ month × 3, then ₹199</span></div>
+        <div class="price-desc">Unlimited conversations + all daily health features.</div>
         <ul class="price-feats">
           <li>Unlimited conversations</li>
           <li>Prescription reader</li>
+          <li>Medicine reminders</li>
           <li>Memory notes</li>
-          <li>Priority support</li>
+          <li>SOS + family alerts</li>
           <li>Founding Member badge</li>
         </ul>
         <button class="price-btn primary" id="landingPay99" onclick="landingPay('founding')">🙏 Start ₹99/month</button>
       </div>
+
+      <div class="price-card">
+        <div class="price-tag-label">Full Health Suite</div>
+        <div class="price-name">Saathi Pro</div>
+        <div class="price-amount">₹299 <span>/ month</span></div>
+        <div class="price-desc">Everything in Basic + AI Dietician + health analytics.</div>
+        <ul class="price-feats">
+          <li>Everything in Basic</li>
+          <li>🥗 AI Dietician</li>
+          <li>Weekly meal calendar</li>
+          <li>Food-medicine interactions</li>
+          <li>30-day vitals PDF report</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="price-btn secondary" id="landingPay299" onclick="landingPay('pro')">Start ₹299/month</button>
+      </div>
+
       <div class="price-card">
         <div class="price-tag-label">B2B — Care Homes / HR</div>
         <div class="price-name">Saathi Enterprise</div>
@@ -341,12 +366,13 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
         <div class="price-desc">For hospitals, old age homes, corporate HR, insurance providers.</div>
         <ul class="price-feats">
           <li>Multi-resident dashboard</li>
-          <li>Vitals reporting & PDF</li>
+          <li>Biweekly dietician review</li>
+          <li>Monthly family PDF reports</li>
           <li>API integration</li>
           <li>White label option</li>
-          <li>Dedicated support</li>
+          <li>Dedicated account manager</li>
         </ul>
-        <button class="price-btn secondary" id="landingPay299" onclick="landingPay('pro')">Start ₹299/month</button>
+        <button class="price-btn secondary" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Contact Us</button>
       </div>
     </div>
   </div>
@@ -386,7 +412,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
 
       <div style="margin-top:28px;padding-top:24px;border-top:1px solid #F0E0C0;text-align:center">
         <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Or reach us directly</div>
-        <span style="font-family:'Baloo 2';font-weight:700;color:var(--amber-d);font-size:.95rem">hello [at] saathiai [dot] health</span>
+        <a href="mailto:support@saathiai.health" style="font-family:'Baloo 2';font-weight:700;color:var(--amber-d);font-size:.95rem">support@saathiai.health</a>
       </div>
     </div>
   </div>
@@ -415,7 +441,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
     <p style="margin-bottom:10px;color:rgba(255,255,255,.35);font-family:'Baloo 2';font-size:.95rem">
       <strong style="color:rgba(255,255,255,.6)">Companion AI</strong> · साथी AI
     </p>
-    <p>© 2025 Companion AI · Made with 💛 in India · <a href="https://saathiai.health">saathiai.health</a> · <span style="color:rgba(245,158,11,.5)">hello [at] saathiai [dot] health</span></p>
+    <p>© 2025 Companion AI · Made with 💛 in India · <a href="https://saathiai.health">saathiai.health</a> · <a href="mailto:support@saathiai.health" style="color:rgba(245,158,11,.7)">support@saathiai.health</a></p>
   </div>
 </footer>
 
