@@ -30,7 +30,7 @@ module.exports = async function handler(req, res) {
         headers: { 'X-Api-Key': API_KEY, 'X-Auth-Token': AUTH_TOKEN }
       });
       const data = await r.json();
-      const verified = data.payment && data.payment.status === 'Credit';
+      const verified = Boolean(data.payment && data.payment.status === 'Credit');
       return res.status(200).json({ verified, payment: data.payment });
     } catch(err) {
       return res.status(500).json({error: err.message});
