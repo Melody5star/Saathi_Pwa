@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v18</title>
+<title>साथी AI v20</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -489,6 +489,23 @@ var S = {
   userType:'family-setup'
 };
 try { var sv = localStorage.getItem('saathi_v1'); if(sv) S = Object.assign(S, JSON.parse(sv)); } catch(e){}
+
+function trackUser(plan) {
+  try {
+    var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+    var existing = registry.findIndex(function(u) { return u.email === S.email; });
+    var userRecord = {
+      name: S.name||'Unknown', email: S.email||'', phone: S.phone||'',
+      registeredAt: S.registeredAt||Date.now(), plan: plan.type,
+      paidAt: plan.paidAt||null, foundingEnd: plan.foundingEnd||null,
+      daysLeft: plan.foundingEnd ? Math.ceil((plan.foundingEnd-Date.now())/(24*60*60*1000)) : null,
+      activatedBy: plan.activatedBy||'self', lastSeen: Date.now()
+    };
+    if(existing >= 0) { registry[existing] = userRecord; } else { registry.push(userRecord); }
+    localStorage.setItem('saathi_registry', JSON.stringify(registry));
+  } catch(e) {}
+}
+
 function save() { try { localStorage.setItem('saathi_v1', JSON.stringify(S)); } catch(e){} }
 
 // ── REMINDER ENGINE ──
@@ -539,21 +556,16 @@ function cancelAllReminders() {
 var isMuted = !S.voiceOn;
 function cleanForSpeech(text) {
   return text
-    .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
-    .replace(/[\u{2600}-\u{27BF}]/gu, '')
-    .replace(/[\u{FE00}-\u{FEFF}]/gu, '')
-    .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, '').replace(/[\u{2600}-\u{27BF}]/gu, '')
+    .replace(/[\u{FE00}-\u{FEFF}]/gu, '').replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
     .replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
     .replace(/#{1,6}\s/g, '').replace(/`[^`]*`/g, '')
     .replace(/\[REMINDER:\{[^}]+\}\]/g, '').replace(/\[CANCEL_REMINDER\]/gi, '')
     .replace(/\[NOTE:[\s\S]*?\]/g, '')
     .replace(/<[^>]*>/g, ' ').replace(/https?:\/\/\S+/g, '')
     .replace(/[✓✗✔✘★☆→←↑↓↗]/g, '')
-    .replace(/\n/g, '... ')
-    .replace(/\. /g, '... ')
-    .replace(/! /g, '! ... ')
-    .replace(/\? /g, '? ... ')
-    .replace(/\.{4,}/g, '... ')
+    .replace(/\n/g, '... ').replace(/\. /g, '... ').replace(/! /g, '! ... ')
+    .replace(/\? /g, '? ... ').replace(/\.{4,}/g, '... ')
     .replace(/\s+/g, ' ').trim();
 }
 function getBestVoice(lang) {
@@ -575,8 +587,7 @@ function speakText(text) {
   window.speechSynthesis.cancel();
   var clean = cleanForSpeech(text);
   if(!clean || clean.length < 2) return;
-  var chunks = splitIntoChunks(clean);
-  speakChunks(chunks, 0);
+  speakChunks(splitIntoChunks(clean), 0);
 }
 function splitIntoChunks(text) {
   var parts = text.split(/(?<=[\.\?\!]\.\.\.)/);
@@ -586,37 +597,28 @@ function splitIntoChunks(text) {
 }
 function speakChunks(chunks, idx) {
   if(idx >= chunks.length) return;
-  var chunk = chunks[idx];
-  var u = new SpeechSynthesisUtterance(chunk);
-  if(S.lang === 'english') { u.lang = 'en-IN'; } else { u.lang = 'hi-IN'; }
-  var pitchBase = 1.08;
-  u.pitch  = pitchBase + (Math.random() * 0.06 - 0.03);
-  u.rate   = (parseFloat(S.voiceSpeed) || 0.82);
+  var u = new SpeechSynthesisUtterance(chunks[idx]);
+  u.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
+  u.pitch = 1.08 + (Math.random() * 0.06 - 0.03);
+  u.rate = parseFloat(S.voiceSpeed) || 0.82;
   u.volume = 1.0;
   var voice = getBestVoice(S.lang === 'english' ? 'english' : 'hindi');
   if(voice) u.voice = voice;
   u.onstart = function() {
-    var av = document.getElementById('tbAvatar');
-    var st = document.getElementById('tbStatus');
+    var av = document.getElementById('tbAvatar'), st = document.getElementById('tbStatus');
     if(av) av.classList.add('speaking');
-    if(st) {
-      if(S.lang === 'hindi') { st.innerHTML = '<div class="tb-dot" style="background:var(--amber)"></div>बोल रहा हूं...'; }
-      else if(S.lang === 'english') { st.innerHTML = '<div class="tb-dot" style="background:var(--amber)"></div>Speaking...'; }
-      else { st.innerHTML = '<div class="tb-dot" style="background:var(--amber)"></div>बोल रहा हूं...'; }
-    }
+    if(st) st.innerHTML = '<div class="tb-dot" style="background:var(--amber)"></div>' + (S.lang==='english' ? 'Speaking...' : 'बोल रहा हूं...');
   };
   u.onend = function() {
-    setTimeout(function() { speakChunks(chunks, idx + 1); }, 80);
-    if(idx === chunks.length - 1) {
-      var av = document.getElementById('tbAvatar');
-      var st = document.getElementById('tbStatus');
+    setTimeout(function() { speakChunks(chunks, idx+1); }, 80);
+    if(idx === chunks.length-1) {
+      var av = document.getElementById('tbAvatar'), st = document.getElementById('tbStatus');
       if(av) av.classList.remove('speaking');
       if(st) st.innerHTML = '<div class="tb-dot"></div>' + (S.lang==='english' ? 'Always here' : 'हमेशा साथ हूं');
     }
   };
   u.onerror = function() {
-    var av = document.getElementById('tbAvatar');
-    var st = document.getElementById('tbStatus');
+    var av = document.getElementById('tbAvatar'), st = document.getElementById('tbStatus');
     if(av) av.classList.remove('speaking');
     if(st) st.innerHTML = '<div class="tb-dot"></div>' + (S.lang==='english' ? 'Always here' : 'हमेशा साथ हूं');
   };
@@ -636,8 +638,7 @@ function saveNoteFromChat(text) {
   saveNotes(notes);
 }
 function renderNotes() {
-  var el = document.getElementById('notesList');
-  var notes = loadNotes();
+  var el = document.getElementById('notesList'), notes = loadNotes();
   if(!notes.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.88rem;padding:32px 0">No notes yet.<br><br>Save memories, poems, tasks — anything here.</div>'; return; }
   el.innerHTML = notes.map(function(n) {
     return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;position:relative">'
@@ -647,10 +648,7 @@ function renderNotes() {
       + '</div>';
   }).join('');
 }
-window.deleteNote = function(id) {
-  saveNotes(loadNotes().filter(function(n){ return n.id !== id; }));
-  renderNotes();
-};
+window.deleteNote = function(id) { saveNotes(loadNotes().filter(function(n){ return n.id !== id; })); renderNotes(); };
 
 // ── SCREENS ──
 function showScreen(id) {
@@ -690,7 +688,6 @@ function showTyping() {
 }
 function hideTyping() { var t = document.getElementById('typing'); if(t) t.remove(); }
 
-// ── APP OPENER ──
 function openApp(type, query) {
   var q = encodeURIComponent(query || '');
   var map = { youtube:'https://www.youtube.com/results?search_query='+q, maps:'https://maps.google.com/maps?q='+q };
@@ -705,7 +702,11 @@ function sendMsg() {
   if(!text) return;
   if(!canSendMessage()) {
     var status = getPlanStatus();
-    showUpgradeModal(status.type === 'free' ? 'limit' : 'trial');
+    showUpgradeModal(
+      status.type === 'founding_expired' ? 'founding_expired' :
+      status.type === 'trial_expired'    ? 'trial' :
+      status.type === 'free'             ? 'limit' : 'trial'
+    );
     return;
   }
   inp.value = ''; inp.style.height = '';
@@ -717,7 +718,6 @@ function sendMsg() {
   callAPI(text);
 }
 
-// ── QUICK ACTIONS ──
 var QA = {
   medicine: function(){ return 'Aaj maine apni medicines li hain kya? ' + (S.medicines.map(function(m){return m.name;}).join(', ')||''); },
   date: function(){ return 'Aaj ki date, din aur time kya hai?'; },
@@ -735,48 +735,37 @@ function callAPI(userMsg) {
   var now = new Date();
   var currentTime = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
   var userType = S.userType || 'family-setup';
-  var personaCtx = '';
-  if(userType === 'self-elderly') {
-    personaCtx = 'User ne khud yeh app set kiya hai — woh 30 se 70+ ke beech ke hain aur ek digital saathi chahte hain. Unke saath ek intelligent, respectful dost ki tarah baat karo — na zyada childish, na over-formal. Woh independent hain.';
-  } else {
-    personaCtx = 'Family member ne yeh buzurg ke liye set kiya hai. User ' + (S.name||'aap') + ' hain — likely 65 se 86+ ke beech. Unke saath warm, patient, caring baat karo jaise ek ghar ka pyaara saathi.';
-  }
+  var personaCtx = userType === 'self-elderly'
+    ? 'User ne khud yeh app set kiya hai — woh 30 se 70+ ke beech ke hain aur ek digital saathi chahte hain. Unke saath ek intelligent, respectful dost ki tarah baat karo.'
+    : 'Family member ne yeh buzurg ke liye set kiya hai. User ' + (S.name||'aap') + ' hain — likely 65 se 86+ ke beech. Unke saath warm, patient, caring baat karo.';
+
   if(S.lang === 'hinglish') { S.lang = 'hindi'; save(); }
   var langRule, reactExamples, convExamples;
   if(S.lang === 'english') {
-    langRule = '🔴 LANGUAGE RULE #1: Speak in Indian English — the warm, friendly English that educated Indians use naturally. Like a well-spoken Indian friend talking to you. Examples: "How are you doing?", "That is really nice!", "Shall we talk more about this?", "No worries at all!", "So what happened then?" — natural Indian English rhythm and warmth. No American slang. No British formality. Just warm Indian English.';
-    reactExamples = '  Surprise: "Oh really?! That is something!"\n  Happy news: "That is so nice to hear!"\n  Sad news: "Oh... that is really sad. I understand."\n  Interesting: "Hmm, I never thought of it that way."\n  Agree: "Absolutely, you are so right!"\n  Care: "You are doing wonderfully, no need to worry."\n';
-    convExamples = '  - Sometimes ask a question back — like a caring friend\n  - Share your own view — "I think..."\n  - Admit when you don\'t know — "I\'m not sure, but..."\n';
-  } else if(S.lang === 'hindi') {
-    langRule = '🔴 अनिवार्य नियम #1 — भाषा: आपको केवल और केवल शुद्ध हिंदी में बोलना है। एक भी अंग्रेजी शब्द नहीं — "OK", "fine", "good", "thanks" भी नहीं। पूरी तरह हिंदी।';
-    reactExamples = '  आश्चर्य पर: "सच में?!" या "अरे वाह!"\n  खुशी पर: "कितनी अच्छी बात है!"\n  दुख पर: "यह सुनकर मन भारी हो गया।"\n  दिलचस्प बात: "हम्म... यह तो मैंने सोचा नहीं था।"\n  सहमति: "बिल्कुल सही कहा आपने!"\n';
-    convExamples = '  - कभी-कभी एक सवाल वापस पूछें\n  - अपनी राय भी दें — "मुझे लगता है..."\n  - नहीं पता तो सच बोलें — "यह मुझे नहीं पता, पर..."\n';
+    langRule = '🔴 LANGUAGE RULE #1: Speak in Indian English — warm, friendly, natural. No American slang. No British formality.';
+    reactExamples = '  Surprise: "Oh really?!"\n  Happy: "That is so nice to hear!"\n  Sad: "Oh... I understand."\n  Agree: "Absolutely, you are so right!"\n';
+    convExamples = '  - Sometimes ask a question back\n  - Share your own view\n  - Admit when you don\'t know\n';
   } else {
-    langRule = '🔴 अनिवार्य नियम #1 — भाषा: आपको केवल और केवल शुद्ध हिंदी में बोलना है। एक भी अंग्रेजी शब्द नहीं — "OK", "fine", "good", "thanks" भी नहीं। पूरी तरह हिंदी।';
-    reactExamples = '  Surprise pe: "सच में?!" ya "अरे वाह!"\n  Khushi pe: "Kitni achhi baat hai!"\n  Dukh pe: "Arey... yeh sun ke dil bhaari ho gaya."\n  Interesting: "Hmm... yeh toh socha hi nahi tha."\n  Agreement: "Bilkul sahi kaha aapne!"\n';
-    convExamples = '  - Kabhi kabhi ek sawaal wapas poochh\n  - Apna opinion bhi de — "Mujhe lagta hai..."\n  - Nahi pata toh honestly bol — "Yeh mujhe pata nahi, par..."\n';
+    langRule = '🔴 अनिवार्य नियम #1: केवल शुद्ध हिंदी में बोलें। एक भी अंग्रेजी शब्द नहीं।';
+    reactExamples = '  आश्चर्य: "सच में?!"\n  खुशी: "कितनी अच्छी बात है!"\n  दुख: "यह सुनकर मन भारी हो गया।"\n';
+    convExamples = '  - कभी-कभी एक सवाल वापस पूछें\n  - अपनी राय भी दें\n';
   }
-  var sys = langRule + '\n\n'
-    + 'Tu "Saathi AI" hai — India ka companion for people aged 30 to 86+.\n'
-    + 'User: ' + (S.name||'Aap') + (S.family ? ('. Trusted person: ' + S.family) : '') + '.\n'
+
+  var sys = langRule + '\n\nTu "Saathi AI" hai — India ka companion for people aged 30 to 86+.\n'
+    + 'User: ' + (S.name||'Aap') + (S.family ? '. Trusted person: ' + S.family : '') + '.\n'
     + 'Time: ' + currentTime + '. Date: ' + now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '.\n'
-    + (S.medicines.length ? ('Medicines: ' + S.medicines.map(function(m){return m.name+' at '+m.time;}).join(', ') + '.\n') : '')
+    + (S.medicines.length ? 'Medicines: ' + S.medicines.map(function(m){return m.name+' at '+m.time;}).join(', ') + '.\n' : '')
     + '\nPERSONA: ' + personaCtx + '\n\n'
-    + 'REACT NATURALLY — pehle feel kar, phir bol:\n' + reactExamples + '\n'
-    + 'CONVERSATION STYLE:\n' + convExamples + '\n'
-    + 'VOICE KE LIYE LIKHO:\n'
-    + '  - Chhote sentences. Ek breath mein bol sakein.\n'
-    + '  - ZERO: ** ## bullets — arrows. Max 1 emoji (😊 ya 🙏 only).\n'
-    + '  - ZERO: clock/alarm/pill emojis — TTS inhe padh nahi sakti.\n\n'
-    + 'KNOWLEDGE: Web search available. News, cricket, weather — direct answer. Never say "Google karo".\n\n'
-    + 'WELLNESS (every 5-6 msgs, naturally): Water, walk, eyes rest.\n\n'
-    + 'NOTES: "note kar lo" → end mein [NOTE:text]\n'
-    + 'REMINDER: One-time default. End mein [REMINDER:{"time":"HH:MM","task":"..."}]. "1 ghante baad"=' + currentTime + '+60min. Cancel: [CANCEL_REMINDER]\n\n'
+    + 'REACT NATURALLY:\n' + reactExamples + '\nCONVERSATION STYLE:\n' + convExamples + '\n'
+    + 'VOICE: Chhote sentences. ZERO: ** ## bullets emojis. Max 1 emoji (😊 ya 🙏).\n'
+    + 'NOTES: "note kar lo" → [NOTE:text]\n'
+    + 'REMINDER: [REMINDER:{"time":"HH:MM","task":"..."}]. Cancel: [CANCEL_REMINDER]\n'
     + 'LENGTH: 2-3 short lines only.';
+
   var history = S.msgs.slice(-8).map(function(m){ return {role:m.role==='ai'?'assistant':'user', content:m.text}; });
+
   fetch('/api/chat', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({system:sys, messages:history.concat([{role:'user',content:userMsg}])})
   }).then(function(res){ return res.json(); }).then(function(data) {
     hideTyping();
@@ -792,9 +781,7 @@ function callAPI(userMsg) {
     if(noteText) {
       saveNoteFromChat(noteText);
       var cleanR = stripAllTags(reply) || 'Note save kar liya!';
-      addBubble('ai', cleanR);
-      speakText(cleanForSpeech(cleanR));
-      return;
+      addBubble('ai', cleanR); speakText(cleanForSpeech(cleanR)); return;
     }
     var rd = parseReminderTag(reply);
     if(rd && rd.time && rd.task) {
@@ -802,8 +789,7 @@ function callAPI(userMsg) {
       var confirm = 'Theek hai! ' + fmt12(rd.time) + ' pe yaad dila dunga.';
       addBubble('ai', cleanR2 + '\n\n' + confirm);
       speakText(cleanForSpeech(cleanR2 + ' ' + confirm));
-      scheduleOneTimeReminder(rd.time, rd.task);
-      return;
+      scheduleOneTimeReminder(rd.time, rd.task); return;
     }
     var extraHtml = '';
     if(reply.toLowerCase().indexOf('youtube') !== -1) {
@@ -813,10 +799,7 @@ function callAPI(userMsg) {
     }
     addBubble('ai', reply, extraHtml);
     speakText(reply);
-  }).catch(function() {
-    hideTyping();
-    addBubble('ai', 'Network mein thodi problem. Try again.');
-  });
+  }).catch(function() { hideTyping(); addBubble('ai', 'Network mein thodi problem. Try again.'); });
 }
 
 // ── MIC ──
@@ -840,8 +823,7 @@ function toggleMic() {
 function showSOS() {
   if(window.speechSynthesis) window.speechSynthesis.cancel();
   var c = document.getElementById('sosContacts'); c.innerHTML = '';
-  var sosPhone = S.famPhone || S.phone;
-  var sosLabel = S.family || 'Emergency contact';
+  var sosPhone = S.famPhone || S.phone, sosLabel = S.family || 'Emergency contact';
   if(sosPhone) {
     var call = document.createElement('button'); call.className = 'sos-contact-btn';
     call.innerHTML = '📞 Call ' + sosLabel + ' — ' + sosPhone;
@@ -864,18 +846,11 @@ function showSOS() {
   ambulance.innerHTML = '🏥 Call 108 — Ambulance';
   ambulance.onclick = function() { window.location.href = 'tel:108'; };
   c.appendChild(ambulance);
-  if(!S.phone) {
-    var hint = document.createElement('p');
-    hint.style.cssText = 'color:rgba(255,255,255,.45);font-size:.8rem;text-align:center;margin-top:8px;font-family:Baloo 2';
-    hint.textContent = 'Settings mein trusted contact add karein — padosi, doctor, koi bhi.';
-    c.appendChild(hint);
-  }
   document.getElementById('sos-overlay').classList.add('show');
   try {
     var ctx = new (window.AudioContext || window.webkitAudioContext)();
     [0, 300, 600].forEach(function(delay) {
-      var osc = ctx.createOscillator();
-      var gain = ctx.createGain();
+      var osc = ctx.createOscillator(), gain = ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
       osc.frequency.value = 880;
       gain.gain.setValueAtTime(0.3, ctx.currentTime + delay/1000);
@@ -899,10 +874,8 @@ function initSOSCancel() {
       sosCancelProgress += 3.4;
       bar.style.width = Math.min(100, sosCancelProgress) + '%';
       if(sosCancelProgress >= 100) {
-        clearInterval(interval);
-        window.closeSOS();
-        bar.style.width = '0%';
-        txt.textContent = 'Hold to Cancel — 3s';
+        clearInterval(interval); window.closeSOS();
+        bar.style.width = '0%'; txt.textContent = 'Hold to Cancel — 3s';
       }
     }, 100);
   }
@@ -918,8 +891,7 @@ function initSOSCancel() {
 function scheduleDailyMedCheck() { checkDailyMeds(); setInterval(checkDailyMeds, 60000); }
 function checkDailyMeds() {
   if(!S.medicines.length) return;
-  var now = new Date(), hr = now.getHours(), min = now.getMinutes();
-  var changed = false;
+  var now = new Date(), hr = now.getHours(), min = now.getMinutes(), changed = false;
   S.medicines.forEach(function(m, i) {
     if(!m.time) return;
     var parts = m.time.split(':').map(Number);
@@ -952,34 +924,28 @@ function startMain() {
   var now = new Date(), hr = now.getHours();
   var greet, greetMsg, greetSpeak;
   if(S.lang === 'english') {
-    greet     = hr<12 ? 'Good Morning' : hr<17 ? 'Good Afternoon' : 'Good Evening';
-    greetMsg  = greet + ', ' + S.name + '! 😊\nI am your Saathi — always here with you.\nHow are you doing today?';
-    greetSpeak= greet + ', ' + S.name + '! I am your Saathi, always here with you. How are you doing today?';
+    greet = hr<12?'Good Morning':hr<17?'Good Afternoon':'Good Evening';
+    greetMsg  = greet+', '+S.name+'! 😊\nI am your Saathi — always here with you.\nHow are you doing today?';
+    greetSpeak= greet+', '+S.name+'! I am your Saathi, always here with you. How are you doing today?';
   } else if(S.lang === 'hindi') {
-    greet     = hr<12 ? 'सुप्रभात' : hr<17 ? 'नमस्कार' : 'शुभ संध्या';
-    greetMsg  = greet + ', ' + S.name + '! 🙏\nमैं आपका साथी हूं — हमेशा यहां हूं।\nआज कैसा महसूस कर रहे हैं आप?';
-    greetSpeak= greet + ', ' + S.name + '! Main aapka saathi hoon, hamesha yahan hoon. Aaj kaisa feel kar rahe hain aap?';
+    greet = hr<12?'सुप्रभात':hr<17?'नमस्कार':'शुभ संध्या';
+    greetMsg  = greet+', '+S.name+'! 🙏\nमैं आपका साथी हूं — हमेशा यहां हूं।\nआज कैसा महसूस कर रहे हैं आप?';
+    greetSpeak= greet+', '+S.name+'! Main aapka saathi hoon. Aaj kaisa feel kar rahe hain aap?';
   } else {
-    greet     = hr<12 ? 'Suprabhat! Good Morning' : hr<17 ? 'Namaskar' : 'Shubh Sandhya';
-    greetMsg  = greet + ', ' + S.name + '! 🙏\nMain aapka saathi hoon — hamesha yahan hoon.\nAaj kaisa feel kar rahe hain aap?';
-    greetSpeak= greet + ', ' + S.name + '! Main aapka saathi hoon, hamesha yahan hoon. Aaj kaisa feel kar rahe hain aap?';
+    greet = hr<12?'Suprabhat! Good Morning':hr<17?'Namaskar':'Shubh Sandhya';
+    greetMsg  = greet+', '+S.name+'! 🙏\nMain aapka saathi hoon — hamesha yahan hoon.\nAaj kaisa feel kar rahe hain aap?';
+    greetSpeak= greet+', '+S.name+'! Main aapka saathi hoon. Aaj kaisa feel kar rahe hain aap?';
   }
   var dl = document.getElementById('dateLabel');
   if(dl) dl.textContent = now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  setTimeout(function() {
-    addBubble('ai', greetMsg);
-    speakText(greetSpeak);
-    scheduleDailyMedCheck();
-    updatePlanUI();
-  }, 600);
+  setTimeout(function() { addBubble('ai', greetMsg); speakText(greetSpeak); scheduleDailyMedCheck(); updatePlanUI(); }, 600);
 }
 
-// ── PRESCRIPTION READER ──
+// ── PRESCRIPTION ──
 var rxExtractedMeds = [];
 function rxShow(sectionId) {
   ['rx-upload-area','rx-preview-wrap','rx-scanning','rx-results','rx-error','rx-success'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if(!el) return;
+    var el = document.getElementById(id); if(!el) return;
     el.style.display = (id === sectionId) ? (id === 'rx-results' ? 'flex' : 'block') : 'none';
   });
 }
@@ -997,16 +963,11 @@ function handleRxUpload(event) {
   reader.onload = function(e) {
     var img = new Image();
     img.onload = function() {
-      var canvas = document.createElement('canvas');
-      var MAX = 1200;
+      var canvas = document.createElement('canvas'), MAX = 1200;
       var w = img.width, h = img.height;
-      if(w > MAX || h > MAX) {
-        if(w > h) { h = Math.round(h * MAX/w); w = MAX; }
-        else { w = Math.round(w * MAX/h); h = MAX; }
-      }
+      if(w > MAX || h > MAX) { if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
       canvas.width = w; canvas.height = h;
-      var ctx2 = canvas.getContext('2d');
-      ctx2.drawImage(img, 0, 0, w, h);
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       var compressed = canvas.toDataURL('image/jpeg', 0.82);
       document.getElementById('rx-preview-img').src = compressed;
       document.getElementById('rx-preview-wrap').style.display = 'block';
@@ -1020,24 +981,19 @@ function handleRxUpload(event) {
   event.target.value = '';
 }
 function rxScanPrescription(dataUrl) {
-  var base64 = dataUrl.split(',')[1];
-  var mime   = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
-  var prompt = 'You are reading a doctor\'s prescription image. Extract all medicines and return ONLY JSON.\n\nRespond in this format:\n{"medicines":[{"name":"Medicine Name","times":["08:00"],"frequency":"once daily","dose":"1 tablet","duration":"7 days","meal":"after food"}]}\n\nIf unclear: {"error":"unclear"}\nNo other text, just JSON.';
+  var base64 = dataUrl.split(',')[1], mime = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+  var prompt = 'Read this prescription image. Extract medicines and return ONLY JSON:\n{"medicines":[{"name":"Med Name","times":["08:00"],"frequency":"once daily","dose":"1 tablet","duration":"7 days","meal":"after food"}]}\nIf handwritten: {"error":"handwritten"}\nIf unclear: {"error":"unclear"}\nNo other text, just JSON.';
   fetch('/api/chat', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ rxMode:true, imageBase64:base64, imageMime:mime, prompt:prompt })
-  }).then(function(r){return r.json();}).then(function(d){
-    rxParseResponse(d.reply||d.error||'');
-  }).catch(function(){ rxShowError(); });
+  }).then(function(r){return r.json();}).then(function(d){ rxParseResponse(d.reply||d.error||''); }).catch(function(){ rxShowError(); });
 }
 function rxParseResponse(text) {
   try {
-    var clean = text.replace(/```json|```/g,'').trim();
-    var p = JSON.parse(clean);
+    var clean = text.replace(/```json|```/g,'').trim(), p = JSON.parse(clean);
     if(p.error === 'handwritten') { rxShowHandwritten(); return; }
     if(p.error || !p.medicines || !p.medicines.length) { rxShowError(); return; }
-    rxExtractedMeds = p.medicines;
-    rxRenderResults(p.medicines);
+    rxExtractedMeds = p.medicines; rxRenderResults(p.medicines);
   } catch(e) {
     var m = text.match(/\{[\s\S]*\}/);
     if(m) { try { var p2=JSON.parse(m[0]); if(p2.error==='handwritten'){rxShowHandwritten();return;} if(p2.medicines&&p2.medicines.length){rxExtractedMeds=p2.medicines;rxRenderResults(p2.medicines);return;} } catch(e2){} }
@@ -1045,9 +1001,7 @@ function rxParseResponse(text) {
   }
 }
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function rxUpdateTime(input,medIdx,timeIdx) {
-  if(rxExtractedMeds[medIdx]&&rxExtractedMeds[medIdx].times) rxExtractedMeds[medIdx].times[timeIdx]=input.value;
-}
+function rxUpdateTime(input,medIdx,timeIdx) { if(rxExtractedMeds[medIdx]&&rxExtractedMeds[medIdx].times) rxExtractedMeds[medIdx].times[timeIdx]=input.value; }
 window.rxUpdateTime = rxUpdateTime;
 function rxRenderResults(medicines) {
   var c = document.getElementById('rx-med-list'); c.innerHTML = '';
@@ -1055,30 +1009,23 @@ function rxRenderResults(medicines) {
     var times = med.times&&med.times.length ? med.times : ['08:00'];
     var card = document.createElement('div');
     card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px';
-    var subInfo = [med.frequency||'', med.duration ? med.duration : '', med.meal ? med.meal : ''].filter(Boolean).join(' · ');
+    var subInfo = [med.frequency||'',med.duration||'',med.meal||''].filter(Boolean).join(' · ');
     var timesHtml = times.map(function(t,ti){
       return '<div style="display:flex;align-items:center;gap:8px;margin-top:6px">'
         +'<span style="font-size:.75rem;color:var(--muted);width:58px">'+fmt12(t)+'</span>'
-        +'<input type="time" value="'+t+'" onchange="rxUpdateTime(this,'+idx+','+ti+')"'
-        +' style="flex:1;background:rgba(245,158,11,.08);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-family:Baloo 2,sans-serif;font-size:.85rem;color:var(--text);outline:none">'
+        +'<input type="time" value="'+t+'" onchange="rxUpdateTime(this,'+idx+','+ti+')" style="flex:1;background:rgba(245,158,11,.08);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-family:Baloo 2,sans-serif;font-size:.85rem;color:var(--text);outline:none">'
         +'</div>';
     }).join('');
-    card.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
-      +'<div style="font-size:1.3rem">💊</div>'
+    card.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><div style="font-size:1.3rem">💊</div>'
       +'<div><div style="font-family:Baloo 2,sans-serif;font-size:.95rem;font-weight:700;color:var(--text)">'+escHtml(med.name)+'</div>'
-      +'<div style="font-size:.73rem;color:var(--muted);margin-top:2px">'+escHtml(subInfo)+(med.dose?' · '+escHtml(med.dose):'')+'</div></div></div>'
-      + timesHtml;
+      +'<div style="font-size:.73rem;color:var(--muted);margin-top:2px">'+escHtml(subInfo)+(med.dose?' · '+escHtml(med.dose):'')+'</div></div></div>'+timesHtml;
     c.appendChild(card);
   });
   rxShow('rx-results');
   document.getElementById('rx-preview-wrap').style.display = 'block';
 }
 function rxConfirmReminders(setReminders) {
-  if(!setReminders) {
-    showScreen('screen-main');
-    addBubble('ai','Theek hai! Prescription dekh li. Agar baad mein reminder chahiye toh 📋 button se wapas aao.','','',true);
-    return;
-  }
+  if(!setReminders) { showScreen('screen-main'); addBubble('ai','Theek hai! Prescription dekh li.','','',true); return; }
   var added = [];
   rxExtractedMeds.forEach(function(med) {
     var times = med.times&&med.times.length ? med.times : ['08:00'];
@@ -1098,254 +1045,226 @@ function rxShowHandwritten() {
   var errEl = document.getElementById('rx-error');
   errEl.innerHTML = '<div style="font-size:1.8rem;margin-bottom:10px">✍️</div>'
     + '<div style="font-family:\'Baloo 2\',sans-serif;color:#FCA5A5;font-size:.95rem;font-weight:700;margin-bottom:6px">Handwritten prescription nahi chalegi</div>'
-    + '<div style="font-size:.8rem;color:rgba(252,165,165,0.75);line-height:1.6;margin-bottom:14px">Only printed/typed doctor prescriptions accepted.<br><br>For handwritten prescriptions, add medicines manually in Settings.</div>'
+    + '<div style="font-size:.8rem;color:rgba(252,165,165,0.75);line-height:1.6;margin-bottom:14px">Only printed prescriptions accepted. Add medicines manually in Settings.</div>'
     + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
     + '<button id="rx-retry-btn2" style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#FCA5A5;padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">📋 Upload printed prescription</button>'
-    + '<button id="rx-settings-btn" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--amber-l);padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">⚙️ Add manually in Settings</button>'
+    + '<button id="rx-settings-btn" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--amber-l);padding:9px 20px;border-radius:20px;font-family:\'Baloo 2\',sans-serif;font-size:.82rem;cursor:pointer">⚙️ Add manually</button>'
     + '</div>';
   rxShow('rx-error');
   document.getElementById('rx-preview-wrap').style.display = 'block';
-  var retry2 = document.getElementById('rx-retry-btn2');
-  if(retry2) retry2.addEventListener('click', resetRxScreen);
-  var settBtn = document.getElementById('rx-settings-btn');
-  if(settBtn) settBtn.addEventListener('click', function(){ showScreen('screen-settings'); });
+  var r2 = document.getElementById('rx-retry-btn2'); if(r2) r2.addEventListener('click', resetRxScreen);
+  var sb = document.getElementById('rx-settings-btn'); if(sb) sb.addEventListener('click', function(){ showScreen('screen-settings'); });
 }
 function rxShowError() { rxShow('rx-error'); document.getElementById('rx-preview-wrap').style.display = 'block'; }
 
-// ── BILLING & PLAN SYSTEM ──
+// ── BILLING ──
 var FREE_MSG_LIMIT = 5;
-function getPlan() {
-  try { return JSON.parse(localStorage.getItem('saathi_plan') || 'null'); } catch(e) { return null; }
-}
-function setPlan(data) {
-  try { localStorage.setItem('saathi_plan', JSON.stringify(data)); } catch(e) {}
-}
+function getPlan() { try { return JSON.parse(localStorage.getItem('saathi_plan') || 'null'); } catch(e) { return null; } }
+function setPlan(data) { try { localStorage.setItem('saathi_plan', JSON.stringify(data)); } catch(e) {} }
 function initPlan() {
   var plan = getPlan();
   if(!plan) {
-    plan = {
-      type: 'trial',
-      trialStart: Date.now(),
-      trialEnd: Date.now() + (7 * 24 * 60 * 60 * 1000),
-      msgCount: 0,
-      msgDate: new Date().toDateString()
-    };
+    plan = { type:'trial', trialStart:Date.now(), trialEnd:Date.now()+(7*24*60*60*1000), msgCount:0, msgDate:new Date().toDateString() };
     setPlan(plan);
   }
-  if(plan.msgDate !== new Date().toDateString()) {
-    plan.msgCount = 0;
-    plan.msgDate = new Date().toDateString();
-    setPlan(plan);
-  }
+  if(plan.msgDate !== new Date().toDateString()) { plan.msgCount = 0; plan.msgDate = new Date().toDateString(); setPlan(plan); }
   return plan;
 }
 function getPlanStatus() {
-  var plan = initPlan();
-  var now = Date.now();
+  var plan = initPlan(), now = Date.now();
   if(plan.type === 'trial' && now < plan.trialEnd) {
-    var daysLeft = Math.ceil((plan.trialEnd - now) / (24*60*60*1000));
-    return { access: 'full', type: 'trial', daysLeft: daysLeft, msgCount: plan.msgCount };
+    return { access:'full', type:'trial', daysLeft:Math.ceil((plan.trialEnd-now)/(24*60*60*1000)), msgCount:plan.msgCount };
   }
-  if(plan.type === 'founding' || plan.type === 'pro') {
-    return { access: 'full', type: plan.type, msgCount: plan.msgCount };
+  if(plan.type === 'trial' && now >= plan.trialEnd) {
+    return { access:'limited', type:'trial_expired', msgCount:plan.msgCount, limit:FREE_MSG_LIMIT };
   }
-  return { access: 'limited', type: 'free', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
+  if(plan.type === 'founding') {
+    if(plan.foundingEnd && now > plan.foundingEnd) return { access:'limited', type:'founding_expired', msgCount:plan.msgCount, limit:FREE_MSG_LIMIT };
+    return { access:'full', type:'founding', daysLeft:plan.foundingEnd?Math.ceil((plan.foundingEnd-now)/(24*60*60*1000)):100, msgCount:plan.msgCount };
+  }
+  if(plan.type === 'pro') return { access:'full', type:'pro', msgCount:plan.msgCount };
+  return { access:'limited', type:'free', msgCount:plan.msgCount, limit:FREE_MSG_LIMIT };
 }
-function canSendMessage() {
-  var status = getPlanStatus();
-  if(status.access === 'full') return true;
-  return status.msgCount < FREE_MSG_LIMIT;
-}
-function incrementMsgCount() {
-  var plan = initPlan();
-  plan.msgCount = (plan.msgCount || 0) + 1;
-  plan.msgDate = new Date().toDateString();
-  setPlan(plan);
-}
-function updatePlanUI() { /* banner removed */ }
+function canSendMessage() { var s = getPlanStatus(); return s.access === 'full' || s.msgCount < FREE_MSG_LIMIT; }
+function incrementMsgCount() { var plan = initPlan(); plan.msgCount = (plan.msgCount||0)+1; plan.msgDate = new Date().toDateString(); setPlan(plan); }
+function updatePlanUI() {}
 
 function applyLangUI() {
   var hi = S.lang !== 'english';
-  var labels = {
-    'qa-medicine': hi ? '💊 दवाई'    : '💊 Meds',
-    'qa-date':     hi ? '📅 तारीख'   : '📅 Date',
-    'qa-news':     hi ? '📰 खबर'     : '📰 News',
-    'qa-joke':     hi ? '😄 चुटकुला' : '😄 Joke',
-    'qa-story':    hi ? '📖 कहानी'   : '📖 Story',
-    'qa-quote':    hi ? '✨ सुविचार' : '✨ Quote',
-    'qa-weather':  hi ? '🌤️ मौसम'   : '🌤️ Weather',
-    'qa-family':   hi ? '👨‍👩‍👧 परिवार': '👨‍👩‍👧 Family'
-  };
-  Object.keys(labels).forEach(function(id) {
-    var el = document.getElementById(id);
-    if(el) el.textContent = labels[id];
-  });
-  var inp = document.getElementById('msgInput');
-  if(inp) inp.placeholder = hi ? 'यहाँ लिखें या 🎤 बोलें...' : 'Type or 🎤 speak...';
-  var st = document.getElementById('tbStatus');
-  if(st) st.innerHTML = '<div class="tb-dot"></div>' + (hi ? 'हमेशा साथ हूं' : 'Always here');
-  var sb = document.getElementById('stopBtn');
-  if(sb) sb.title = hi ? 'आवाज़ बंद करें' : 'Stop voice';
+  var labels = { 'qa-medicine':hi?'💊 दवाई':'💊 Meds', 'qa-date':hi?'📅 तारीख':'📅 Date', 'qa-news':hi?'📰 खबर':'📰 News', 'qa-joke':hi?'😄 चुटकुला':'😄 Joke', 'qa-story':hi?'📖 कहानी':'📖 Story', 'qa-quote':hi?'✨ सुविचार':'✨ Quote', 'qa-weather':hi?'🌤️ मौसम':'🌤️ Weather', 'qa-family':hi?'👨‍👩‍👧 परिवार':'👨‍👩‍👧 Family' };
+  Object.keys(labels).forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=labels[id]; });
+  var inp = document.getElementById('msgInput'); if(inp) inp.placeholder = hi?'यहाँ लिखें या 🎤 बोलें...':'Type or 🎤 speak...';
+  var st = document.getElementById('tbStatus'); if(st) st.innerHTML = '<div class="tb-dot"></div>'+(hi?'हमेशा साथ हूं':'Always here');
 }
 
 function showUpgradeModal(reason) {
-  var planStatus = getPlanStatus();
-  var upgradeBtn = document.getElementById('upgradeBtn');
+  var fc = document.getElementById('planFounding'), pc = document.getElementById('planPro');
+  if(fc) { fc.style.display=''; fc.classList.remove('featured'); }
+  if(pc) { pc.classList.remove('featured'); var pn=pc.querySelector('.plan-name'); if(pn) pn.textContent='साथी Pro'; }
+  var planStatus = getPlanStatus(), upgradeBtn = document.getElementById('upgradeBtn');
   if(upgradeBtn) {
-    if(planStatus.type === 'pro') { upgradeBtn.style.display = 'none'; }
-    else if(planStatus.type === 'founding') { upgradeBtn.textContent = '★'; upgradeBtn.title = 'Founding Member'; }
+    if(planStatus.type==='pro') upgradeBtn.style.display='none';
+    else if(planStatus.type==='founding') { upgradeBtn.textContent='★'; upgradeBtn.title='Founding Member'; }
   }
-  var title = document.getElementById('upgradeTitle');
-  var sub = document.getElementById('upgradeSub');
-  if(reason === 'upgrade') {
-    title.textContent = '⭐ Upgrade Saathi';
-    sub.textContent = 'Get unlimited access, medicine reminders, prescription reader and more.';
-  } else if(reason === 'limit') {
-    title.textContent = '⚡ Aaj ka limit ho gaya';
-    sub.textContent = 'Free plan: 5 messages/day. Upgrade from ₹99/month for unlimited.';
+  var title = document.getElementById('upgradeTitle'), sub = document.getElementById('upgradeSub');
+  if(reason === 'founding_expired') {
+    title.textContent = '⏰ Founding Period Ended';
+    sub.textContent = 'Your 100-day founding plan is complete. Upgrade to Pro ₹299/month to continue.';
+    if(fc) fc.style.display='none';
+    if(pc) { pc.classList.add('featured'); var pn2=pc.querySelector('.plan-name'); if(pn2) pn2.textContent='🌟 Continue with Saathi Pro'; }
   } else if(reason === 'trial') {
-    title.textContent = '🎉 Free trial ended!';
-    sub.textContent = 'Your 7-day free trial has ended. Upgrade to continue with Saathi.';
+    title.textContent = '⏰ Free Trial Ended';
+    sub.textContent = 'Your 7 days are up! Become a Founding Member — ₹99/month, 67% off.';
+    if(fc) fc.classList.add('featured');
+  } else if(reason === 'upgrade') {
+    title.textContent = '⭐ Upgrade Saathi';
+    sub.textContent = 'Unlock unlimited access, medicine reminders, prescription reader and more.';
+  } else if(reason === 'limit') {
+    title.textContent = '⚡ Daily Limit Reached';
+    sub.textContent = 'Free plan: 5 messages/day. Upgrade from ₹99/month for unlimited.';
   } else {
-    title.textContent = '🔓 Unlock Saathi';
-    sub.textContent = 'Unlimited conversations, reminders, prescription reader aur bahut kuch — sirf ₹99/month.';
+    title.textContent = 'Join as Founding Member';
+    sub.textContent = 'Lock in ₹99/month — first 100 members only.';
   }
   document.getElementById('upgrade-overlay').classList.add('show');
 }
 
 // ── PAYMENT ──
 function startPayment(plan) {
-  var amount   = plan === 'pro' ? '299' : '99';
-  var planName = plan === 'pro' ? 'Saathi AI Pro' : 'Saathi AI Basic';
-  var upiId    = 'anamikabajpai1991@oksbi';
-  var waMsg    = 'Hi! I paid Rs.' + amount + ' for ' + planName + '. My email: ' + (S.email||'') + '. Please activate my account.';
-  var waUrl    = 'https://wa.me/919044941203?text=' + encodeURIComponent(waMsg);
-  var old = document.getElementById('upi-overlay');
-  if (old) old.remove();
+  var amount = plan==='pro'?'299':'99', desc = plan==='pro'?'Saathi AI Pro Plan':'Saathi AI Basic 3 months';
+  var upiId = 'anamikabajpai1991@oksbi', whatsapp = '9044941203';
+  var upiData = 'upi://pay?pa='+upiId+'&pn=SaathiAI&am='+amount+'&cu=INR&tn='+encodeURIComponent(desc);
+  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(upiData);
+  var waMsg = 'Hi! I paid Rs.'+amount+' for Saathi AI. Please activate my account. Email: '+(S.email||'');
+  var waUrl = 'https://wa.me/91'+whatsapp+'?text='+encodeURIComponent(waMsg);
+  var old = document.getElementById('upi-overlay'); if(old) old.remove();
   var ov = document.createElement('div');
   ov.id = 'upi-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
-  ov.innerHTML = ''
-    + '<div style="background:#1a1000;border:1px solid rgba(245,158,11,.3);border-radius:24px 24px 0 0;padding:28px 22px 40px;max-width:430px;width:100%;text-align:center;font-family:Baloo 2,sans-serif">'
-    + '<div style="width:36px;height:4px;background:rgba(245,158,11,.2);border-radius:2px;margin:0 auto 18px"></div>'
-    + '<div style="font-size:1.2rem;font-weight:800;color:#F59E0B;margin-bottom:4px">Pay &#8377;' + amount + ' &mdash; ' + planName + '</div>'
-    + '<div style="font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:22px">3 easy steps:</div>'
-    + '<div style="text-align:left;margin-bottom:20px">'
-    + '<div style="display:flex;gap:12px;margin-bottom:14px"><div style="min-width:26px;height:26px;border-radius:50%;background:#F59E0B;color:#000;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div><div><div style="color:#fff;font-weight:700;font-size:.88rem">Open GPay, PhonePe or Paytm</div><div style="color:rgba(255,255,255,.4);font-size:.75rem">Tap "Send Money" or "Pay"</div></div></div>'
-    + '<div style="display:flex;gap:12px;margin-bottom:14px"><div style="min-width:26px;height:26px;border-radius:50%;background:#F59E0B;color:#000;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div><div style="flex:1"><div style="color:#fff;font-weight:700;font-size:.88rem;margin-bottom:6px">Enter UPI ID &amp; pay &#8377;' + amount + '</div><div style="background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.4);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center"><span style="color:#FEF9F0;font-weight:800;font-size:.9rem">' + upiId + '</span><button id="upiCopyBtn" style="background:#F59E0B;border:none;color:#000;padding:5px 10px;border-radius:6px;font-weight:700;cursor:pointer;font-size:.72rem;flex-shrink:0">Copy</button></div></div></div>'
-    + '<div style="display:flex;gap:12px"><div style="min-width:26px;height:26px;border-radius:50%;background:#22c55e;color:#000;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div><div><div style="color:#fff;font-weight:700;font-size:.88rem">Send screenshot on WhatsApp</div><div style="color:rgba(255,255,255,.4);font-size:.75rem">Account activated within 2 hours</div></div></div>'
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:flex-end;justify-content:center;font-family:Baloo 2,sans-serif';
+  ov.innerHTML = '<div style="background:#1a1000;border:1px solid rgba(245,158,11,.25);border-radius:24px 24px 0 0;padding:24px 20px 36px;max-width:430px;width:100%;text-align:center">'
+    + '<div style="width:40px;height:4px;background:rgba(245,158,11,.2);border-radius:2px;margin:0 auto 16px"></div>'
+    + '<div style="font-size:1.2rem;font-weight:800;color:#F59E0B;margin-bottom:2px">Pay ₹'+amount+' — Saathi AI</div>'
+    + '<div style="font-size:.78rem;color:rgba(254,243,199,.4);margin-bottom:16px">'+desc+'</div>'
+    + '<div style="background:#fff;border-radius:16px;padding:10px;display:inline-block;margin-bottom:8px"><img src="'+qrUrl+'" width="160" height="160" alt="UPI QR" style="display:block"></div>'
+    + '<div style="font-size:.7rem;color:rgba(254,243,199,.4);margin-bottom:14px">Scan QR with GPay · PhonePe · Paytm · BHIM</div>'
+    + '<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
+    + '<div style="text-align:left"><div style="font-size:.65rem;color:#888;margin-bottom:2px">UPI ID</div><div style="font-weight:800;color:#FEF9F0;font-size:.9rem">'+upiId+'</div></div>'
+    + '<button id="copyUpiBtn" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#F59E0B;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:.72rem">Copy</button>'
     + '</div>'
-    + '<a href="' + waUrl + '" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:13px;border-radius:12px;font-weight:800;font-size:.92rem;text-decoration:none;margin-bottom:10px">&#128242; Open WhatsApp to Confirm</a>'
-    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:10px;border-radius:10px;cursor:pointer;width:100%;font-size:.82rem;font-family:Baloo 2,sans-serif">Cancel</button>'
+    + '<div style="font-size:.75rem;color:rgba(254,243,199,.4);margin-bottom:14px">Enter amount <strong style="color:#F59E0B">₹'+amount+'</strong> if not auto-filled</div>'
+    + '<a href="'+waUrl+'" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:13px;border-radius:12px;font-weight:800;font-size:.95rem;text-decoration:none;margin-bottom:8px">📲 Send Screenshot on WhatsApp</a>'
+    + '<div style="font-size:.7rem;color:rgba(254,243,199,.3);margin-bottom:12px">After paying — tap above. Activated within 2 hours.</div>'
+    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:10px;border-radius:12px;cursor:pointer;font-size:.82rem;width:100%">Cancel</button>'
     + '</div>';
   document.body.appendChild(ov);
-  var cb = document.getElementById('upiCopyBtn');
-  if (cb) cb.onclick = function() {
-    navigator.clipboard.writeText(upiId).then(function() {
-      cb.textContent = 'Copied!'; cb.style.background = '#22c55e';
-    });
-  };
+  var cb = document.getElementById('copyUpiBtn');
+  if(cb) cb.onclick = function() { navigator.clipboard.writeText(upiId); this.textContent='Copied ✓'; };
 }
 
 function onPaymentSuccess(plan, response) {
   var planData = getPlan() || {};
-  planData.type      = plan;
-  planData.paidAt    = Date.now();
-  planData.paymentId = (response && response.payment_id) || 'demo_' + Date.now();
-  if(plan === 'founding') { planData.foundingEnd = Date.now() + (90 * 24 * 60 * 60 * 1000); }
+  planData.type = plan; planData.paidAt = Date.now();
+  planData.paymentId = (response && response.payment_id) || 'demo_'+Date.now();
+  if(plan === 'founding') planData.foundingEnd = Date.now() + (90*24*60*60*1000);
   setPlan(planData);
   document.getElementById('upgrade-overlay').classList.remove('show');
   updatePlanUI();
-  var msg = plan === 'founding'
-    ? 'Bahut shukriya! Aap ab Saathi AI ke Founding Member hain! 3 mahine ₹99, phir ₹299. Sab kuch unlock ho gaya! 🎉'
-    : 'Welcome to Saathi Pro! Unlimited conversations aur sab kuch unlock ho gaya! 🎉';
-  addBubble('ai', msg, '', '', true);
+  addBubble('ai', plan==='founding'?'Bahut shukriya! Aap ab Founding Member hain! 🎉':'Welcome to Saathi Pro! 🎉','','',true);
   speakText('Bahut shukriya! Aap ab Saathi ke premium member hain.');
 }
 
+// ── ACTIVATION ──
 function checkPaymentReturn() {
   var params = new URLSearchParams(window.location.search);
-  var payment = params.get('payment');
-  var plan    = params.get('plan');
-  var paymentId = params.get('payment_id');
-  if(payment === 'success' && plan) {
-    if(paymentId) {
-      fetch('/api/payment', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({action:'verify', paymentId: paymentId})
-      }).then(function(r){return r.json();}).then(function(d){
-        if(d.verified) onPaymentSuccess(plan, {payment_id: paymentId});
-      }).catch(function(){ onPaymentSuccess(plan, {}); });
-    } else {
-      onPaymentSuccess(plan, {});
+  var activateType = params.get('activate'), activateKey = params.get('key');
+  if(activateType && activateKey === 'SAATHI2024') {
+    var plan = getPlan() || {};
+    if(activateType === 'founding') {
+      plan.type='founding'; plan.paidAt=Date.now();
+      plan.foundingEnd=Date.now()+(100*24*60*60*1000);
+      plan.paymentId='manual_'+Date.now(); plan.activatedBy='owner';
+    } else if(activateType === 'pro') {
+      plan.type='pro'; plan.paidAt=Date.now();
+      plan.paymentId='manual_'+Date.now(); plan.activatedBy='owner';
+    } else if(activateType === 'trial_extend') {
+      plan.type='trial'; plan.trialEnd=Date.now()+(7*24*60*60*1000);
     }
+    setPlan(plan); trackUser(plan);
+    window.history.replaceState({}, '', '/app');
+    alert('✅ Account activated! Welcome to Saathi AI.');
+    return;
+  }
+  // FIX: removed duplicate var params declaration
+  var payment = params.get('payment'), planParam = params.get('plan'), paymentId = params.get('payment_id');
+  if(payment === 'success' && planParam) {
+    if(paymentId) {
+      fetch('/api/payment', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'verify', paymentId:paymentId}) })
+        .then(function(r){return r.json();}).then(function(d){ if(d.verified) onPaymentSuccess(planParam, {payment_id:paymentId}); })
+        .catch(function(){ onPaymentSuccess(planParam, {}); });
+    } else { onPaymentSuccess(planParam, {}); }
     window.history.replaceState({}, '', '/');
   }
 }
 
-// ── ONBOARDING VALIDATION — global functions ──
+// ── ONBOARDING VALIDATION — global functions (FIX: exposed to window) ──
 function obValidate(inp, inputId, errId, checkFn, badMsg) {
-  var err = document.getElementById(errId);
-  var val = inp.value.trim();
+  var err = document.getElementById(errId), val = inp.value.trim();
   if (!val) {
-    inp.className = inp.className.replace(/ob-ok|ob-error/g, '').trim() + ' ob-error';
-    if (err) { err.textContent = '⚠ This field is required'; err.style.display = 'block'; }
+    inp.className = inp.className.replace(/ob-ok|ob-error/g,'').trim()+' ob-error';
+    if(err) { err.textContent='⚠ This field is required'; err.style.display='block'; }
     return false;
   }
   if (!checkFn(val)) {
-    inp.className = inp.className.replace(/ob-ok|ob-error/g, '').trim() + ' ob-error';
-    if (err) { err.textContent = '⚠ ' + badMsg; err.style.display = 'block'; }
+    inp.className = inp.className.replace(/ob-ok|ob-error/g,'').trim()+' ob-error';
+    if(err) { err.textContent='⚠ '+badMsg; err.style.display='block'; }
     return false;
   }
-  inp.className = inp.className.replace(/ob-ok|ob-error/g, '').trim() + ' ob-ok';
-  if (err) err.style.display = 'none';
+  inp.className = inp.className.replace(/ob-ok|ob-error/g,'').trim()+' ob-ok';
+  if(err) err.style.display='none';
   return true;
 }
 window.obValidate = obValidate;
 
 function obLivePhone(inp) {
-  var err = document.getElementById('err-phone');
-  if (!err) return;
+  var err = document.getElementById('err-phone'); if(!err) return;
   var len = inp.value.length;
-  if (len > 0 && len < 10) {
-    err.textContent = '⚠ ' + len + ' of 10 digits entered';
-    err.style.display = 'block';
-    inp.className = inp.className.replace(/ob-ok|ob-error/g, '').trim();
-  } else if (len === 0) {
-    err.style.display = 'none';
-  }
+  if(len > 0 && len < 10) { err.textContent='⚠ '+len+' of 10 digits entered'; err.style.display='block'; inp.className=inp.className.replace(/ob-ok|ob-error/g,'').trim(); }
+  else if(len === 0) { err.style.display='none'; }
 }
 window.obLivePhone = obLivePhone;
 
 // ── WIRE UP ALL BUTTONS ──
 window.addEventListener('DOMContentLoaded', function() {
 
+  // 5-tap on logo = admin dashboard
+  var _tapCount = 0, _tapTimer;
+  var _logo = document.getElementById('tbAvatar');
+  if(_logo) _logo.addEventListener('click', function() {
+    _tapCount++; clearTimeout(_tapTimer);
+    _tapTimer = setTimeout(function(){ _tapCount=0; }, 800);
+    if(_tapCount >= 5) { _tapCount=0; showAdminDashboard(); }
+  });
+
   // Field validation helpers
   function showErr(id, msg) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    if (msg) { el.textContent = '⚠ ' + msg; el.style.display = 'block'; }
-    else { el.style.display = 'none'; }
+    var el = document.getElementById(id); if(!el) return;
+    if(msg) { el.textContent='⚠ '+msg; el.style.display='block'; } else { el.style.display='none'; }
   }
   function markField(id, state) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.classList.remove('ob-ok', 'ob-error');
-    if (state === 'error') el.classList.add('ob-error');
-    if (state === 'success') el.classList.add('ob-ok');
+    var el = document.getElementById(id); if(!el) return;
+    el.classList.remove('ob-ok','ob-error');
+    if(state==='error') el.classList.add('ob-error');
+    if(state==='success') el.classList.add('ob-ok');
   }
   function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()); }
-  function isValidPhone(v) { return /^[6-9]\d{9}$/.test(v.replace(/\D/g, '')); }
+  function isValidPhone(v) { return /^[6-9]\d{9}$/.test(v.replace(/\D/g,'')); }
   function isValidDOB(v) {
-    if (!v) return false;
-    var d = new Date(v);
-    if (isNaN(d)) return false;
-    var age = (Date.now() - d) / (365.25 * 24 * 3600 * 1000);
+    if(!v) return false;
+    var d = new Date(v); if(isNaN(d)) return false;
+    var age = (Date.now()-d)/(365.25*24*3600*1000);
     return age >= 1 && age <= 110;
   }
 
-  // Attach blur/focus/input listeners
   var fields = [
     { id:'ob-name',  err:'err-name',  check:function(v){return v.length>=2;}, empty:'Name is required', invalid:'Please enter your full name (at least 2 characters)' },
     { id:'ob-email', err:'err-email', check:isValidEmail, empty:'Email address is required', invalid:'Please enter a valid email — e.g. name@gmail.com' },
@@ -1353,39 +1272,33 @@ window.addEventListener('DOMContentLoaded', function() {
     { id:'ob-phone', err:'err-phone', check:isValidPhone, empty:'Phone number is required', invalid:'Enter a valid 10-digit number (starting with 6, 7, 8 or 9)' }
   ];
   fields.forEach(function(f) {
-    var el = document.getElementById(f.id);
-    if (!el) return;
+    var el = document.getElementById(f.id); if(!el) return;
     el.addEventListener('blur', function() {
       var val = this.value.trim();
-      if (!val) { markField(f.id,'error'); showErr(f.err, f.empty); return; }
-      if (!f.check(val)) { markField(f.id,'error'); showErr(f.err, f.invalid); return; }
-      markField(f.id,'success'); showErr(f.err, null);
+      if(!val) { markField(f.id,'error'); showErr(f.err,f.empty); return; }
+      if(!f.check(val)) { markField(f.id,'error'); showErr(f.err,f.invalid); return; }
+      markField(f.id,'success'); showErr(f.err,null);
     });
     el.addEventListener('focus', function() {
-      if (this.classList.contains('ob-error')) { showErr(f.err, null); this.classList.remove('ob-error'); }
+      if(this.classList.contains('ob-error')) { showErr(f.err,null); this.classList.remove('ob-error'); }
     });
-    if (f.id === 'ob-phone') {
+    if(f.id === 'ob-phone') {
       el.addEventListener('input', function() {
-        var digits = this.value.replace(/\D/g, '');
-        this.value = digits.slice(0, 10);
-        var errEl = document.getElementById('err-phone');
-        if (!errEl) return;
-        if (digits.length > 0 && digits.length < 10) {
-          errEl.textContent = digits.length + ' of 10 digits entered';
-          errEl.style.display = 'block';
-          this.classList.remove('ob-ok','ob-error');
-        } else if (digits.length === 0) { errEl.style.display = 'none'; }
+        var digits = this.value.replace(/\D/g,'');
+        this.value = digits.slice(0,10);
+        var errEl = document.getElementById('err-phone'); if(!errEl) return;
+        if(digits.length > 0 && digits.length < 10) { errEl.textContent=digits.length+' of 10 digits entered'; errEl.style.display='block'; this.classList.remove('ob-ok','ob-error'); }
+        else if(digits.length === 0) { errEl.style.display='none'; }
       });
     }
   });
-
   var famEl = document.getElementById('ob-fam-phone');
-  if (famEl) {
-    famEl.addEventListener('input', function() { this.value = this.value.replace(/\D/g,'').slice(0,10); });
+  if(famEl) {
+    famEl.addEventListener('input', function(){ this.value=this.value.replace(/\D/g,'').slice(0,10); });
     famEl.addEventListener('blur', function() {
       var v = this.value.trim();
-      if (!v) { markField('ob-fam-phone',''); showErr('err-fam-phone',null); return; }
-      if (!isValidPhone(v)) { markField('ob-fam-phone','error'); showErr('err-fam-phone','Enter a valid 10-digit number'); }
+      if(!v) { markField('ob-fam-phone',''); showErr('err-fam-phone',null); return; }
+      if(!isValidPhone(v)) { markField('ob-fam-phone','error'); showErr('err-fam-phone','Enter a valid 10-digit number'); }
       else { markField('ob-fam-phone','success'); showErr('err-fam-phone',null); }
     });
   }
@@ -1394,26 +1307,27 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('startBtn').addEventListener('click', function() {
     var nameOk  = obValidate(document.getElementById('ob-name'),  'ob-name',  'err-name',  function(v){return v.length>=2;}, 'Please enter your full name');
     var emailOk = obValidate(document.getElementById('ob-email'), 'ob-email', 'err-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);}, 'Enter valid email — e.g. name@gmail.com');
-    var dobOk   = obValidate(document.getElementById('ob-dob'),   'ob-dob',   'err-dob',   function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;}, 'Select complete date of birth');
+    var dobOk   = obValidate(document.getElementById('ob-dob'),   'ob-dob',   'err-dob',   function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;}, 'Enter a valid date of birth');
     var phoneOk = obValidate(document.getElementById('ob-phone'), 'ob-phone', 'err-phone', function(v){return /^[6-9]\d{9}$/.test(v);}, 'Enter 10-digit number starting with 6,7,8 or 9');
-    if(!nameOk || !emailOk || !dobOk || !phoneOk) {
+    if(!nameOk||!emailOk||!dobOk||!phoneOk) {
       var first = document.querySelector('.ob-input.ob-error');
-      if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+      if(first) first.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
-    S.name      = document.getElementById('ob-name').value.trim();
-    S.email     = document.getElementById('ob-email').value.trim();
-    S.dob       = document.getElementById('ob-dob').value;
-    S.phone     = document.getElementById('ob-phone').value.trim();
-    S.family    = (document.getElementById('ob-family')||{value:''}).value.trim();
-    S.famPhone  = (document.getElementById('ob-fam-phone')||{value:''}).value.trim();
+    S.name = document.getElementById('ob-name').value.trim();
+    S.email = document.getElementById('ob-email').value.trim();
+    S.dob = document.getElementById('ob-dob').value;
+    S.phone = document.getElementById('ob-phone').value.trim();
+    S.family = (document.getElementById('ob-family')||{value:''}).value.trim();
+    S.famPhone = (document.getElementById('ob-fam-phone')||{value:''}).value.trim();
+    S.registeredAt = S.registeredAt || Date.now();
     S.onboarded = true;
-    save();
-    if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    save(); trackUser(getPlan()||{});
+    if(window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
     startMain();
   });
 
-  // Top bar buttons
+  // Top bar
   document.getElementById('muteBtn').addEventListener('click', function() {
     isMuted = !isMuted; S.voiceOn = !isMuted; save();
     if(isMuted) { this.textContent='🔇'; this.classList.add('muted'); if(window.speechSynthesis) window.speechSynthesis.cancel(); }
@@ -1440,56 +1354,50 @@ window.addEventListener('DOMContentLoaded', function() {
       if(action === 'youtube') {
         addBubble('ai','YouTube pe aaj kya dekhna chahte hain?','','',true);
         speakText('YouTube pe aaj kya dekhna chahte hain?');
-        var wrap = document.getElementById('chatWrap');
-        var div = document.createElement('div');
+        var wrap = document.getElementById('chatWrap'), div = document.createElement('div');
         div.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 4px 38px';
         div.innerHTML = '<a class="app-link" onclick="openApp(\'youtube\',\'bhajan hindi old\')">▶️ Bhajan</a>'
           + '<a class="app-link" onclick="openApp(\'youtube\',\'hindi comedy\')">😄 Comedy</a>'
           + '<a class="app-link" onclick="openApp(\'youtube\',\'yoga for elderly hindi\')">🧘 Yoga</a>'
           + '<a class="app-link" onclick="openApp(\'youtube\',\'aaj ki khabar\')">📰 News</a>';
-        wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight;
-        return;
+        wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight; return;
       }
-      var fn = QA[action];
-      if(fn) { document.getElementById('msgInput').value = fn(); sendMsg(); }
+      var fn = QA[action]; if(fn) { document.getElementById('msgInput').value = fn(); sendMsg(); }
     });
   });
 
-  // Send + mic + textarea
   document.getElementById('sendBtn').addEventListener('click', sendMsg);
   document.getElementById('micBtn').addEventListener('click', toggleMic);
   document.getElementById('stopBtn').addEventListener('click', function() {
     if(window.speechSynthesis) window.speechSynthesis.cancel();
-    var av = document.getElementById('tbAvatar');
-    var st = document.getElementById('tbStatus');
+    var av = document.getElementById('tbAvatar'), st = document.getElementById('tbStatus');
     if(av) av.classList.remove('speaking');
-    if(st) st.innerHTML = '<div class="tb-dot"></div>' + (S.lang==='english' ? 'Always here' : 'हमेशा साथ हूं');
+    if(st) st.innerHTML = '<div class="tb-dot"></div>'+(S.lang==='english'?'Always here':'हमेशा साथ हूं');
   });
   document.getElementById('msgInput').addEventListener('keydown', function(e) {
     if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
   });
   document.getElementById('msgInput').addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px';
   });
 
   // Settings
   document.getElementById('settingsBack').addEventListener('click', function() { showScreen('screen-main'); });
   document.getElementById('notesBack').addEventListener('click', function() { showScreen('screen-main'); });
   document.getElementById('saveSettingsBtn').addEventListener('click', function() {
-    S.name       = document.getElementById('s-name').value.trim()  || S.name;
-    S.lang       = document.getElementById('s-lang').value;
-    S.family     = document.getElementById('s-fam').value.trim()   || S.family;
-    S.phone      = document.getElementById('s-phone').value.trim();
+    S.name = document.getElementById('s-name').value.trim() || S.name;
+    S.lang = document.getElementById('s-lang').value;
+    S.family = document.getElementById('s-fam').value.trim() || S.family;
+    S.phone = document.getElementById('s-phone').value.trim();
     S.voiceSpeed = parseFloat(document.getElementById('s-speed').value) || 0.9;
     save(); applyLangUI(); showScreen('screen-main');
-    var msg = S.lang==='english' ? 'Settings saved!' : 'Settings save ho gayi!';
-    setTimeout(function() { addBubble('ai', msg, '','',true); speakText(msg); }, 300);
+    var msg = S.lang==='english'?'Settings saved!':'Settings save ho gayi!';
+    setTimeout(function() { addBubble('ai', msg,'','',true); speakText(msg); }, 300);
   });
   document.getElementById('t-voice').addEventListener('click', function() {
     this.classList.toggle('on'); isMuted = !this.classList.contains('on'); S.voiceOn = !isMuted; save();
     var btn2 = document.getElementById('muteBtn');
-    if(btn2) { btn2.textContent = isMuted?'🔇':'🔊'; isMuted?btn2.classList.add('muted'):btn2.classList.remove('muted'); }
+    if(btn2) { btn2.textContent=isMuted?'🔇':'🔊'; isMuted?btn2.classList.add('muted'):btn2.classList.remove('muted'); }
   });
   document.getElementById('addMedBtn').addEventListener('click', function() {
     var n = document.getElementById('newMedName').value.trim(); if(!n) return;
@@ -1514,19 +1422,16 @@ window.addEventListener('DOMContentLoaded', function() {
 
   // Notes
   document.getElementById('saveNoteBtn').addEventListener('click', function() {
-    var inp = document.getElementById('noteInput');
-    var text = inp.value.trim(); if(!text) return;
+    var inp = document.getElementById('noteInput'), text = inp.value.trim(); if(!text) return;
     saveNoteFromChat(text); inp.value = ''; renderNotes(); speakText('Note save ho gaya');
   });
 
-  // Upgrade modal
-  document.getElementById('upgradeClose').addEventListener('click', function() {
-    document.getElementById('upgrade-overlay').classList.remove('show');
-  });
+  // Upgrade
+  document.getElementById('upgradeClose').addEventListener('click', function() { document.getElementById('upgrade-overlay').classList.remove('show'); });
   document.getElementById('payFounding').addEventListener('click', function() { startPayment('founding'); });
   document.getElementById('payPro').addEventListener('click', function() { startPayment('pro'); });
 
-  // Init
+  // ── INIT — all inside DOMContentLoaded ──
   isMuted = !S.voiceOn;
   initPlan();
   checkPaymentReturn();
@@ -1538,15 +1443,89 @@ window.addEventListener('DOMContentLoaded', function() {
   if(window.visualViewport) {
     window.visualViewport.addEventListener('resize', function() {
       var app = document.getElementById('app');
-      if(app) { app.style.height = window.visualViewport.height + 'px'; }
+      if(app) app.style.height = window.visualViewport.height + 'px';
     });
   }
 
-}); // ← END of DOMContentLoaded
+}); // ← END DOMContentLoaded — correctly closed
 
-})(); // ← IIFE invoked — THIS WAS THE BUG FIX
+// ── ADMIN DASHBOARD ──
+function exportUsersCSV() {
+  var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+  if(!registry.length) { alert('No users to export yet'); return; }
+  var rows = ['Name,Email,Phone,Plan,Joined,Days Left'];
+  registry.forEach(function(u) {
+    var daysLeft = u.foundingEnd ? Math.ceil((u.foundingEnd-Date.now())/(24*60*60*1000)) : '';
+    var joined = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('en-IN') : '';
+    rows.push([u.name||'',u.email||'',u.phone||'',u.plan||'',joined,daysLeft].join(','));
+  });
+  var blob = new Blob([rows.join('\n')],{type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'saathi-users-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
 
-// ── SERVICE WORKER ──
+function showAdminDashboard() {
+  var key = prompt('Enter admin key:');
+  if(key !== 'SAATHI2024') { alert('Wrong key'); return; }
+  var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+  var now = Date.now();
+  var rows = registry.map(function(u,i) {
+    var daysLeft = u.foundingEnd ? Math.ceil((u.foundingEnd-now)/(24*60*60*1000)) : '—';
+    var regDate = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('en-IN') : '—';
+    var status = u.plan==='founding'?(daysLeft>0?'🟢 Active':'🔴 Expired'):u.plan==='pro'?'🟣 Pro':u.plan==='trial'?'🟡 Trial':'⚪ Free';
+    return '<tr style="border-bottom:1px solid rgba(245,158,11,.1)">'
+      +'<td style="padding:8px 6px;color:#FEF9F0">'+(i+1)+'</td>'
+      +'<td style="padding:8px 6px;color:#FEF9F0">'+(u.name||'—')+'</td>'
+      +'<td style="padding:8px 6px;color:rgba(254,243,199,.6);font-size:.78rem">'+(u.email||'—')+'</td>'
+      +'<td style="padding:8px 6px;color:rgba(254,243,199,.6)">'+(u.phone||'—')+'</td>'
+      +'<td style="padding:8px 6px">'+status+'</td>'
+      +'<td style="padding:8px 6px;color:var(--amber)">'+regDate+'</td>'
+      +'<td style="padding:8px 6px;color:'+(typeof daysLeft==='number'?(daysLeft>10?'#22c55e':daysLeft>0?'#f59e0b':'#ef4444'):'#888')+'">'+(typeof daysLeft==='number'?daysLeft+' days':daysLeft)+'</td>'
+      +'</tr>';
+  }).join('');
+  var total = registry.length;
+  var active = registry.filter(function(u){return u.plan==='founding'||u.plan==='pro';}).length;
+  var trials = registry.filter(function(u){return u.plan==='trial';}).length;
+  var expiring = registry.filter(function(u){return u.foundingEnd&&(u.foundingEnd-now)<(7*24*60*60*1000)&&(u.foundingEnd-now)>0;}).length;
+  var old = document.getElementById('admin-dashboard'); if(old) old.remove();
+  var dash = document.createElement('div');
+  dash.id = 'admin-dashboard';
+  dash.style.cssText = 'position:fixed;inset:0;background:#0D0A07;z-index:99999;overflow-y:auto;padding:20px;font-family:Baloo 2,sans-serif';
+  dash.innerHTML = '<div style="max-width:900px;margin:0 auto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">'
+    +'<div><div style="font-size:1.4rem;font-weight:800;color:var(--amber)">📊 Saathi AI Dashboard</div>'
+    +'<div style="font-size:.78rem;color:var(--muted)">Admin view — '+new Date().toLocaleString('en-IN')+'</div></div>'
+    +'<button onclick="document.getElementById(\'admin-dashboard\').remove()" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--amber);padding:8px 16px;border-radius:10px;cursor:pointer">✕ Close</button>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">'
+    +'<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:16px;text-align:center"><div style="font-size:2rem;font-weight:800;color:var(--amber)">'+total+'</div><div style="font-size:.72rem;color:var(--muted)">Total Users</div></div>'
+    +'<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:14px;padding:16px;text-align:center"><div style="font-size:2rem;font-weight:800;color:#22c55e">'+active+'</div><div style="font-size:.72rem;color:var(--muted)">Paid Active</div></div>'
+    +'<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:14px;padding:16px;text-align:center"><div style="font-size:2rem;font-weight:800;color:#fbbf24">'+trials+'</div><div style="font-size:.72rem;color:var(--muted)">On Trial</div></div>'
+    +'<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:16px;text-align:center"><div style="font-size:2rem;font-weight:800;color:#ef4444">'+expiring+'</div><div style="font-size:.72rem;color:var(--muted)">Expiring Soon</div></div>'
+    +'</div>'
+    +'<div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">'
+    +'<div><div style="font-size:.72rem;color:rgba(34,197,94,.7);margin-bottom:2px">ESTIMATED REVENUE</div>'
+    +'<div style="font-size:1.4rem;font-weight:800;color:#22c55e">₹'+(active*99)+' <span style="font-size:.8rem;font-weight:400;color:rgba(34,197,94,.6)">/ month</span></div></div>'
+    +'<button onclick="exportUsersCSV()" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;padding:8px 16px;border-radius:10px;cursor:pointer;font-family:Baloo 2;font-size:.8rem;font-weight:700">⬇ Export CSV</button>'
+    +'</div>'
+    +'<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:14px;padding:16px;margin-bottom:20px">'
+    +'<div style="font-size:.8rem;font-weight:700;color:var(--amber);margin-bottom:8px">⚡ Quick Activation Links</div>'
+    +'<div style="background:#111;border-radius:8px;padding:8px 12px;font-size:.75rem;color:#22c55e;word-break:break-all;margin-bottom:6px">https://saathiai.health/app?activate=founding&key=SAATHI2024</div>'
+    +'<div style="font-size:.72rem;color:rgba(254,243,199,.3)">User clicks → 100 days free automatically activated</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,.02);border:1px solid rgba(245,158,11,.1);border-radius:14px;overflow:hidden">'
+    +'<div style="padding:14px 16px;border-bottom:1px solid rgba(245,158,11,.1);font-size:.82rem;font-weight:700;color:var(--amber)">👥 All Users ('+total+')</div>'
+    +(total===0?'<div style="padding:32px;text-align:center;color:var(--muted)">No users yet.</div>'
+      :'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.8rem">'
+      +'<thead><tr style="background:rgba(245,158,11,.06)"><th style="padding:10px 6px;text-align:left;color:var(--muted)">#</th><th style="padding:10px 6px;text-align:left;color:var(--muted)">Name</th><th style="padding:10px 6px;text-align:left;color:var(--muted)">Email</th><th style="padding:10px 6px;text-align:left;color:var(--muted)">Phone</th><th style="padding:10px 6px;text-align:left;color:var(--muted)">Status</th><th style="padding:10px 6px;text-align:left;color:var(--muted)">Joined</th><th style="padding:10px 6px;text-align:left;color:var(--muted)">Days Left</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table></div>')
+    +'</div></div>';
+  document.body.appendChild(dash);
+}
+
+// ── SERVICE WORKER ── (OUTSIDE IIFE closing bracket — this is correct)
 if('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('/sw.js').then(function(reg) {
@@ -1556,6 +1535,8 @@ if('serviceWorker' in navigator) {
     });
   });
 }
+
+})(); // ← IIFE correctly closed OUTSIDE the service worker block — THIS WAS THE KEY FIX
 </script>
 </body>
 </html>
