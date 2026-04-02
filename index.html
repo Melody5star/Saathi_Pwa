@@ -11,7 +11,7 @@
 <meta name="description" content="Your elderly companion — Hindi and English AI assistant">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>साथी AI v18</title>
+<title>साथी AI v20</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -219,56 +219,44 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 <div id="upgrade-overlay">
   <div class="upgrade-sheet">
     <button class="upgrade-close" id="upgradeClose">✕</button>
-
-    <!-- Beta Banner -->
-    <div style="background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(234,88,12,.1));border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:12px 16px;margin-bottom:16px;text-align:center">
-      <div style="font-size:.7rem;font-weight:700;color:var(--amber);letter-spacing:2px;margin-bottom:4px">🚀 BETA LAUNCH OFFER</div>
-      <div style="font-size:.88rem;color:#FEF9F0;font-weight:600">First 100 Founding Members only</div>
-      <div style="font-size:.75rem;color:rgba(254,243,199,.5);margin-top:2px"><span id="betaCounter">87</span> spots remaining</div>
-    </div>
-
-    <div class="upgrade-title" id="upgradeTitle">Join as Founding Member</div>
-    <div class="upgrade-sub" id="upgradeSub">Lock in your lifetime discount before we launch publicly.</div>
+    <div class="upgrade-title" id="upgradeTitle">🔓 Unlock Saathi</div>
+    <div class="upgrade-sub" id="upgradeSub">Daily free limit reached. Upgrade to continue.</div>
 
     <!-- Plan 1: Basic ₹99 -->
     <div class="plan-card featured" id="planFounding">
-      <div class="plan-popular">⭐ Founding Member Special</div>
+      <div class="plan-popular">⭐ Most Popular</div>
       <div style="margin-top:10px">
         <div class="plan-name">साथी Basic</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <div class="plan-price">₹99<span>/month</span></div>
-          <div style="font-size:.72rem;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3);padding:3px 8px;border-radius:20px;font-weight:700">67% OFF</div>
-        </div>
-        <div class="plan-desc" style="color:rgba(254,243,199,.5);text-decoration:line-through;font-size:.78rem">Regular price ₹299/month</div>
-        <div class="plan-feats" style="margin-top:8px">
-          ✓ Unlimited conversations — Hindi &amp; English<br>
-          ✓ Medicine reminders + SOS button<br>
+        <div class="plan-price">₹99 <span>/ month</span></div>
+        <div class="plan-desc" style="color:var(--amber-l)">First 3 months at ₹99 — founding member special price</div>
+        <div class="plan-feats">
+          ✓ Unlimited baat-cheet (chat + voice)<br>
+          ✓ Medicine reminders<br>
           ✓ Memory notes<br>
-          ✓ Prescription reader<br>
-          ✓ Founding Member badge forever<br>
-          ✓ Price locked — never increases
+          ✓ SOS emergency button<br>
+          ✓ Hindi + English support
         </div>
       </div>
-      <button class="pay-btn" id="payFounding">🙏 Claim Founding Member — ₹99/month</button>
-      <div style="font-size:.72rem;color:rgba(254,243,199,.35);text-align:center;margin-top:8px">Pay via UPI · Activated within 2 hours</div>
+      <button class="pay-btn" id="payFounding">🙏 Start at ₹99/month</button>
     </div>
 
     <!-- Plan 2: Pro ₹299 -->
     <div class="plan-card" id="planPro">
       <div class="plan-name">साथी Pro</div>
       <div class="plan-price">₹299 <span>/ month</span></div>
-      <div class="plan-desc">Full health suite — dietician, prescriptions, reports</div>
+      <div class="plan-desc">Most features — including doctor visit support</div>
       <div class="plan-feats" style="font-size:.8rem;color:var(--muted);line-height:1.8;margin:8px 0">
-        ✓ Everything in Basic<br>
-        ✓ 🥗 AI Dietician + weekly meal calendar<br>
-        ✓ Prescription scanner<br>
-        ✓ 30-day BP/Sugar PDF report
+        ✓ All Basic features +<br>
+        ✓ Prescription scanner (read doctor documents)<br>
+        ✓ AI health insights from reports<br>
+        ✓ Auto medicine reminder from prescription<br>
+        ✓ 30-day BP/Sugar report (PDF)
       </div>
       <button class="pay-btn" style="background:rgba(245,158,11,.12);color:var(--amber);box-shadow:none;border:1.5px solid rgba(245,158,11,.35)" id="payPro">Choose Pro — ₹299/month</button>
     </div>
 
     <div class="upgrade-free-note">
-      🔒 Pay via UPI · WhatsApp confirmation · Activated in 2 hrs<br>
+      🔒 Secure payment via Instamojo · UPI, Card, NetBanking<br>
       Cancel anytime · No hidden charges
     </div>
   </div>
@@ -557,6 +545,32 @@ var S = {
   userType:'family-setup'
 };
 try { var sv = localStorage.getItem('saathi_v1'); if(sv) S = Object.assign(S, JSON.parse(sv)); } catch(e){}
+function trackUser(plan) {
+  // Store user in registry for dashboard
+  try {
+    var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+    var existing = registry.findIndex(function(u) { return u.email === S.email; });
+    var userRecord = {
+      name:         S.name || 'Unknown',
+      email:        S.email || '',
+      phone:        S.phone || '',
+      registeredAt: S.registeredAt || Date.now(),
+      plan:         plan.type,
+      paidAt:       plan.paidAt || null,
+      foundingEnd:  plan.foundingEnd || null,
+      daysLeft:     plan.foundingEnd ? Math.ceil((plan.foundingEnd - Date.now()) / (24*60*60*1000)) : null,
+      activatedBy:  plan.activatedBy || 'self',
+      lastSeen:     Date.now()
+    };
+    if(existing >= 0) {
+      registry[existing] = userRecord;
+    } else {
+      registry.push(userRecord);
+    }
+    localStorage.setItem('saathi_registry', JSON.stringify(registry));
+  } catch(e) {}
+}
+
 function save() { try { localStorage.setItem('saathi_v1', JSON.stringify(S)); } catch(e){} }
 
 // ── REMINDER ENGINE ──
@@ -1380,33 +1394,28 @@ function initPlan() {
 function getPlanStatus() {
   var plan = initPlan();
   var now = Date.now();
-
   // Trial active
   if(plan.type === 'trial' && now < plan.trialEnd) {
     var daysLeft = Math.ceil((plan.trialEnd - now) / (24*60*60*1000));
     return { access: 'full', type: 'trial', daysLeft: daysLeft, msgCount: plan.msgCount };
   }
-
-  // Trial expired — show specific message, not generic 'free'
+  // Trial expired — specific state
   if(plan.type === 'trial' && now >= plan.trialEnd) {
     return { access: 'limited', type: 'trial_expired', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
   }
-
-  // Founding member — check 90-day expiry
+  // Founding member — check 90/100-day expiry
   if(plan.type === 'founding') {
     if(plan.foundingEnd && now > plan.foundingEnd) {
       return { access: 'limited', type: 'founding_expired', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
     }
-    var daysLeftFounding = plan.foundingEnd ? Math.ceil((plan.foundingEnd - now) / (24*60*60*1000)) : 90;
-    return { access: 'full', type: 'founding', daysLeft: daysLeftFounding, msgCount: plan.msgCount };
+    var daysLeftF = plan.foundingEnd ? Math.ceil((plan.foundingEnd - now) / (24*60*60*1000)) : 100;
+    return { access: 'full', type: 'founding', daysLeft: daysLeftF, msgCount: plan.msgCount };
   }
-
-  // Pro — full access, no expiry
+  // Pro — full access forever
   if(plan.type === 'pro') {
     return { access: 'full', type: 'pro', msgCount: plan.msgCount };
   }
-
-  // Free (never started trial)
+  // Free
   return { access: 'limited', type: 'free', msgCount: plan.msgCount, limit: FREE_MSG_LIMIT };
 }
 
@@ -1460,62 +1469,42 @@ function applyLangUI() {
 }
 
 function showUpgradeModal(reason) {
-  // Reset card state on every open
+  // Reset card state every time modal opens
   var fc0 = document.getElementById('planFounding');
   var pc0 = document.getElementById('planPro');
   if(fc0) { fc0.style.display = ''; fc0.classList.remove('featured'); }
-  if(pc0) { pc0.classList.remove('featured'); pc0.querySelector('.plan-name').textContent = 'साथी Pro'; }
+  if(pc0) { pc0.classList.remove('featured'); if(pc0.querySelector('.plan-name')) pc0.querySelector('.plan-name').textContent = 'साथी Pro'; }
 
-  // Hide PRO button if already paid
+  // Hide PRO button if already on pro plan
   var planStatus = getPlanStatus();
   var upgradeBtn = document.getElementById('upgradeBtn');
   if(upgradeBtn) {
-    if(planStatus.type === 'pro') {
-      upgradeBtn.style.display = 'none';
-    } else if(planStatus.type === 'founding') {
-      upgradeBtn.textContent = '★';
-      upgradeBtn.title = 'Founding Member';
-    }
+    if(planStatus.type === 'pro') upgradeBtn.style.display = 'none';
+    else if(planStatus.type === 'founding') { upgradeBtn.textContent = '★'; upgradeBtn.title = 'Founding Member'; }
   }
+
   var title = document.getElementById('upgradeTitle');
-  var sub = document.getElementById('upgradeSub');
+  var sub   = document.getElementById('upgradeSub');
+
   if(reason === 'founding_expired') {
     title.textContent = '⏰ Founding Period Ended';
-    sub.textContent = 'Your 3-month founding plan is complete. Upgrade to Pro ₹299/month to continue unlimited access.';
-    // Hide ₹99 founding card, highlight Pro
-    var foundingCard = document.getElementById('planFounding');
-    var proCard = document.getElementById('planPro');
-    if(foundingCard) foundingCard.style.display = 'none';
-    if(proCard) { proCard.classList.add('featured'); proCard.querySelector('.plan-name').textContent = '🌟 Continue with Saathi Pro'; }
-
+    sub.textContent   = 'Your 100-day founding plan is complete. Upgrade to Pro ₹299/month to continue.';
+    if(fc0) fc0.style.display = 'none';
+    if(pc0) { pc0.classList.add('featured'); if(pc0.querySelector('.plan-name')) pc0.querySelector('.plan-name').textContent = '🌟 Continue with Saathi Pro'; }
   } else if(reason === 'trial') {
     title.textContent = '⏰ Free Trial Ended';
-    sub.textContent = 'Your 7 days are up! Become a Founding Member at just ₹99/month — 67% off regular price.';
-    // Show ₹99 card prominently, reset pro card
-    var fc = document.getElementById('planFounding');
-    var pc = document.getElementById('planPro');
-    if(fc) { fc.style.display = ''; fc.classList.add('featured'); }
-    if(pc) { pc.classList.remove('featured'); }
-
+    sub.textContent   = 'Your 7 days are up! Become a Founding Member — ₹99/month, 67% off.';
+    if(fc0) { fc0.style.display = ''; fc0.classList.add('featured'); }
+    if(pc0) pc0.classList.remove('featured');
   } else if(reason === 'upgrade') {
     title.textContent = '⭐ Upgrade Saathi';
-    sub.textContent = 'Get unlimited access, medicine reminders, prescription reader and more.';
-    var fc2 = document.getElementById('planFounding');
-    var pc2 = document.getElementById('planPro');
-    if(fc2) fc2.style.display = '';
-    if(pc2) pc2.classList.remove('featured');
-
+    sub.textContent   = 'Unlock unlimited access, medicine reminders, prescription reader and more.';
   } else if(reason === 'limit') {
     title.textContent = '⚡ Daily Limit Reached';
-    sub.textContent = 'Free plan: 5 messages/day. Upgrade from ₹99/month for unlimited access.';
-    var fc3 = document.getElementById('planFounding');
-    if(fc3) fc3.style.display = '';
-
+    sub.textContent   = 'Free plan: 5 messages/day. Upgrade from ₹99/month for unlimited.';
   } else {
     title.textContent = 'Join as Founding Member';
-    sub.textContent = 'Lock in ₹99/month before we launch publicly.';
-    var fc4 = document.getElementById('planFounding');
-    if(fc4) fc4.style.display = '';
+    sub.textContent   = 'Lock in ₹99/month — first 100 members only.';
   }
   document.getElementById('upgrade-overlay').classList.add('show');
 }
@@ -1523,59 +1512,45 @@ function showUpgradeModal(reason) {
 // ── INSTAMOJO PAYMENT ──
 function startPayment(plan) {
   var amount   = plan === 'pro' ? '299' : '99';
-  var planName = plan === 'pro' ? 'Saathi AI Pro' : 'Saathi AI Basic';
+  var desc     = plan === 'pro' ? 'Saathi AI Pro Plan' : 'Saathi AI Basic 3 months';
   var upiId    = 'anamikabajpai1991@oksbi';
-  var waMsg    = 'Hi! I paid Rs.' + amount + ' for ' + planName + '. My email: ' + (S.email||'') + '. Please activate my account.';
-  var waUrl    = 'https://wa.me/919044941203?text=' + encodeURIComponent(waMsg);
+  var whatsapp = '9044941203';
+  var upiData  = 'upi://pay?pa=' + upiId + '&pn=SaathiAI&am=' + amount + '&cu=INR&tn=' + encodeURIComponent(desc);
+  var qrUrl    = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiData);
+  var waMsg    = 'Hi! I paid Rs.' + amount + ' for Saathi AI. Please activate my account. Email: ' + (S.email||'');
+  var waUrl    = 'https://wa.me/91' + whatsapp + '?text=' + encodeURIComponent(waMsg);
 
   var old = document.getElementById('upi-overlay');
-  if (old) old.remove();
+  if(old) old.remove();
 
   var ov = document.createElement('div');
   ov.id = 'upi-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
-
-  ov.innerHTML = ''
-    + '<div style="background:#1a1000;border:1px solid rgba(245,158,11,.3);border-radius:24px 24px 0 0;padding:28px 22px 40px;max-width:430px;width:100%;text-align:center;font-family:Baloo 2,sans-serif">'
-    + '<div style="width:36px;height:4px;background:rgba(245,158,11,.2);border-radius:2px;margin:0 auto 18px"></div>'
-    + '<div style="font-size:1.2rem;font-weight:800;color:#F59E0B;margin-bottom:4px">Pay &#8377;' + amount + ' &mdash; ' + planName + '</div>'
-    + '<div style="font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:22px">3 easy steps:</div>'
-
-    + '<div style="text-align:left;margin-bottom:20px">'
-
-    + '<div style="display:flex;gap:12px;margin-bottom:14px">'
-    + '<div style="min-width:26px;height:26px;border-radius:50%;background:#F59E0B;color:#000;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>'
-    + '<div><div style="color:#fff;font-weight:700;font-size:.88rem">Open GPay, PhonePe or Paytm</div>'
-    + '<div style="color:rgba(255,255,255,.4);font-size:.75rem">Tap "Send Money" or "Pay"</div></div>'
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0;font-family:Baloo 2,sans-serif';
+  ov.innerHTML =
+    '<div style="background:#1a1000;border:1px solid rgba(245,158,11,.25);border-radius:24px 24px 0 0;padding:24px 20px 36px;max-width:430px;width:100%;text-align:center">'
+    + '<div style="width:40px;height:4px;background:rgba(245,158,11,.2);border-radius:2px;margin:0 auto 16px"></div>'
+    + '<div style="font-size:1.2rem;font-weight:800;color:#F59E0B;margin-bottom:2px">Pay ₹' + amount + ' — Saathi AI</div>'
+    + '<div style="font-size:.78rem;color:rgba(254,243,199,.4);margin-bottom:16px">' + desc + '</div>'
+    + '<div style="background:#fff;border-radius:16px;padding:10px;display:inline-block;margin-bottom:8px">'
+    + '<img src="' + qrUrl + '" width="160" height="160" alt="UPI QR" style="display:block">'
     + '</div>'
-
-    + '<div style="display:flex;gap:12px;margin-bottom:14px">'
-    + '<div style="min-width:26px;height:26px;border-radius:50%;background:#F59E0B;color:#000;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>'
-    + '<div style="flex:1"><div style="color:#fff;font-weight:700;font-size:.88rem;margin-bottom:6px">Enter UPI ID &amp; pay &#8377;' + amount + '</div>'
-    + '<div style="background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.4);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">'
-    + '<span style="color:#FEF9F0;font-weight:800;font-size:.9rem">' + upiId + '</span>'
-    + '<button id="upiCopyBtn" style="background:#F59E0B;border:none;color:#000;padding:5px 10px;border-radius:6px;font-weight:700;cursor:pointer;font-size:.72rem;flex-shrink:0">Copy</button>'
-    + '</div></div></div>'
-
-    + '<div style="display:flex;gap:12px">'
-    + '<div style="min-width:26px;height:26px;border-radius:50%;background:#22c55e;color:#000;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>'
-    + '<div><div style="color:#fff;font-weight:700;font-size:.88rem">Send screenshot on WhatsApp</div>'
-    + '<div style="color:rgba(255,255,255,.4);font-size:.75rem">Account activated within 2 hours</div></div>'
+    + '<div style="font-size:.7rem;color:rgba(254,243,199,.4);margin-bottom:14px">Scan QR with GPay · PhonePe · Paytm · BHIM</div>'
+    + '<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
+    + '<div style="text-align:left"><div style="font-size:.65rem;color:#888;margin-bottom:2px">UPI ID (manual)</div>'
+    + '<div style="font-weight:800;color:#FEF9F0;font-size:.9rem">' + upiId + '</div></div>'
+    + '<button id="copyUpiBtn" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#F59E0B;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:.72rem">Copy</button>'
     + '</div>'
-    + '</div>'
-
-    + '<a href="' + waUrl + '" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:13px;border-radius:12px;font-weight:800;font-size:.92rem;text-decoration:none;margin-bottom:10px">&#128242; Open WhatsApp to Confirm</a>'
-    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:10px;border-radius:10px;cursor:pointer;width:100%;font-size:.82rem;font-family:Baloo 2,sans-serif">Cancel</button>'
+    + '<div style="font-size:.75rem;color:rgba(254,243,199,.4);margin-bottom:14px">Enter amount <strong style="color:#F59E0B">₹' + amount + '</strong> if not auto-filled</div>'
+    + '<a href="' + waUrl + '" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:13px;border-radius:12px;font-weight:800;font-size:.95rem;text-decoration:none;margin-bottom:8px">📲 Send Screenshot on WhatsApp</a>'
+    + '<div style="font-size:.7rem;color:rgba(254,243,199,.3);margin-bottom:12px">After paying — tap above to notify us. Activated within 2 hours.</div>'
+    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:10px;border-radius:12px;cursor:pointer;font-size:.82rem;width:100%">Cancel</button>'
     + '</div>';
-
   document.body.appendChild(ov);
-
-  var cb = document.getElementById('upiCopyBtn');
-  if (cb) cb.onclick = function() {
-    navigator.clipboard.writeText(upiId).then(function() {
-      cb.textContent = 'Copied!';
-      cb.style.background = '#22c55e';
-    });
+  // Wire copy button after DOM insert
+  var copyBtn = document.getElementById('copyUpiBtn');
+  if(copyBtn) copyBtn.onclick = function() {
+    navigator.clipboard.writeText('anamikabajpai1991@oksbi');
+    this.textContent = 'Copied ✓';
   };
 }
 
@@ -1599,6 +1574,36 @@ function onPaymentSuccess(plan, response) {
 
 // Check URL params on load — handle return from Instamojo payment page
 function checkPaymentReturn() {
+  // ── SECRET ACTIVATION LINK ──
+  // Usage: saathiai.health/app?activate=founding&key=SAATHI2024
+  var params = new URLSearchParams(window.location.search);
+  var activateType = params.get('activate');
+  var activateKey  = params.get('key');
+
+  if(activateType && activateKey === 'SAATHI2024') {
+    var plan = getPlan() || {};
+    if(activateType === 'founding') {
+      plan.type        = 'founding';
+      plan.paidAt      = Date.now();
+      plan.foundingEnd = Date.now() + (100 * 24 * 60 * 60 * 1000); // 100 days free
+      plan.paymentId   = 'manual_' + Date.now();
+      plan.activatedBy = 'owner';
+    } else if(activateType === 'pro') {
+      plan.type        = 'pro';
+      plan.paidAt      = Date.now();
+      plan.paymentId   = 'manual_' + Date.now();
+      plan.activatedBy = 'owner';
+    } else if(activateType === 'trial_extend') {
+      plan.type        = 'trial';
+      plan.trialEnd    = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    }
+    setPlan(plan);
+    // Track in user registry
+    trackUser(plan);
+    window.history.replaceState({}, '', '/app');
+    alert('✅ Account activated! Welcome to Saathi AI.');
+    return;
+  }
   var params = new URLSearchParams(window.location.search);
   var payment = params.get('payment');
   var plan    = params.get('plan');
@@ -1643,7 +1648,6 @@ function obValidate(inp, inputId, errId, checkFn, badMsg) {
   if (err) err.style.display = 'none';
   return true;
 }
-window.obValidate = obValidate;
 
 function obLivePhone(inp) {
   var err = document.getElementById('err-phone');
@@ -1657,10 +1661,22 @@ function obLivePhone(inp) {
     err.style.display = 'none';
   }
 }
+
+window.obValidate = obValidate;
 window.obLivePhone = obLivePhone;
 
 // ── WIRE UP ALL BUTTONS (no inline onclick) ──
 window.addEventListener('DOMContentLoaded', function() {
+  // 5-tap on logo = admin dashboard
+  var _tapCount = 0, _tapTimer;
+  var _logo = document.getElementById('tbAvatar');
+  if(_logo) _logo.addEventListener('click', function() {
+    _tapCount++;
+    clearTimeout(_tapTimer);
+    _tapTimer = setTimeout(function() { _tapCount = 0; }, 800);
+    if(_tapCount >= 5) { _tapCount = 0; showAdminDashboard(); }
+  });
+
 
   // ── ONBOARDING VALIDATION ──
   function showErr(id, msg) {
@@ -1809,7 +1825,7 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('startBtn').addEventListener('click', function() {
     var nameOk  = obValidate(document.getElementById('ob-name'),  'ob-name',  'err-name',  function(v){return v.length>=2;}, 'Please enter your full name');
     var emailOk = obValidate(document.getElementById('ob-email'), 'ob-email', 'err-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);}, 'Enter valid email — e.g. name@gmail.com');
-    var dobEl = document.getElementById('ob-dob'); var dobOk = obValidate(dobEl, 'ob-dob', 'err-dob', function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;}, 'Select complete date of birth — day, month and year');
+    var dobOk   = obValidate(document.getElementById('ob-dob'),   'ob-dob',   'err-dob',   function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;}, 'Enter a valid date of birth');
     var phoneOk = obValidate(document.getElementById('ob-phone'), 'ob-phone', 'err-phone', function(v){return /^[6-9]\d{9}$/.test(v);}, 'Enter 10-digit number starting with 6,7,8 or 9');
 
     if(!nameOk || !emailOk || !dobOk || !phoneOk) {
@@ -1824,8 +1840,10 @@ window.addEventListener('DOMContentLoaded', function() {
     S.phone     = document.getElementById('ob-phone').value.trim();
     S.family    = (document.getElementById('ob-family')||{value:''}).value.trim();
     S.famPhone  = (document.getElementById('ob-fam-phone')||{value:''}).value.trim();
+    S.registeredAt = S.registeredAt || Date.now();
     S.onboarded = true;
     save();
+    trackUser(getPlan() || {});
     if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
     startMain();
   });
@@ -1979,9 +1997,115 @@ window.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-})();
+});
 
 // ── PWA INSTALL ──
+
+// ── ADMIN DASHBOARD ──
+function exportUsersCSV() {
+  var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+  if(!registry.length) { alert('No users to export yet'); return; }
+  var rows = ['Name,Email,Phone,Plan,Joined,Days Left'];
+  registry.forEach(function(u) {
+    var daysLeft = u.foundingEnd ? Math.ceil((u.foundingEnd - Date.now()) / (24*60*60*1000)) : '';
+    var joined = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('en-IN') : '';
+    rows.push([u.name||'',u.email||'',u.phone||'',u.plan||'',joined,daysLeft].join(','));
+  });
+  var blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url; a.download = 'saathi-users-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+
+function showAdminDashboard() {
+  var key = prompt('Enter admin key:');
+  if(key !== 'SAATHI2024') { alert('Wrong key'); return; }
+
+  var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+  var now = Date.now();
+
+  var rows = registry.map(function(u, i) {
+    var daysLeft = u.foundingEnd ? Math.ceil((u.foundingEnd - now) / (24*60*60*1000)) : '—';
+    var regDate  = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('en-IN') : '—';
+    var status   = u.plan === 'founding' ? (daysLeft > 0 ? '🟢 Active' : '🔴 Expired') :
+                   u.plan === 'pro'      ? '🟣 Pro' :
+                   u.plan === 'trial'    ? '🟡 Trial' : '⚪ Free';
+    return '<tr style="border-bottom:1px solid rgba(245,158,11,.1)">'
+      + '<td style="padding:8px 6px;color:#FEF9F0">' + (i+1) + '</td>'
+      + '<td style="padding:8px 6px;color:#FEF9F0">' + (u.name||'—') + '</td>'
+      + '<td style="padding:8px 6px;color:rgba(254,243,199,.6);font-size:.78rem">' + (u.email||'—') + '</td>'
+      + '<td style="padding:8px 6px;color:rgba(254,243,199,.6)">' + (u.phone||'—') + '</td>'
+      + '<td style="padding:8px 6px">' + status + '</td>'
+      + '<td style="padding:8px 6px;color:var(--amber)">' + regDate + '</td>'
+      + '<td style="padding:8px 6px;color:' + (daysLeft > 10 ? '#22c55e' : daysLeft > 0 ? '#f59e0b' : '#ef4444') + '">'
+      + (typeof daysLeft === 'number' ? daysLeft + ' days' : daysLeft) + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var total    = registry.length;
+  var active   = registry.filter(function(u){ return u.plan === 'founding' || u.plan === 'pro'; }).length;
+  var trials   = registry.filter(function(u){ return u.plan === 'trial'; }).length;
+  var expiring = registry.filter(function(u){ return u.foundingEnd && (u.foundingEnd - now) < (7*24*60*60*1000) && (u.foundingEnd - now) > 0; }).length;
+
+  var old = document.getElementById('admin-dashboard');
+  if(old) old.remove();
+
+  var dash = document.createElement('div');
+  dash.id = 'admin-dashboard';
+  dash.style.cssText = 'position:fixed;inset:0;background:#0D0A07;z-index:99999;overflow-y:auto;padding:20px;font-family:Baloo 2,sans-serif';
+  dash.innerHTML = '<div style="max-width:900px;margin:0 auto">'
+
+    // Header
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">'
+    + '<div><div style="font-size:1.4rem;font-weight:800;color:var(--amber)">📊 Saathi AI Dashboard</div>'
+    + '<div style="font-size:.78rem;color:var(--muted)">Admin view — ' + new Date().toLocaleString('en-IN') + '</div></div>'
+    + '<button onclick="document.getElementById(\'admin-dashboard\').remove()" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--amber);padding:8px 16px;border-radius:10px;cursor:pointer">✕ Close</button>'
+    + '</div>'
+
+    // Stats cards
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">'
+    + '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:16px;text-align:center"><div style="font-size:2rem;font-weight:800;color:var(--amber)">' + total + '</div><div style="font-size:.72rem;color:var(--muted)">Total Users</div></div>'
+    + '<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:14px;padding:16px;text-align:center"><div style="font-size:2rem;font-weight:800;color:#22c55e">' + active + '</div><div style="font-size:.72rem;color:var(--muted)">Paid Active</div></div>'
+    + '<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:14px;padding:16px;text-align:center"><div style="font-size:2rem;font-weight:800;color:#fbbf24">' + trials + '</div><div style="font-size:.72rem;color:var(--muted)">On Trial</div></div>'
+    + '<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:16px;text-align:center"><div style="font-size:2rem;font-weight:800;color:#ef4444">' + expiring + '</div><div style="font-size:.72rem;color:var(--muted)">Expiring Soon</div></div>'
+    + '</div>'
+
+    // Revenue summary
+    + '<div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">'
+    + '<div><div style="font-size:.72rem;color:rgba(34,197,94,.7);margin-bottom:2px">ESTIMATED REVENUE</div>'
+    + '<div style="font-size:1.4rem;font-weight:800;color:#22c55e">₹' + (active * 99) + ' <span style="font-size:.8rem;font-weight:400;color:rgba(34,197,94,.6)">/ month (founding)</span></div></div>'
+    + '<button onclick="exportUsersCSV()" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;padding:8px 16px;border-radius:10px;cursor:pointer;font-family:Baloo 2;font-size:.8rem;font-weight:700">⬇ Export CSV</button>'
+    + '</div>'
+
+    // Activation helper
+    + '<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:14px;padding:16px;margin-bottom:20px">'
+    + '<div style="font-size:.8rem;font-weight:700;color:var(--amber);margin-bottom:8px">⚡ Quick Activation Links</div>'
+    + '<div style="font-size:.75rem;color:rgba(254,243,199,.5);margin-bottom:4px">Send to user after payment:</div>'
+    + '<div style="background:#111;border-radius:8px;padding:8px 12px;font-size:.75rem;color:#22c55e;word-break:break-all;margin-bottom:6px">https://saathiai.health/app?activate=founding&key=SAATHI2024</div>'
+    + '<div style="font-size:.72rem;color:rgba(254,243,199,.3)">User clicks → 100 days free automatically activated</div>'
+    + '</div>'
+
+    // Users table
+    + '<div style="background:rgba(255,255,255,.02);border:1px solid rgba(245,158,11,.1);border-radius:14px;overflow:hidden">'
+    + '<div style="padding:14px 16px;border-bottom:1px solid rgba(245,158,11,.1);font-size:.82rem;font-weight:700;color:var(--amber)">👥 All Users (' + total + ')</div>'
+    + (total === 0
+      ? '<div style="padding:32px;text-align:center;color:var(--muted)">No users yet. Share the app to get started!</div>'
+      : '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.8rem">'
+        + '<thead><tr style="background:rgba(245,158,11,.06)">'
+        + '<th style="padding:10px 6px;text-align:left;color:var(--muted);font-weight:600">#</th>'
+        + '<th style="padding:10px 6px;text-align:left;color:var(--muted);font-weight:600">Name</th>'
+        + '<th style="padding:10px 6px;text-align:left;color:var(--muted);font-weight:600">Email</th>'
+        + '<th style="padding:10px 6px;text-align:left;color:var(--muted);font-weight:600">Phone</th>'
+        + '<th style="padding:10px 6px;text-align:left;color:var(--muted);font-weight:600">Status</th>'
+        + '<th style="padding:10px 6px;text-align:left;color:var(--muted);font-weight:600">Joined</th>'
+        + '<th style="padding:10px 6px;text-align:left;color:var(--muted);font-weight:600">Days Left</th>'
+        + '</tr></thead><tbody>' + rows + '</tbody></table></div>')
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(dash);
+}
 
 // ── SERVICE WORKER REGISTRATION ──
 if('serviceWorker' in navigator) {
@@ -1991,7 +2115,7 @@ if('serviceWorker' in navigator) {
     }).catch(function(err) {
       console.log('SW registration failed:', err);
     });
-  });
+})();
 }
 </script>
 </body>
