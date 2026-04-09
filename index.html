@@ -331,6 +331,24 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
     <div class="chat-wrap" id="chatWrap">
       <div class="date-div"><span id="dateLabel">आज</span></div>
     </div>
+
+  <!-- FEEDBACK WIDGET -->
+  <div id="feedbackWidget" style="display:none;position:fixed;inset:0;background:rgba(13,10,7,.88);z-index:9000;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#1E1408;border:1px solid rgba(245,158,11,.3);border-radius:20px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-family:'Baloo 2';font-size:1.15rem;font-weight:800;color:#F59E0B;margin-bottom:4px">आपका अनुभव कैसा रहा?</div>
+        <div style="font-size:.8rem;color:rgba(254,243,199,.45)">How was your session with Saathi?</div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:18px" id="fbEmojis">
+        <button onclick="selectFeedback('loved')" id="fb-loved" style="flex:1;padding:12px 6px;background:rgba(245,158,11,.08);border:1.5px solid rgba(245,158,11,.2);border-radius:14px;cursor:pointer;font-size:.82rem;color:#FEF3C7;font-family:'Baloo 2';transition:all .2s">😊<br>Loved it</button>
+        <button onclick="selectFeedback('okay')" id="fb-okay" style="flex:1;padding:12px 6px;background:rgba(245,158,11,.08);border:1.5px solid rgba(245,158,11,.2);border-radius:14px;cursor:pointer;font-size:.82rem;color:#FEF3C7;font-family:'Baloo 2';transition:all .2s">😐<br>It was okay</button>
+        <button onclick="selectFeedback('needs')" id="fb-needs" style="flex:1;padding:12px 6px;background:rgba(245,158,11,.08);border:1.5px solid rgba(245,158,11,.2);border-radius:14px;cursor:pointer;font-size:.82rem;color:#FEF3C7;font-family:'Baloo 2';transition:all .2s">😞<br>Needs work</button>
+      </div>
+      <textarea id="fbText" placeholder="Tell us more (optional)..." rows="3" style="width:100%;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.15);border-radius:12px;padding:11px 14px;font-family:'Baloo 2';font-size:.88rem;color:#FEF3C7;outline:none;resize:none;margin-bottom:14px"></textarea>
+      <button onclick="submitFeedback()" style="width:100%;padding:13px;background:linear-gradient(135deg,#F59E0B,#EA580C);border:none;border-radius:12px;font-family:'Baloo 2';font-size:1rem;font-weight:800;color:#fff;cursor:pointer">Submit →</button>
+      <div style="text-align:center;margin-top:10px"><span onclick="closeFeedback()" style="font-size:.78rem;color:rgba(254,243,199,.3);cursor:pointer;text-decoration:underline">Skip for now</span></div>
+    </div>
+  </div>
     <div class="input-bar">
       <div class="input-row">
         <button class="stop-btn" id="stopBtn" title="Stop voice">⏹</button>
@@ -800,6 +818,7 @@ function callAPI(userMsg) {
     }
     addBubble('ai', reply, extraHtml);
     speakText(reply);
+    maybeShowFeedback();
   }).catch(function() { hideTyping(); addBubble('ai', 'Network mein thodi problem. Try again.'); });
 }
 
@@ -1524,6 +1543,50 @@ function showAdminDashboard() {
       +'<tbody>'+rows+'</tbody></table></div>')
     +'</div></div>';
   document.body.appendChild(dash);
+}
+
+// ── FEEDBACK WIDGET ──
+var sessionAiCount = 0;
+var feedbackShownThisSession = false;
+var selectedFeedback = '';
+
+function maybeShowFeedback() {
+  sessionAiCount++;
+  if(!feedbackShownThisSession && sessionAiCount >= 5) {
+    feedbackShownThisSession = true;
+    setTimeout(function() {
+      var w = document.getElementById('feedbackWidget');
+      if(w) { w.style.display = 'flex'; }
+    }, 1200);
+  }
+}
+
+function selectFeedback(val) {
+  selectedFeedback = val;
+  ['loved','okay','needs'].forEach(function(k) {
+    var b = document.getElementById('fb-'+k);
+    if(b) b.style.border = k === val ? '1.5px solid #F59E0B' : '1.5px solid rgba(245,158,11,.2)';
+    if(b) b.style.background = k === val ? 'rgba(245,158,11,.2)' : 'rgba(245,158,11,.08)';
+  });
+}
+
+function closeFeedback() {
+  var w = document.getElementById('feedbackWidget');
+  if(w) w.style.display = 'none';
+}
+
+function submitFeedback() {
+  if(!selectedFeedback) { selectFeedback('okay'); }
+  var text = (document.getElementById('fbText')||{}).value || '';
+  var user = S && S.name ? S.name : 'Unknown';
+  var email = S && S.email ? S.email : '';
+  fetch('/api/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rating: selectedFeedback, message: text, user: user, email: email })
+  }).catch(function(){});
+  closeFeedback();
+  setTimeout(function() { addBubble('ai', 'Shukriya! Aapka feedback sun ke bahut achha laga. 🙏', '', '', true); }, 400);
 }
 
 // ── SERVICE WORKER ── (OUTSIDE IIFE closing bracket — this is correct)
