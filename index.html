@@ -431,7 +431,8 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
     </div>
     <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:flex-end">
-        <textarea id="noteInput" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:11px 14px;font-family:'Baloo 2',sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:none;min-height:60px;max-height:120px;line-height:1.5" placeholder="कुछ important लिखें — कोई याद, कविता, नाम, काम..."></textarea>
+        <textarea id="noteInput" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:11px 14px;font-family:'Baloo 2',sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:none;min-height:60px;max-height:120px;line-height:1.5" placeholder="Type or tap 🎤 to speak your note..."></textarea>
+        <button id="noteMicBtn" title="Speak your note" style="width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--border);font-size:1.2rem;cursor:pointer;flex-shrink:0">🎤</button>
         <button id="saveNoteBtn" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;font-size:1.2rem;cursor:pointer;flex-shrink:0">+</button>
       </div>
       <div id="notesList" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -1444,6 +1445,27 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('saveNoteBtn').addEventListener('click', function() {
     var inp = document.getElementById('noteInput'), text = inp.value.trim(); if(!text) return;
     saveNoteFromChat(text); inp.value = ''; renderNotes(); speakText('Note save ho gaya');
+  });
+
+  // Notes mic — speech to text
+  var noteRecog = null, noteRec = false;
+  document.getElementById('noteMicBtn').addEventListener('click', function() {
+    var btn = this;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR) { alert('Voice input works in Chrome. Please use Chrome.'); return; }
+    if(noteRec) { if(noteRecog) noteRecog.stop(); return; }
+    noteRecog = new SR();
+    noteRecog.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
+    noteRecog.interimResults = false;
+    noteRecog.onresult = function(e) {
+      var transcript = e.results[0][0].transcript;
+      var inp = document.getElementById('noteInput');
+      inp.value = inp.value ? inp.value + ' ' + transcript : transcript;
+    };
+    noteRecog.onstart = function() { noteRec = true; btn.style.background = 'rgba(239,68,68,.2)'; btn.style.border = '1px solid #ef4444'; btn.textContent = '🔴'; };
+    noteRecog.onend = function() { noteRec = false; btn.style.background = 'var(--card)'; btn.style.border = '1px solid var(--border)'; btn.textContent = '🎤'; };
+    noteRecog.onerror = function() { noteRec = false; btn.style.background = 'var(--card)'; btn.style.border = '1px solid var(--border)'; btn.textContent = '🎤'; };
+    noteRecog.start();
   });
 
   // Upgrade
