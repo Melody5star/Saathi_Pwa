@@ -313,6 +313,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div class="tb-icon-btn" id="sosBtn">🆘</div>
         <div class="tb-icon-btn" id="rxBtn" title="Prescription">📋</div>
         <div class="tb-icon-btn" id="notesBtn">📝</div>
+        <div class="tb-icon-btn" id="familyBtn" title="Family Dashboard" style="display:none;font-size:1rem">👨‍👩‍👧</div>
         <div class="tb-icon-btn" id="upgradeBtn" title="Upgrade Plan" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);font-size:.7rem;font-weight:800;color:var(--amber)">PRO</div>
         <div class="tb-icon-btn" id="settingsBtn">⚙️</div>
       </div>
@@ -331,6 +332,36 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
     <div class="chat-wrap" id="chatWrap">
       <div class="date-div"><span id="dateLabel">आज</span></div>
     </div>
+
+  <!-- FAMILY DASHBOARD (Pro/Founding only) -->
+  <div class="screen hidden" id="screen-family">
+    <div class="settings-head">
+      <button class="back-btn" id="familyBack">←</button>
+      <div class="settings-title">👨‍👩‍👧 Family Dashboard</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
+      <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:14px 16px">
+        <div style="font-size:.72rem;font-weight:700;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">Patient</div>
+        <div style="font-family:'Baloo 2';font-size:1.05rem;font-weight:700;color:var(--text)" id="fd-name">—</div>
+        <div style="font-size:.82rem;color:var(--muted)" id="fd-phone">—</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px">
+        <div style="font-size:.72rem;font-weight:700;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">💊 Today's Medicines</div>
+        <div id="fd-meds" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px">
+        <div style="font-size:.72rem;font-weight:700;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">📝 Recent Notes</div>
+        <div id="fd-notes" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px">
+        <div style="font-size:.72rem;font-weight:700;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">🆘 Emergency Contact</div>
+        <div id="fd-sos" style="font-size:.9rem;color:var(--text)">—</div>
+      </div>
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:.72rem;color:rgba(254,243,199,.2)">साथी AI — Family View • Pro Plan</div>
+      </div>
+    </div>
+  </div>
 
   <!-- FEEDBACK WIDGET -->
   <div id="feedbackWidget" style="display:none;position:fixed;inset:0;background:rgba(13,10,7,.88);z-index:9000;align-items:center;justify-content:center;padding:20px">
@@ -402,7 +433,8 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div class="sec-title">Daily Medicine Reminders</div>
         <div class="med-list" id="medList"></div>
         <div class="add-med-row">
-          <input class="add-med-input" id="newMedName" placeholder="Medicine name">
+          <input class="add-med-input" id="newMedName" placeholder="Medicine name / दवाई का नाम">
+          <button id="medMicBtn" title="Speak medicine name" style="padding:0 10px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);font-size:1rem;cursor:pointer;flex-shrink:0">🎤</button>
           <input class="add-med-input" id="newMedTime" type="time" style="width:90px">
           <button class="add-med-btn" id="addMedBtn">+ Add</button>
         </div>
@@ -597,7 +629,8 @@ function getBestVoice(lang) {
       || voices.find(function(v){ return v.lang==='en-GB'; })
       || voices.find(function(v){ return v.lang.startsWith('en'); }) || null;
   }
-  return voices.find(function(v){ return v.lang==='hi-IN' && v.name.includes('Google'); })
+  return voices.find(function(v){ return v.lang==='hi-IN' && v.name.includes('Google') && /female|woman|girl/i.test(v.name); })
+    || voices.find(function(v){ return v.lang==='hi-IN' && v.name.includes('Google'); })
     || voices.find(function(v){ return v.lang==='hi-IN'; })
     || voices.find(function(v){ return v.lang.startsWith('hi'); })
     || voices.find(function(v){ return v.lang==='en-IN'; }) || null;
@@ -619,8 +652,8 @@ function speakChunks(chunks, idx) {
   if(idx >= chunks.length) return;
   var u = new SpeechSynthesisUtterance(chunks[idx]);
   u.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
-  u.pitch = 1.08 + (Math.random() * 0.06 - 0.03);
-  u.rate = parseFloat(S.voiceSpeed) || 0.82;
+  u.pitch = S.lang === 'english' ? (1.05 + Math.random()*0.05) : (1.1 + Math.random()*0.05);
+  u.rate = parseFloat(S.voiceSpeed) || (S.lang === 'english' ? 0.88 : 0.78);
   u.volume = 1.0;
   var voice = getBestVoice(S.lang === 'english' ? 'english' : 'hindi');
   if(voice) u.voice = voice;
@@ -766,7 +799,7 @@ function callAPI(userMsg) {
     reactExamples = '  Surprise: "Oh really?!"\n  Happy: "That is so nice to hear!"\n  Sad: "Oh... I understand."\n  Agree: "Absolutely, you are so right!"\n';
     convExamples = '  - Sometimes ask a question back\n  - Share your own view\n  - Admit when you don\'t know\n';
   } else {
-    langRule = '🔴 अनिवार्य नियम #1: केवल शुद्ध हिंदी में बोलें। एक भी अंग्रेजी शब्द नहीं।';
+    langRule = '🔴 अनिवार्य नियम #1: हमेशा शुद्ध हिंदी देवनागरी में जवाब दो। User चाहे Roman में लिखे (Hinglish), English में लिखे, या देवनागरी में — तुम्हारा जवाब हमेशा हिंदी देवनागरी में होना चाहिए।';
     reactExamples = '  आश्चर्य: "सच में?!"\n  खुशी: "कितनी अच्छी बात है!"\n  दुख: "यह सुनकर मन भारी हो गया।"\n';
     convExamples = '  - कभी-कभी एक सवाल वापस पूछें\n  - अपनी राय भी दें\n';
   }
@@ -1127,6 +1160,8 @@ function showUpgradeModal(reason) {
     if(planStatus.type==='pro') upgradeBtn.style.display='none';
     else if(planStatus.type==='founding') { upgradeBtn.textContent='★'; upgradeBtn.title='Founding Member'; }
   }
+  var familyBtn = document.getElementById('familyBtn');
+  if(familyBtn) familyBtn.style.display = (planStatus.type==='pro'||planStatus.type==='founding') ? '' : 'none';
   var title = document.getElementById('upgradeTitle'), sub = document.getElementById('upgradeSub');
   if(reason === 'founding_expired') {
     title.textContent = '⏰ Founding Period Ended';
@@ -1430,6 +1465,23 @@ window.addEventListener('DOMContentLoaded', function() {
     save(); renderMedList();
   });
 
+  // Medicine mic — accepts Hindi or English voice
+  var medRecog = null, medRec = false;
+  document.getElementById('medMicBtn').addEventListener('click', function() {
+    var btn = this;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR) { alert('Voice input works in Chrome. Please use Chrome.'); return; }
+    if(medRec) { if(medRecog) medRecog.stop(); return; }
+    medRecog = new SR();
+    medRecog.lang = 'hi-IN'; // default Hindi, but also recognises English names
+    medRecog.interimResults = false;
+    medRecog.onresult = function(e) { document.getElementById('newMedName').value = e.results[0][0].transcript; };
+    medRecog.onstart = function() { medRec = true; btn.style.background = 'rgba(239,68,68,.2)'; btn.style.border = '1px solid #ef4444'; btn.textContent = '🔴'; };
+    medRecog.onend = function() { medRec = false; btn.style.background = 'var(--card)'; btn.style.border = '1px solid var(--border)'; btn.textContent = '🎤'; };
+    medRecog.onerror = function() { medRec = false; btn.style.background = 'var(--card)'; btn.style.border = '1px solid var(--border)'; btn.textContent = '🎤'; };
+    medRecog.start();
+  });
+
   // Prescription
   document.getElementById('rxBtn').addEventListener('click', function() { resetRxScreen(); showScreen('screen-rx'); });
   document.getElementById('rxBack').addEventListener('click', function() { showScreen('screen-main'); });
@@ -1446,6 +1498,50 @@ window.addEventListener('DOMContentLoaded', function() {
     var inp = document.getElementById('noteInput'), text = inp.value.trim(); if(!text) return;
     saveNoteFromChat(text); inp.value = ''; renderNotes(); speakText('Note save ho gaya');
   });
+
+  // Family Dashboard — Pro/Founding only
+  function renderFamilyDash() {
+    document.getElementById('fd-name').textContent = S.name || '—';
+    document.getElementById('fd-phone').textContent = S.phone || S.email || '—';
+    var medsEl = document.getElementById('fd-meds');
+    if(!S.medicines.length) {
+      medsEl.innerHTML = '<div style="font-size:.85rem;color:var(--muted)">No medicines added yet.</div>';
+    } else {
+      medsEl.innerHTML = S.medicines.map(function(m) {
+        var taken = m.reminded;
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(245,158,11,.05);border-radius:10px">'
+          +'<span style="font-size:.9rem;color:var(--text)">💊 '+m.name+'</span>'
+          +'<span style="font-size:.82rem;color:'+(taken?'#22c55e':'var(--amber)')+'">'+m.time+' '+(taken?'✓ Taken':'Pending')+'</span>'
+          +'</div>';
+      }).join('');
+    }
+    var notes = loadNotes().slice(0,5);
+    var notesEl = document.getElementById('fd-notes');
+    if(!notes.length) {
+      notesEl.innerHTML = '<div style="font-size:.85rem;color:var(--muted)">No notes saved yet.</div>';
+    } else {
+      notesEl.innerHTML = notes.map(function(n) {
+        return '<div style="padding:8px 10px;background:rgba(245,158,11,.05);border-radius:10px;font-size:.85rem;color:var(--text)">'+n.text+'</div>';
+      }).join('');
+    }
+    var sosEl = document.getElementById('fd-sos');
+    if(S.family || S.famPhone) {
+      sosEl.innerHTML = '<div style="font-weight:700;color:var(--text)">'+(S.family||'Emergency Contact')+'</div>'
+        +'<div style="color:var(--amber)">'+(S.famPhone||'—')+'</div>';
+    } else {
+      sosEl.innerHTML = '<div style="color:var(--muted)">No emergency contact set.</div>';
+    }
+  }
+  document.getElementById('familyBtn').addEventListener('click', function() {
+    var status = getPlanStatus();
+    if(status.type !== 'pro' && status.type !== 'founding') {
+      addBubble('ai', 'Family Dashboard sirf Pro Members ke liye available hai. Upgrade karein! 🌟', '', '', true);
+      return;
+    }
+    renderFamilyDash();
+    showScreen('screen-family');
+  });
+  document.getElementById('familyBack').addEventListener('click', function() { showScreen('screen-main'); });
 
   // Notes mic — speech to text
   var noteRecog = null, noteRec = false;
