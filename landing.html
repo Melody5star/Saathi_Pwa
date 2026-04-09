@@ -11,7 +11,10 @@
 <link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,700&family=Baloo+2:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,700&family=Baloo+2:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,700&family=Baloo+2:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{
   --amber:#F59E0B;--amber-d:#D97706;--amber-l:#FDE68A;
@@ -153,7 +156,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
 <nav>
   <div class="nav-inner">
     <div class="nav-logo" style="display:flex;align-items:center;gap:10px;">
-      <img src="/icon-192.png" alt="साथी AI logo" width="48" height="48" style="border-radius:12px;display:block;">
+      <img src="/icon-192.png" alt="साथी AI logo" width="48" height="48" fetchpriority="high" style="border-radius:12px;display:block;">
       साथी <span>AI</span>
     </div>
     <div class="nav-links">
@@ -406,7 +409,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
         "साथी means companion. That is all we want to be."
       </p>
       <div style="display:flex;align-items:center;gap:16px;padding-top:28px;border-top:1px solid rgba(245,158,11,.15)">
-        <img src="/icon-192.png" alt="Saathi AI" width="48" height="48" style="border-radius:14px;flex-shrink:0;display:block;">
+        <img src="/icon-192.png" alt="Saathi AI" width="48" height="48" loading="lazy" style="border-radius:14px;flex-shrink:0;display:block;">
         <div>
           <div style="font-family:'Baloo 2';font-weight:800;font-size:1rem;color:#FEF3C7">Anamika Bajpai</div>
           <div style="font-size:.82rem;color:rgba(254,243,199,.4)">Founder, Saathi AI</div>
@@ -484,7 +487,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
   </div>
 </footer>
 
-<script>
+<script defer>
 // ── PAYMENT FROM LANDING ──
 function landingPay(plan) {
   var amount   = plan === 'pro' ? '299' : '99';
