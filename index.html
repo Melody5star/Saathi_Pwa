@@ -385,7 +385,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
       </div>
       <textarea id="fbText" placeholder="Tell us more (optional)..." rows="3" style="width:100%;background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.15);border-radius:12px;padding:11px 14px;font-family:'Baloo 2';font-size:.88rem;color:#FEF3C7;outline:none;resize:none;margin-bottom:14px"></textarea>
       <button onclick="submitFeedback()" style="width:100%;padding:13px;background:linear-gradient(135deg,#F59E0B,#EA580C);border:none;border-radius:12px;font-family:'Baloo 2';font-size:1rem;font-weight:800;color:#fff;cursor:pointer">Submit →</button>
-      <div style="text-align:center;margin-top:10px"><span onclick="closeFeedback()" style="font-size:.78rem;color:rgba(254,243,199,.3);cursor:pointer;text-decoration:underline">Skip for now</span></div>
+      <div style="text-align:center;margin-top:10px"><button onclick="closeFeedback()" style="background:none;border:none;font-size:.82rem;color:rgba(254,243,199,.4);cursor:pointer;text-decoration:underline;font-family:'Baloo 2';padding:6px 12px">Skip for now</button></div>
     </div>
   </div>
     <div class="input-bar">
@@ -829,23 +829,24 @@ function callAPI(userMsg) {
   if(S.lang === 'hinglish') { S.lang = 'hindi'; save(); }
   var langRule, reactExamples, convExamples;
   if(S.lang === 'english') {
-    langRule = '🔴 LANGUAGE RULE #1: Speak in Indian English — warm, friendly, natural. No American slang. No British formality.';
+    langRule = '🔴 CRITICAL LANGUAGE RULE: You MUST reply ONLY in English. NEVER use Hindi or Devanagari script in your response — not even a single word. The user has chosen English as their language. Every word of every reply must be in English only.';
     reactExamples = '  Surprise: "Oh really?!"\n  Happy: "That is so nice to hear!"\n  Sad: "Oh... I understand."\n  Agree: "Absolutely, you are so right!"\n';
     convExamples = '  - Sometimes ask a question back\n  - Share your own view\n  - Admit when you don\'t know\n';
   } else {
-    langRule = '🔴 LANGUAGE RULE #1: Match the user\'s script — if they write in Devanagari (हिंदी) or Roman Hindi (Hinglish like "mera sir dard kar raha hai"), reply in pure Hindi Devanagari. If they write in English, reply in English. Never mix scripts in one reply.';
+    langRule = '🔴 CRITICAL LANGUAGE RULE: Match the user\'s script exactly. If they write in Devanagari or Roman Hindi (Hinglish like "mera sir dard"), reply in pure Hindi Devanagari only. If they write in English, reply in English only. NEVER mix languages in one reply.';
     reactExamples = '  आश्चर्य: "सच में?!"\n  खुशी: "कितनी अच्छी बात है!"\n  दुख: "यह सुनकर मन भारी हो गया।"\n';
     convExamples = '  - कभी-कभी एक सवाल वापस पूछें\n  - अपनी राय भी दें\n';
   }
 
-  var sys = langRule + '\n\nTu "Saathi AI" hai — India ka companion for people aged 30 to 86+.\n'
-    + 'User: ' + (S.name||'Aap') + (S.family ? '. Trusted person: ' + S.family : '') + '.\n'
-    + 'Time: ' + currentTime + '. Date: ' + now.toLocaleDateString('hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '.\n'
-    + (S.medicines.length ? 'Medicines: ' + S.medicines.map(function(m){return m.name+' at '+m.time;}).join(', ') + '.\n' : '')
-    + '\nPERSONA: ' + personaCtx + '\n\n'
+  var isEng = S.lang === 'english';
+  var sys = langRule + '\n\nYou are "Saathi AI" — India\'s caring companion for people aged 30 to 86+.\n'
+    + 'User name: ' + (S.name||'Friend') + (S.family ? '. Trusted family contact: ' + S.family : '') + '.\n'
+    + 'Time: ' + currentTime + '. Date: ' + now.toLocaleDateString(isEng?'en-IN':'hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '.\n'
+    + (S.medicines.length ? (isEng?'Medicines: ':'दवाइयाँ: ') + S.medicines.map(function(m){return m.name+(isEng?' at ':' — ')+m.time;}).join(', ') + '.\n' : '')
+    + '\nPERSONA: ' + (isEng ? 'User set up this app themselves or for an elderly parent. Be a warm, intelligent English-speaking companion.' : personaCtx) + '\n\n'
     + 'REACT NATURALLY:\n' + reactExamples + '\nCONVERSATION STYLE:\n' + convExamples + '\n'
-    + 'VOICE: Chhote sentences. ZERO: ** ## bullets emojis. Max 1 emoji (😊 ya 🙏).\n'
-    + 'NOTES: "note kar lo" → [NOTE:text]\n'
+    + 'VOICE: Short sentences. NO: ** ## bullet points. Max 1 emoji per reply.\n'
+    + (isEng ? 'NOTES: "note this down" → [NOTE:text]\n' : 'NOTES: "note kar lo" → [NOTE:text]\n')
     + 'REMINDER: [REMINDER:{"time":"HH:MM","task":"..."}]. Cancel: [CANCEL_REMINDER]\n'
     + 'LENGTH: 2-3 short lines only.';
 
@@ -1513,7 +1514,7 @@ window.addEventListener('DOMContentLoaded', function() {
     save(); renderMedList();
   });
 
-  // Medicine mic — accepts Hindi or English voice
+  // Medicine mic — full voice flow: speak "medicine name at time" → auto save
   var medRecog = null, medRec = false;
   document.getElementById('medMicBtn').addEventListener('click', function() {
     var btn = this;
@@ -1521,13 +1522,44 @@ window.addEventListener('DOMContentLoaded', function() {
     if(!SR) { alert('Voice input works in Chrome. Please use Chrome.'); return; }
     if(medRec) { if(medRecog) medRecog.stop(); return; }
     medRecog = new SR();
-    medRecog.lang = 'hi-IN'; // default Hindi, but also recognises English names
+    medRecog.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
     medRecog.interimResults = false;
-    medRecog.onresult = function(e) { document.getElementById('newMedName').value = e.results[0][0].transcript; };
+    medRecog.onresult = function(e) {
+      var transcript = e.results[0][0].transcript.trim();
+      // Try to parse "medicine at time" e.g. "Metformin at 8 AM" or "Metformin subah 8 baje"
+      var timeMatch = transcript.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|AM|PM|बजे)?/);
+      var medName = transcript.replace(/\s*(at|@|subah|sham|raat|baje|बजे|सुबह|शाम|रात)\s*.*$/i, '').trim() || transcript;
+      var medTime = '';
+      if(timeMatch) {
+        var h = parseInt(timeMatch[1]);
+        var m = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+        var ampm = (timeMatch[3]||'').toLowerCase();
+        if(ampm === 'pm' || ampm === 'शाम' || ampm === 'raat' || ampm === 'रात') { if(h < 12) h += 12; }
+        if(ampm === 'am' || ampm === 'सुबह' || ampm === 'subah') { if(h === 12) h = 0; }
+        medTime = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+      }
+      if(medName) document.getElementById('newMedName').value = medName;
+      if(medTime) document.getElementById('newMedTime').value = medTime;
+      // Auto-save if both name and time were captured
+      if(medName && medTime) {
+        S.medicines.push({name: medName, time: medTime, reminded: false});
+        document.getElementById('newMedName').value = '';
+        document.getElementById('newMedTime').value = '';
+        save(); renderMedList();
+        var msg = S.lang === 'english'
+          ? medName + ' reminder set for ' + medTime + ' ✓'
+          : medName + ' की दवाई ' + medTime + ' बजे याद दिला दूंगा ✓';
+        speakText(msg);
+      } else {
+        // Partial — filled in the field, user can confirm manually
+        speakText(S.lang === 'english' ? 'Got it. Please set the time and tap Add.' : 'ठीक है। समय चुनकर Add करें।');
+      }
+    };
     medRecog.onstart = function() { medRec = true; btn.style.background = 'rgba(239,68,68,.2)'; btn.style.border = '1px solid #ef4444'; btn.textContent = '🔴'; };
     medRecog.onend = function() { medRec = false; btn.style.background = 'var(--card)'; btn.style.border = '1px solid var(--border)'; btn.textContent = '🎤'; };
     medRecog.onerror = function() { medRec = false; btn.style.background = 'var(--card)'; btn.style.border = '1px solid var(--border)'; btn.textContent = '🎤'; };
     medRecog.start();
+    speakText(S.lang === 'english' ? 'Say the medicine name and time. For example: Metformin at 8 AM.' : 'दवाई का नाम और समय बोलिए। जैसे: मेटफॉर्मिन सुबह 8 बजे।');
   });
 
   // Prescription
