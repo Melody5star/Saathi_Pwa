@@ -656,14 +656,19 @@ function splitIntoChunks(text) {
   parts.forEach(function(p) { var t = p.trim(); if(t) chunks.push(t); });
   return chunks.length ? chunks : [text];
 }
+function detectLang(text) {
+  // If text has Devanagari characters → Hindi, else English
+  return /[\u0900-\u097F]/.test(text) ? 'hindi' : 'english';
+}
 function speakChunks(chunks, idx) {
   if(idx >= chunks.length) return;
   var u = new SpeechSynthesisUtterance(chunks[idx]);
-  u.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
-  u.pitch = S.lang === 'english' ? (1.05 + Math.random()*0.05) : (1.1 + Math.random()*0.05);
-  u.rate = parseFloat(S.voiceSpeed) || (S.lang === 'english' ? 0.88 : 0.78);
+  var chunkLang = detectLang(chunks[idx]);
+  u.lang = chunkLang === 'english' ? 'en-IN' : 'hi-IN';
+  u.pitch = chunkLang === 'english' ? (1.05 + Math.random()*0.05) : (1.1 + Math.random()*0.05);
+  u.rate = parseFloat(S.voiceSpeed) || (chunkLang === 'english' ? 0.88 : 0.78);
   u.volume = 1.0;
-  var voice = getBestVoice(S.lang === 'english' ? 'english' : 'hindi');
+  var voice = getBestVoice(chunkLang);
   if(voice) u.voice = voice;
   u.onstart = function() {
     var av = document.getElementById('tbAvatar'), st = document.getElementById('tbStatus');
