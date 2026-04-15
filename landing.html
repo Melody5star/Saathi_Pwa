@@ -584,7 +584,7 @@ function submitContact(e) {
   // Open mailto with pre-filled subject and body
   var subject = encodeURIComponent('Saathi AI Enquiry — ' + type);
   var body = encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\nPhone: ' + phone + '\nType: ' + type + '\n\nMessage:\n' + msg);
-  window.location.href = 'mailto:hello@saathiai.health?subject=' + subject + '&body=' + body;
+  window.location.href = 'mailto:support@saathiai.health?subject=' + subject + '&body=' + body;
   // Show success message
   document.getElementById('contactForm').style.display = 'none';
   document.getElementById('contactSuccess').style.display = 'block';
