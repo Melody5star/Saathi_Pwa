@@ -7,25 +7,25 @@
 // ─────────────────────────────────────────────
 function getLangRule(lang) {
   if (lang === 'english') {
-    return 'Speak in Indian English — warm, friendly, natural.';
+    return 'LANGUAGE RULE #1: Speak in Indian English — warm, friendly, natural. No American slang. No British formality.';
   }
-  return 'हमेशा शुद्ध हिंदी देवनागरी में जवाब दो। User चाहे Roman में लिखे (Hinglish), English में लिखे, या देवनागरी में — तुम्हारा जवाब हमेशा हिंदी देवनागरी में होना चाहिए।';
+  return "LANGUAGE RULE #1: Match the user's script — if they write in Devanagari (हिंदी) or Roman Hindi (Hinglish like \"mera sir dard kar raha hai\"), reply in pure Hindi Devanagari. If they write in English, reply in English. Never mix scripts in one reply.";
 }
 
 describe('Hinglish support — Language Rule', () => {
   test('Hindi mode rule contains Hinglish acceptance instruction', () => {
     const rule = getLangRule('hindi');
-    expect(rule).toContain('Roman में लिखे (Hinglish)');
+    expect(rule).toContain('Roman Hindi (Hinglish');
   });
 
   test('Hindi mode rule contains English acceptance instruction', () => {
     const rule = getLangRule('hindi');
-    expect(rule).toContain('English में लिखे');
+    expect(rule).toContain('they write in English, reply in English');
   });
 
   test('Hindi mode rule mandates Devanagari reply', () => {
     const rule = getLangRule('hindi');
-    expect(rule).toContain('हिंदी देवनागरी में होना चाहिए');
+    expect(rule).toContain('reply in pure Hindi Devanagari');
   });
 
   test('English mode does not use Devanagari rule', () => {
@@ -35,7 +35,7 @@ describe('Hinglish support — Language Rule', () => {
 
   test('Hindi mode is default when lang is not english', () => {
     const rule = getLangRule('hindi');
-    expect(rule).toContain('शुद्ध हिंदी');
+    expect(rule).toContain('Hindi Devanagari');
   });
 });
 
@@ -231,7 +231,7 @@ describe('Version check — V21', () => {
 
   test('index.html contains Hinglish language rule', () => {
     const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
-    expect(html).toContain('Roman में लिखे (Hinglish)');
+    expect(html).toContain('Roman Hindi (Hinglish');
   });
 
   test('landing.html contains About Us section', () => {
