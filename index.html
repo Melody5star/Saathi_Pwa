@@ -785,15 +785,36 @@ function sendMsg() {
 }
 
 var QA = {
-  medicine: function(){ return 'Aaj maine apni medicines li hain kya? ' + (S.medicines.map(function(m){return m.name;}).join(', ')||''); },
-  date: function(){ return 'Aaj ki date, din aur time kya hai?'; },
-  news: function(){ return 'Aaj ki 2-3 interesting khabren sunao — achhi wali.'; },
-  joke: function(){ return 'Ek mast Hinglish chutakula sunao!'; },
-  story: function(){ return 'Ek choti prerak kahani sunao — 5-6 lines mein.'; },
-  quote: function(){ return 'Ek sundar suvichar ya doha sunao aaj ke liye.'; },
+  medicine: function(){
+    var meds = S.medicines.map(function(m){return m.name;}).join(', ') || '';
+    return S.lang === 'english'
+      ? 'Did I take my medicines today? ' + meds
+      : 'आज मैंने अपनी दवाइयाँ ली हैं क्या? ' + meds;
+  },
+  date: function(){
+    return S.lang === 'english' ? 'What is today\'s date, day and time?' : 'आज की तारीख, दिन और समय क्या है?';
+  },
+  news: function(){
+    return S.lang === 'english' ? 'Tell me 2-3 interesting news stories from today.' : 'आज की 2-3 रोचक खबरें सुनाओ — अच्छी वाली।';
+  },
+  joke: function(){
+    return S.lang === 'english' ? 'Tell me a funny joke!' : 'एक मज़ेदार चुटकुला सुनाओ!';
+  },
+  story: function(){
+    return S.lang === 'english' ? 'Tell me a short inspiring story in 5-6 lines.' : 'एक छोटी प्रेरक कहानी सुनाओ — 5-6 पंक्तियों में।';
+  },
+  quote: function(){
+    return S.lang === 'english' ? 'Share a beautiful quote or thought for today.' : 'आज के लिए एक सुंदर सुविचार या दोहा सुनाओ।';
+  },
   youtube: function(){ return 'youtube'; },
-  weather: function(){ return 'Aaj ka mausam kaisa hai?'; },
-  family: function(){ return S.family + ' ki bahut yaad aa rahi hai...'; }
+  weather: function(){
+    return S.lang === 'english' ? 'How is the weather today?' : 'आज का मौसम कैसा है?';
+  },
+  family: function(){
+    return S.lang === 'english'
+      ? 'I am missing ' + S.family + ' a lot...'
+      : S.family + ' की बहुत याद आ रही है...';
+  }
 };
 
 // ── API ──
