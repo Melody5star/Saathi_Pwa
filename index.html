@@ -1223,6 +1223,13 @@ function onPaymentSuccess(plan, response) {
   planData.paymentId = (response && response.payment_id) || 'demo_'+Date.now();
   if(plan === 'founding') planData.foundingEnd = Date.now() + (90*24*60*60*1000);
   setPlan(planData);
+  // Persist plan upgrade to Supabase
+  if(S.email) sbCall('updatePlan', {
+    email: S.email, plan: plan,
+    planPaidAt: planData.paidAt,
+    planEnd: planData.foundingEnd || null,
+    paymentId: planData.paymentId
+  });
   document.getElementById('upgrade-overlay').classList.remove('show');
   updatePlanUI();
   addBubble('ai', plan==='founding'?'Bahut shukriya! Aap ab Founding Member hain! 🎉':'Welcome to Saathi Pro! 🎉','','',true);
@@ -1379,6 +1386,13 @@ window.addEventListener('DOMContentLoaded', function() {
     S.registeredAt = S.registeredAt || Date.now();
     S.onboarded = true;
     save(); trackUser(getPlan()||{});
+    // Persist user to Supabase
+    if(S.email) sbCall('upsert', {
+      email: S.email, name: S.name, phone: S.phone, dob: S.dob,
+      language: S.lang, userType: S.userType || 'self',
+      familyName: S.family, familyPhone: S.famPhone,
+      registeredAt: S.registeredAt
+    });
     if(window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
     startMain();
   });
@@ -1575,7 +1589,7 @@ window.addEventListener('DOMContentLoaded', function() {
   checkPaymentReturn();
   initSOSCancel();
   applyLangUI();
-  if(S.onboarded) { startMain(); updatePlanUI(); }
+  if(S.onboarded) { startMain(); updatePlanUI(); syncUserFromSupabase(); }
 
   // Mobile keyboard fix
   if(window.visualViewport) {
@@ -1587,32 +1601,60 @@ window.addEventListener('DOMContentLoaded', function() {
 
 }); // ← END DOMContentLoaded — correctly closed
 
-// ── ADMIN DASHBOARD ──
-function exportUsersCSV() {
-  var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
-  if(!registry.length) { alert('No users to export yet'); return; }
-  var rows = ['Name,Email,Phone,Plan,Joined,Days Left'];
-  registry.forEach(function(u) {
-    var daysLeft = u.foundingEnd ? Math.ceil((u.foundingEnd-Date.now())/(24*60*60*1000)) : '';
-    var joined = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('en-IN') : '';
-    rows.push([u.name||'',u.email||'',u.phone||'',u.plan||'',joined,daysLeft].join(','));
-  });
-  var blob = new Blob([rows.join('\n')],{type:'text/csv'});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'saathi-users-'+new Date().toISOString().split('T')[0]+'.csv';
-  a.click();
+// ── SUPABASE HELPER ──
+function sbCall(action, body) {
+  return fetch('/api/supabase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ action: action }, body || {}))
+  }).then(function(r) { return r.json(); }).catch(function() { return { ok: false }; });
 }
 
-function showAdminDashboard() {
-  var key = prompt('Enter admin key:');
-  if(key !== 'SAATHI2024') { alert('Wrong key'); return; }
-  var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+function syncUserFromSupabase() {
+  if(!S.email) return;
+  sbCall('getUser', { email: S.email }).then(function(d) {
+    if(!d.ok || !d.user) return;
+    var u = d.user;
+    if(u.plan && u.plan !== 'trial') {
+      var plan = getPlan() || {};
+      plan.type = u.plan;
+      if(u.plan_paid_at) plan.paidAt = u.plan_paid_at;
+      if(u.plan_end) plan.foundingEnd = u.plan_end;
+      if(u.payment_id) plan.paymentId = u.payment_id;
+      setPlan(plan);
+      updatePlanUI();
+    }
+  });
+}
+
+// ── ADMIN DASHBOARD ──
+function exportUsersCSV() {
+  sbCall('getAllUsers', {}).then(function(d) {
+    var registry = (d.ok && d.users && d.users.length) ? d.users : JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+    if(!registry.length) { alert('No users to export yet'); return; }
+    var rows = ['Name,Email,Phone,Plan,Joined,Days Left'];
+    registry.forEach(function(u) {
+      var planEnd = u.plan_end || u.foundingEnd;
+      var daysLeft = planEnd ? Math.ceil((planEnd-Date.now())/(24*60*60*1000)) : '';
+      var regAt = u.registered_at || u.registeredAt;
+      var joined = regAt ? new Date(regAt).toLocaleDateString('en-IN') : '';
+      rows.push([u.name||'',u.email||'',u.phone||'',u.plan||'',joined,daysLeft].join(','));
+    });
+    var blob = new Blob([rows.join('\n')],{type:'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'saathi-users-'+new Date().toISOString().split('T')[0]+'.csv';
+    a.click();
+  });
+}
+
+function renderAdminDashboard(registry) {
   var now = Date.now();
   var rows = registry.map(function(u,i) {
-    var daysLeft = u.foundingEnd ? Math.ceil((u.foundingEnd-now)/(24*60*60*1000)) : '—';
-    var regDate = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('en-IN') : '—';
-    var status = u.plan==='founding'?(daysLeft>0?'🟢 Active':'🔴 Expired'):u.plan==='pro'?'🟣 Pro':u.plan==='trial'?'🟡 Trial':'⚪ Free';
+    var planEnd = u.plan_end || u.foundingEnd || null;
+    var daysLeft = planEnd ? Math.ceil((planEnd-now)/(24*60*60*1000)) : '—';
+    var regDate = u.registered_at||u.registeredAt ? new Date(u.registered_at||u.registeredAt).toLocaleDateString('en-IN') : '—';
+    var status = u.plan==='founding'?(typeof daysLeft==='number'&&daysLeft>0?'🟢 Active':'🔴 Expired'):u.plan==='pro'?'🟣 Pro':u.plan==='trial'?'🟡 Trial':'⚪ Free';
     return '<tr style="border-bottom:1px solid rgba(245,158,11,.1)">'
       +'<td style="padding:8px 6px;color:#FEF9F0">'+(i+1)+'</td>'
       +'<td style="padding:8px 6px;color:#FEF9F0">'+(u.name||'—')+'</td>'
@@ -1626,7 +1668,7 @@ function showAdminDashboard() {
   var total = registry.length;
   var active = registry.filter(function(u){return u.plan==='founding'||u.plan==='pro';}).length;
   var trials = registry.filter(function(u){return u.plan==='trial';}).length;
-  var expiring = registry.filter(function(u){return u.foundingEnd&&(u.foundingEnd-now)<(7*24*60*60*1000)&&(u.foundingEnd-now)>0;}).length;
+  var expiring = registry.filter(function(u){var pe=u.plan_end||u.foundingEnd;return pe&&(pe-now)<(7*24*60*60*1000)&&(pe-now)>0;}).length;
   var old = document.getElementById('admin-dashboard'); if(old) old.remove();
   var dash = document.createElement('div');
   dash.id = 'admin-dashboard';
@@ -1661,6 +1703,28 @@ function showAdminDashboard() {
       +'<tbody>'+rows+'</tbody></table></div>')
     +'</div></div>';
   document.body.appendChild(dash);
+}
+
+function showAdminDashboard() {
+  var key = prompt('Enter admin key:');
+  if(key !== 'SAATHI2024') { alert('Wrong key'); return; }
+  // Show loading state
+  var old = document.getElementById('admin-dashboard'); if(old) old.remove();
+  var loading = document.createElement('div');
+  loading.id = 'admin-dashboard';
+  loading.style.cssText = 'position:fixed;inset:0;background:#0D0A07;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Baloo 2,sans-serif;color:var(--amber);font-size:1.1rem';
+  loading.innerHTML = '⏳ Loading users from Supabase…';
+  document.body.appendChild(loading);
+  // Fetch real users from Supabase
+  sbCall('getAllUsers', {}).then(function(d) {
+    if(d.ok && d.users) {
+      renderAdminDashboard(d.users);
+    } else {
+      // Fallback to localStorage if Supabase fails
+      var registry = JSON.parse(localStorage.getItem('saathi_registry') || '[]');
+      renderAdminDashboard(registry);
+    }
+  });
 }
 
 // ── FEEDBACK WIDGET ──
