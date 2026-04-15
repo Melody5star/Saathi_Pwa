@@ -8,9 +8,17 @@
 <meta property="og:description" content="A caring Hindi AI companion for your elderly parents. Health tips, medicine reminders, 24/7 companionship. Works on any phone.">
 <meta property="og:image" content="https://saathiai.health/icon-512.png">
 <meta name="keywords" content="hindi health ai, saathi ai, elderly care india, AI companion hindi, senior care app india">
+<link rel="canonical" href="https://saathiai.health/" />
 <title>साथी AI — Hindi Voice Health Companion for Elderly Indians</title>
 <link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XRWEQ63K93"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XRWEQ63K93');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,700&family=Baloo+2:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap">
@@ -270,7 +278,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
       <div class="feat-card" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
         <div class="feat-icon">🥗</div>
         <div class="feat-h">AI Dietician</div>
-        <p class="feat-p">Personalised weekly meal calendar based on your age, health conditions &amp; medicines. Know what to eat, what to avoid — every day.</p>
+        <p class="feat-p">Personalised weekly meal calendar based on your age, health conditions &amp; medicines.</p>
         <div class="feat-badge" style="background:rgba(245,158,11,.2);color:#F59E0B;border-color:rgba(245,158,11,.4)">Pro Feature</div>
       </div>
     </div>
@@ -335,7 +343,6 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
         </ul>
         <button class="price-btn secondary" onclick="window.location.href='https://saathiai.health/app'">Try Free Now</button>
       </div>
-
       <div class="price-card featured">
         <div class="price-popular">⭐ Most Popular</div>
         <div class="price-tag-label">Founding Member</div>
@@ -350,9 +357,8 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
           <li>SOS + family alerts</li>
           <li>Founding Member badge</li>
         </ul>
-        <button class="price-btn primary" id="landingPay99" onclick="landingPay('founding')">🙏 Start ₹99/month</button>
+        <button class="price-btn primary" onclick="landingPay('founding')">🙏 Start ₹99/month</button>
       </div>
-
       <div class="price-card">
         <div class="price-tag-label">Full Health Suite</div>
         <div class="price-name">Saathi Pro</div>
@@ -366,9 +372,8 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
           <li>30-day vitals PDF report</li>
           <li>Priority support</li>
         </ul>
-        <button class="price-btn secondary" id="landingPay299" onclick="landingPay('pro')">Start ₹299/month</button>
+        <button class="price-btn secondary" onclick="landingPay('pro')">Start ₹299/month</button>
       </div>
-
       <div class="price-card">
         <div class="price-tag-label">B2B — Care Homes / HR</div>
         <div class="price-name">Saathi Enterprise</div>
@@ -421,7 +426,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
   </div>
 </section>
 
-<!-- CONTACT + GOOGLE FORM -->
+<!-- CONTACT -->
 <section class="contact-section" id="contact">
   <div class="container">
     <div style="text-align:center;margin-bottom:40px">
@@ -452,7 +457,6 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
         <div style="font-family:'Baloo 2';font-weight:700;font-size:1.1rem;margin-bottom:6px">Message sent!</div>
         <p style="font-size:.88rem;color:var(--muted)">We'll get back to you within 24 hours.</p>
       </div>
-
       <div style="margin-top:28px;padding-top:24px;border-top:1px solid #F0E0C0;text-align:center">
         <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Or reach us directly</div>
         <a href="mailto:support@saathiai.health" style="font-family:'Baloo 2';font-weight:700;color:var(--amber-d);font-size:.95rem">support@saathiai.health</a>
@@ -496,10 +500,7 @@ function landingPay(plan) {
   var upiId    = 'anamikabajpai1991@oksbi';
   var waMsg    = 'Hi! I paid Rs.' + amount + ' for ' + planName + '. Please activate my account.';
   var waUrl    = 'https://wa.me/919044941203?text=' + encodeURIComponent(waMsg);
-
-  var old = document.getElementById('l-upi-ov');
-  if (old) old.remove();
-
+  var old = document.getElementById('l-upi-ov'); if (old) old.remove();
   var ov = document.createElement('div');
   ov.id = 'l-upi-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Baloo 2,sans-serif';
@@ -525,59 +526,47 @@ function landingPay(plan) {
 }
 
 // ── EMAIL GATE ──
-var FORMSPREE_ID = 'YOUR_FORM_ID'; // Replace with your Formspree ID
+var FORMSPREE_ID = 'YOUR_FORM_ID'; // ← Replace with your Formspree ID from formspree.io
 
 function submitGate() {
   var name  = document.getElementById('gateName').value.trim();
   var email = document.getElementById('gateEmail').value.trim();
   var phone = document.getElementById('gatePhone').value.trim();
-
   if(!email || !email.includes('@')) {
     document.getElementById('gateEmail').focus();
     document.getElementById('gateEmail').style.borderColor = '#ef4444';
     return;
   }
-
-  // Save to localStorage
   try {
     var leads = JSON.parse(localStorage.getItem('saathi_leads') || '[]');
     leads.push({name:name, email:email, phone:phone, time:new Date().toISOString(), source:'landing'});
     localStorage.setItem('saathi_leads', JSON.stringify(leads));
-    // Also save email as "gated user"
     localStorage.setItem('saathi_gated_email', email);
     localStorage.setItem('saathi_gated_name', name);
   } catch(e){}
-
-  // Submit to Formspree
   if(FORMSPREE_ID !== 'YOUR_FORM_ID') {
     fetch('https://formspree.io/f/' + FORMSPREE_ID, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
       body: JSON.stringify({name:name, email:email, phone:phone, source:'landing-gate', time:new Date().toISOString()})
     }).catch(function(){});
   }
-
+  // GA4 event tracking
+  if(typeof gtag !== 'undefined') { gtag('event', 'sign_up', {method: 'email_gate'}); }
   showGateSuccess(name);
 }
 
 function showGateSuccess(name) {
   document.getElementById('gateFormWrap').style.display = 'none';
-  var succ = document.getElementById('gateSuccess');
-  succ.style.display = 'block';
-  // Auto-redirect after 2.5 seconds
-  setTimeout(function() {
-    window.location.href = 'https://saathiai.health/app';
-  }, 2500);
+  document.getElementById('gateSuccess').style.display = 'block';
+  setTimeout(function() { window.location.href = 'https://saathiai.health/app'; }, 2500);
 }
 
 function skipGate() {
-  // Show features only — scroll down
   document.getElementById('features').scrollIntoView({behavior:'smooth'});
-  // Replace form with minimal CTA
   var card = document.getElementById('gateCard');
   card.innerHTML = '<div style="text-align:center;padding:20px">'
     + '<div style="font-family:Baloo 2;font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px">Explore साथी AI</div>'
-    + '<p style="font-size:.88rem;color:var(--muted);margin-bottom:20px">See the features below, then try free — no sign up needed.</p>'
+    + '<p style="font-size:.88rem;color:var(--muted);margin-bottom:20px">See the features below, then try free.</p>'
     + '<a href="https://saathiai.health/app" style="display:inline-block;background:linear-gradient(135deg,var(--amber),var(--saffron));color:#fff;padding:14px 28px;border-radius:14px;font-family:Baloo 2;font-size:.95rem;font-weight:800;text-decoration:none">Try Saathi AI Free →</a>'
     + '</div>';
 }
@@ -593,11 +582,11 @@ function submitContact(e) {
     msg:   document.getElementById('c-msg').value,
     time:  new Date().toISOString()
   };
-
+  // GA4 event
+  if(typeof gtag !== 'undefined') { gtag('event', 'contact_form_submit', {user_type: data.type}); }
   if(FORMSPREE_ID !== 'YOUR_FORM_ID') {
     fetch('https://formspree.io/f/' + FORMSPREE_ID, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
       body: JSON.stringify(data)
     }).then(function() {
       document.getElementById('contactForm').style.display = 'none';
@@ -621,11 +610,7 @@ window.addEventListener('DOMContentLoaded', function() {
     var subText = document.getElementById('gateSubText');
     if(subText) subText.textContent = 'Welcome back' + (name ? ', ' + name : '') + '! 🙏';
     var succ = document.getElementById('gateSuccess');
-    if(succ) {
-      succ.style.display = 'block';
-      var p = succ.querySelector('p');
-      if(p) p.textContent = 'Click below to open Saathi AI';
-    }
+    if(succ) { succ.style.display = 'block'; var p = succ.querySelector('p'); if(p) p.textContent = 'Click below to open Saathi AI'; }
   }
 });
 </script>
