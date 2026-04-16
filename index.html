@@ -843,6 +843,7 @@ function callAPI(userMsg) {
     + 'User name: ' + (S.name||'Friend') + (S.family ? '. Trusted family contact: ' + S.family : '') + '.\n'
     + 'Time: ' + currentTime + '. Date: ' + now.toLocaleDateString(isEng?'en-IN':'hi-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '.\n'
     + (S.medicines.length ? (isEng?'Medicines: ':'दवाइयाँ: ') + S.medicines.map(function(m){return m.name+(isEng?' at ':' — ')+m.time;}).join(', ') + '.\n' : '')
+    + (function(){ var notes = loadNotes(); return notes.length ? (isEng?'USER NOTES (search & reference these when user asks): ':'यूज़र के नोट्स (पूछने पर इनमें से जवाब दो): ') + notes.slice(0,10).map(function(n,i){return (i+1)+'. '+n.text+' ['+n.date+']';}).join(' | ') + '.\n' : ''; })()
     + '\nPERSONA: ' + (isEng ? 'User set up this app themselves or for an elderly parent. Be a warm, intelligent English-speaking companion.' : personaCtx) + '\n\n'
     + 'REACT NATURALLY:\n' + reactExamples + '\nCONVERSATION STYLE:\n' + convExamples + '\n'
     + 'VOICE: Short sentences. NO: ** ## bullet points. Max 1 emoji per reply.\n'
