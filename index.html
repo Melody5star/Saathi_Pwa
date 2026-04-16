@@ -237,8 +237,8 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
       <button class="pay-btn" style="background:rgba(245,158,11,.12);color:var(--amber);box-shadow:none;border:1.5px solid rgba(245,158,11,.35)" id="payPro">Choose Pro — ₹299/month</button>
     </div>
     <div class="upgrade-free-note">
-      🔒 Secure payment via Instamojo · UPI, Card, NetBanking<br>
-      Cancel anytime · No hidden charges
+      🔒 Secure payment via Dodo Payments · UPI, Card, NetBanking<br>
+      Cancel anytime · No hidden charges · Auto-activated instantly
     </div>
   </div>
 </div>
@@ -1222,35 +1222,39 @@ function showUpgradeModal(reason) {
 }
 
 // ── PAYMENT ──
+// ── DODO PAYMENT LINKS (replace with real links from Dodo dashboard) ──
+var DODO_LINK_99  = 'DODO_LINK_99';   // founding plan ₹99
+var DODO_LINK_299 = 'DODO_LINK_299';  // pro plan ₹299
+
 function startPayment(plan) {
-  var amount = plan==='pro'?'299':'99', desc = plan==='pro'?'Saathi AI Pro Plan':'Saathi AI Basic 3 months';
-  var upiId = 'anamikabajpai1991@oksbi', whatsapp = '9044941203';
-  var upiData = 'upi://pay?pa='+upiId+'&pn=SaathiAI&am='+amount+'&cu=INR&tn='+encodeURIComponent(desc);
-  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(upiData);
-  var waMsg = 'Hi! I paid Rs.'+amount+' for Saathi AI. Please activate my account. Email: '+(S.email||'');
-  var waUrl = 'https://wa.me/91'+whatsapp+'?text='+encodeURIComponent(waMsg);
+  var link = plan === 'pro' ? DODO_LINK_299 : DODO_LINK_99;
+  var amount = plan === 'pro' ? '299' : '99';
+  var label  = plan === 'pro' ? 'Saathi Pro' : 'Saathi Basic (Founding)';
+
+  // If real Dodo links are configured — redirect directly
+  if(link !== 'DODO_LINK_99' && link !== 'DODO_LINK_299') {
+    // Pass email as prefill if available
+    var url = link + (S.email ? (link.includes('?') ? '&' : '?') + 'prefill_email=' + encodeURIComponent(S.email) : '');
+    window.location.href = url;
+    return;
+  }
+
+  // Fallback overlay shown until Dodo links are configured
   var old = document.getElementById('upi-overlay'); if(old) old.remove();
   var ov = document.createElement('div');
   ov.id = 'upi-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:flex-end;justify-content:center;font-family:Baloo 2,sans-serif';
-  ov.innerHTML = '<div style="background:#1a1000;border:1px solid rgba(245,158,11,.25);border-radius:24px 24px 0 0;padding:24px 20px 36px;max-width:430px;width:100%;text-align:center">'
+  ov.innerHTML = '<div style="background:#1a1000;border:1px solid rgba(245,158,11,.25);border-radius:24px 24px 0 0;padding:28px 20px 36px;max-width:430px;width:100%;text-align:center">'
     + '<div style="width:40px;height:4px;background:rgba(245,158,11,.2);border-radius:2px;margin:0 auto 16px"></div>'
-    + '<div style="font-size:1.2rem;font-weight:800;color:#F59E0B;margin-bottom:2px">Pay ₹'+amount+' — Saathi AI</div>'
-    + '<div style="font-size:.78rem;color:rgba(254,243,199,.4);margin-bottom:16px">'+desc+'</div>'
-    + '<div style="background:#fff;border-radius:16px;padding:10px;display:inline-block;margin-bottom:8px"><img src="'+qrUrl+'" width="160" height="160" alt="UPI QR" style="display:block"></div>'
-    + '<div style="font-size:.7rem;color:rgba(254,243,199,.4);margin-bottom:14px">Scan QR with GPay · PhonePe · Paytm · BHIM</div>'
-    + '<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
-    + '<div style="text-align:left"><div style="font-size:.65rem;color:#888;margin-bottom:2px">UPI ID</div><div style="font-weight:800;color:#FEF9F0;font-size:.9rem">'+upiId+'</div></div>'
-    + '<button id="copyUpiBtn" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#F59E0B;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:.72rem">Copy</button>'
+    + '<div style="font-size:1.2rem;font-weight:800;color:#F59E0B;margin-bottom:6px">'+label+' — ₹'+amount+'/month</div>'
+    + '<div style="font-size:.82rem;color:rgba(254,243,199,.5);margin-bottom:24px">Secure payment · Auto-activated after payment</div>'
+    + '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:20px;margin-bottom:16px">'
+    + '<div style="font-size:.78rem;color:rgba(254,243,199,.5);margin-bottom:8px">Payment link coming soon via Dodo Payments</div>'
+    + '<div style="font-size:.85rem;color:#FEF3C7;line-height:1.6">Write to us at<br><a href="mailto:support@saathiai.health" style="color:#F59E0B;font-weight:700">support@saathiai.health</a><br>to get early access & pay manually.</div>'
     + '</div>'
-    + '<div style="font-size:.75rem;color:rgba(254,243,199,.4);margin-bottom:14px">Enter amount <strong style="color:#F59E0B">₹'+amount+'</strong> if not auto-filled</div>'
-    + '<a href="'+waUrl+'" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:13px;border-radius:12px;font-weight:800;font-size:.95rem;text-decoration:none;margin-bottom:8px">📲 Send Screenshot on WhatsApp</a>'
-    + '<div style="font-size:.7rem;color:rgba(254,243,199,.3);margin-bottom:12px">After paying — tap above. Activated within 2 hours.</div>'
-    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:10px;border-radius:12px;cursor:pointer;font-size:.82rem;width:100%">Cancel</button>'
+    + '<button onclick="document.getElementById(\'upi-overlay\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:12px;border-radius:12px;cursor:pointer;font-size:.82rem;width:100%">Close</button>'
     + '</div>';
   document.body.appendChild(ov);
-  var cb = document.getElementById('copyUpiBtn');
-  if(cb) cb.onclick = function() { navigator.clipboard.writeText(upiId); this.textContent='Copied ✓'; };
 }
 
 function onPaymentSuccess(plan, response) {
