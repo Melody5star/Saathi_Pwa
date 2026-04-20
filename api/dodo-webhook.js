@@ -17,14 +17,23 @@ const PLAN_CONFIG = {
   pro:      { label: 'Saathi Pro',              days: 30,  amount: '299' }
 };
 
-// ── Verify Dodo webhook signature ──
-function verifySignature(rawBody, signature) {
-  if(!DODO_SECRET) return true; // skip in dev if secret not set
-  const hmac = crypto.createHmac('sha256', DODO_SECRET);
-  hmac.update(rawBody);
-  const expected = hmac.digest('hex');
+// ── Verify Dodo webhook signature (Standard Webhooks spec) ──
+function verifySignature(rawBody, msgId, msgTimestamp, sigHeader) {
+  if(!DODO_SECRET) return true;
   try {
-    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    const secret = DODO_SECRET.startsWith('whsec_')
+      ? Buffer.from(DODO_SECRET.slice(6), 'base64')
+      : Buffer.from(DODO_SECRET, 'base64');
+    const toSign = `${msgId}.${msgTimestamp}.${rawBody}`;
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(toSign);
+    const computed = hmac.digest('base64');
+    // sigHeader format: "v1,<base64sig> v1,<base64sig2> ..."
+    const sigs = sigHeader.split(' ').map(s => s.replace(/^v\d+,/, ''));
+    return sigs.some(sig => {
+      try { return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(sig)); }
+      catch(e) { return false; }
+    });
   } catch(e) {
     return false;
   }
@@ -139,11 +148,13 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase env vars not set' });
   }
 
-  // Read raw body for signature verification
+  // Standard Webhooks headers
   const rawBody = JSON.stringify(req.body);
-  const signature = req.headers['dodo-signature'] || req.headers['x-dodo-signature'] || '';
+  const msgId        = req.headers['webhook-id'] || '';
+  const msgTimestamp = req.headers['webhook-timestamp'] || '';
+  const sigHeader    = req.headers['webhook-signature'] || '';
 
-  if(!verifySignature(rawBody, signature)) {
+  if(!verifySignature(rawBody, msgId, msgTimestamp, sigHeader)) {
     console.error('Dodo webhook signature mismatch');
     return res.status(401).json({ error: 'Invalid signature' });
   }
