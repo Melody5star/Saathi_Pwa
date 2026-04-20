@@ -494,35 +494,15 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
 
 <script defer>
 // ── PAYMENT FROM LANDING ──
+var DODO_LINK_99  = 'DODO_LINK_99';
+var DODO_LINK_299 = 'DODO_LINK_299';
 function landingPay(plan) {
-  var amount   = plan === 'pro' ? '299' : '99';
-  var planName = plan === 'pro' ? 'Saathi AI Pro' : 'Saathi AI Basic';
-  var upiId    = 'anamikabajpai1991@oksbi';
-  var waMsg    = 'Hi! I paid Rs.' + amount + ' for ' + planName + '. Please activate my account.';
-  var waUrl    = 'https://wa.me/919044941203?text=' + encodeURIComponent(waMsg);
-  var old = document.getElementById('l-upi-ov'); if (old) old.remove();
-  var ov = document.createElement('div');
-  ov.id = 'l-upi-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Baloo 2,sans-serif';
-  ov.innerHTML = '<div style="background:#1a0e00;border:1px solid rgba(245,158,11,.3);border-radius:20px;padding:24px 20px 28px;max-width:360px;width:100%;text-align:center">'
-    + '<div style="font-size:1.15rem;font-weight:800;color:#F59E0B;margin-bottom:4px">Pay &#8377;' + amount + ' &mdash; ' + planName + '</div>'
-    + '<div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-bottom:18px">3 easy steps</div>'
-    + '<div style="text-align:left;margin-bottom:18px">'
-    + '<div style="display:flex;gap:10px;margin-bottom:12px"><div style="min-width:24px;height:24px;border-radius:50%;background:#F59E0B;color:#000;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div><div style="color:#fff;font-size:.85rem;padding-top:2px">Open GPay / PhonePe / Paytm</div></div>'
-    + '<div style="display:flex;gap:10px;margin-bottom:12px"><div style="min-width:24px;height:24px;border-radius:50%;background:#F59E0B;color:#000;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>'
-    + '<div style="flex:1"><div style="color:#fff;font-size:.85rem;margin-bottom:5px">Pay &#8377;' + amount + ' to UPI ID:</div>'
-    + '<div style="background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.35);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">'
-    + '<span style="color:#FEF9F0;font-weight:800;font-size:.88rem">' + upiId + '</span>'
-    + '<button id="lCopyBtn" style="background:#F59E0B;border:none;color:#000;padding:4px 8px;border-radius:5px;font-weight:700;cursor:pointer;font-size:.7rem">Copy</button>'
-    + '</div></div></div>'
-    + '<div style="display:flex;gap:10px"><div style="min-width:24px;height:24px;border-radius:50%;background:#22c55e;color:#000;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div><div style="color:#fff;font-size:.85rem;padding-top:2px">Send screenshot on WhatsApp &mdash; activated in 2 hrs</div></div>'
-    + '</div>'
-    + '<a href="' + waUrl + '" target="_blank" style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:12px;border-radius:10px;font-weight:800;font-size:.88rem;text-decoration:none;margin-bottom:8px">&#128242; Confirm on WhatsApp</a>'
-    + '<button onclick="document.getElementById(\'l-upi-ov\').remove()" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:8px;border-radius:8px;cursor:pointer;width:100%;font-size:.8rem">Cancel</button>'
-    + '</div>';
-  document.body.appendChild(ov);
-  var cb = document.getElementById('lCopyBtn');
-  if (cb) cb.onclick = function(){ navigator.clipboard.writeText(upiId).then(function(){ cb.textContent='Copied!'; cb.style.background='#22c55e'; }); };
+  var link = plan === 'pro' ? DODO_LINK_299 : DODO_LINK_99;
+  if(link && link !== 'DODO_LINK_99' && link !== 'DODO_LINK_299') {
+    window.open(link, '_blank');
+  } else {
+    alert('Payment link coming soon! Write to support@saathiai.health to get started.');
+  }
 }
 
 // ── EMAIL GATE ──
