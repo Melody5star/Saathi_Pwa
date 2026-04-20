@@ -494,8 +494,8 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
 
 <script defer>
 // ── PAYMENT FROM LANDING ──
-var DODO_LINK_99  = 'DODO_LINK_99';
-var DODO_LINK_299 = 'DODO_LINK_299';
+var DODO_LINK_99  = 'https://test.checkout.dodopayments.com/buy/pdt_0NcqiLCSnFZtCj2c3zwKs?quantity=1';
+var DODO_LINK_299 = 'https://test.checkout.dodopayments.com/buy/pdt_0NcqiuzIGICj47Ifx4aOl?quantity=1';
 function landingPay(plan) {
   var link = plan === 'pro' ? DODO_LINK_299 : DODO_LINK_99;
   if(link && link !== 'DODO_LINK_99' && link !== 'DODO_LINK_299') {
