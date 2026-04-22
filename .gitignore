@@ -18,3 +18,11 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# TWA / Play Store — NEVER commit keystore
+*.jks
+*.keystore
+twa/build/
+twa/.gradle/
+twa/app/build/
+twa/gradle/

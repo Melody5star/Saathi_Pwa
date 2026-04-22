@@ -1,0 +1,40 @@
+{
+  "packageId": "health.saathiai.app",
+  "host": "saathiai.health",
+  "name": "Saathi AI",
+  "launcherName": "Saathi AI",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#FF6B1A",
+  "navigationColor": "#FF6B1A",
+  "navigationColorDark": "#0D0D0D",
+  "navigationDividerColor": "#FF6B1A",
+  "navigationDividerColorDark": "#0D0D0D",
+  "backgroundColor": "#0D0D0D",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://saathiai.health/icon-512.png",
+  "maskableIconUrl": "https://saathiai.health/icon-512.png",
+  "monochromeIconUrl": "https://saathiai.health/icon-192.png",
+  "appVersion": "1",
+  "appVersionCode": 1,
+  "signingKey": {
+    "path": "./saathi-release-key.jks",
+    "alias": "saathi-key"
+  },
+  "splashScreenFadeOutDuration": 300,
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://saathiai.health/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": { "enabled": false },
+    "playBilling": { "enabled": false }
+  },
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "targetSdkVersion": 34,
+  "fingerprints": []
+}
