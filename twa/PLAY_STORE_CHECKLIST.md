@@ -64,7 +64,11 @@ Founding Member plan: ₹99 for 3 months (limited — first 100 members only)
 **Category:** Health & Fitness
 **Content rating:** Everyone
 **Privacy policy URL:** https://saathiai.health/privacy.html
+**Data safety — deletion URL:** https://saathiai.health/delete-account
 **Website:** https://saathiai.health
+**Developer name:** Anamika Bajpai
+**Developer email:** support@saathiai.health
+**Developer website:** https://saathiai.health
 
 ---
 

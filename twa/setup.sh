@@ -24,7 +24,7 @@ keytool -genkey -v \
   -keyalg RSA \
   -keysize 2048 \
   -validity 10000 \
-  -dname "CN=Anamika Bajpai, OU=Starai Automations, O=Starai Automations, L=New Delhi, ST=Delhi, C=IN"
+  -dname "CN=Anamika Bajpai, OU=Saathi AI, O=Saathi AI, L=New Delhi, ST=Delhi, C=IN"
 
 # ── STEP 3: Print SHA-256 fingerprint ──
 echo ""
