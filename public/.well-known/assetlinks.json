@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "health.saathiai.app",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_SHA256_AFTER_KEYTOOL"]
+      "sha256_cert_fingerprints": ["5D:BE:B9:A7:27:00:F6:D3:6B:CA:26:7C:9E:FA:05:EE:02:E2:4A:D7:5F:93:F4:36:D4:27:3E:68:42:09:D5:EB"]
     }
   }
 ]
