@@ -203,10 +203,10 @@ describe('Mic language selection', () => {
 const fs = require('fs');
 const path = require('path');
 
-describe('Version check — V21', () => {
-  test('index.html title contains v21', () => {
+describe('Version check — V22', () => {
+  test('index.html title contains v22', () => {
     const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
-    expect(html).toContain('साथी AI v21');
+    expect(html).toContain('साथी AI v22');
   });
 
   test('index.html contains Family Dashboard screen', () => {
