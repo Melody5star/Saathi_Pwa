@@ -4,12 +4,24 @@
     <loc>https://saathiai.health/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-04-22</lastmod>
   </url>
   <url>
     <loc>https://saathiai.health/app</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-04-22</lastmod>
+  </url>
+  <url>
+    <loc>https://saathiai.health/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-22</lastmod>
+  </url>
+  <url>
+    <loc>https://saathiai.health/blog/medicine-reminder-tips</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <lastmod>2026-04-22</lastmod>
   </url>
 </urlset>

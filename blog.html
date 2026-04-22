@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="साथी AI Blog — Hindi health tips, elderly care advice, medicine reminders and more for Indian families.">
+<meta property="og:title" content="साथी AI Blog — Health Tips for Indian Families">
+<meta property="og:description" content="Hindi health tips, elderly care advice, medicine reminders and more.">
+<meta property="og:image" content="https://saathiai.health/icon-512.png">
+<link rel="canonical" href="https://saathiai.health/blog" />
+<title>Blog — साथी AI | Health Tips for Indian Families</title>
+<link rel="icon" type="image/png" href="/icon-192.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XRWEQ63K93"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XRWEQ63K93');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,700&family=Baloo+2:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--amber:#F59E0B;--amber-d:#D97706;--amber-l:#FDE68A;--saffron:#EA580C;--dark:#0D0A07;--cream:#FFFDF7;--text:#1C0800;--muted:#78350F;--border:rgba(245,158,11,0.18)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);border-bottom:1px solid rgba(245,158,11,0.1);padding:0}
+.nav-inner{max-width:1100px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:'Baloo 2';font-size:1.3rem;font-weight:800;color:var(--dark);display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo img{width:36px;height:36px;border-radius:10px;display:block;flex-shrink:0}
+.nav-logo span{color:var(--amber)}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:.85rem;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--amber-d)}
+.nav-cta{background:linear-gradient(135deg,var(--amber),var(--saffron));color:#fff!important;padding:8px 20px;border-radius:24px;font-family:'Baloo 2';font-size:.85rem;font-weight:700}
+
+.blog-hero{background:var(--dark);padding:120px 24px 60px;text-align:center}
+.blog-hero h1{font-family:'Playfair Display';font-size:clamp(2rem,4vw,3rem);color:#FEF9F0;margin-bottom:12px}
+.blog-hero h1 em{font-style:italic;background:linear-gradient(135deg,var(--amber-l),var(--saffron));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.blog-hero p{color:rgba(254,243,199,.55);font-size:1rem;max-width:500px;margin:0 auto}
+
+.blog-grid{max-width:1100px;margin:0 auto;padding:60px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:32px}
+
+.blog-card{border:1px solid var(--border);border-radius:20px;overflow:hidden;transition:transform .2s,box-shadow .2s;background:#fff}
+.blog-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(245,158,11,.12)}
+.blog-card-img{width:100%;height:180px;object-fit:cover;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(234,88,12,.1));display:flex;align-items:center;justify-content:center;font-size:4rem}
+.blog-card-body{padding:20px}
+.blog-tag{display:inline-block;background:rgba(245,158,11,.1);color:var(--amber-d);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.blog-card-body h2{font-family:'Baloo 2';font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4}
+.blog-card-body p{font-size:.85rem;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.blog-meta{font-size:.75rem;color:#b45309;display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.blog-read-btn{display:inline-block;background:linear-gradient(135deg,var(--amber),var(--saffron));color:#fff;padding:9px 20px;border-radius:24px;font-family:'Baloo 2';font-size:.82rem;font-weight:700;text-decoration:none;transition:all .2s}
+.blog-read-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,158,11,.3)}
+
+.coming-soon-card{border:1px dashed var(--border);border-radius:20px;padding:32px 20px;text-align:center;background:rgba(245,158,11,.02)}
+.coming-soon-card .icon{font-size:2.5rem;margin-bottom:12px}
+.coming-soon-card h3{font-family:'Baloo 2';font-size:1rem;color:var(--muted);margin-bottom:6px}
+.coming-soon-card p{font-size:.82rem;color:#b45309}
+
+footer{background:var(--dark);color:rgba(254,243,199,.4);text-align:center;padding:28px 24px;font-size:.82rem}
+footer a{color:rgba(245,158,11,.7);text-decoration:none}
+
+@media(max-width:640px){
+  .nav-links a:not(.nav-cta){display:none}
+  .blog-grid{grid-template-columns:1fr;padding:40px 16px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/icon-192.png" alt="Saathi AI">
+      साथी <span>AI</span>
+    </a>
+    <div class="nav-links">
+      <a href="/#features">Features</a>
+      <a href="/#pricing">Plans</a>
+      <a href="/#about">About</a>
+      <a href="/blog" class="active">Blog</a>
+      <a href="/#contact">Contact</a>
+      <a href="https://saathiai.health/app" class="nav-cta">Try Free →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="blog-hero">
+  <h1>साथी AI <em>Blog</em></h1>
+  <p>Health tips, elderly care advice and medicine guidance — in Hindi & English, for Indian families.</p>
+</div>
+
+<div class="blog-grid">
+
+  <!-- Article 1 — Live -->
+  <div class="blog-card">
+    <div class="blog-card-img">💊</div>
+    <div class="blog-card-body">
+      <span class="blog-tag">Medicine</span>
+      <div class="blog-meta">📅 22 April 2026 &nbsp;·&nbsp; 4 min read</div>
+      <h2>Parents Ki Medicines Bhool Jaate Hain? Ye 5 Tips Try Karein</h2>
+      <p>Elderly parents often forget medicines. Here are 5 simple, proven strategies to ensure they never miss a dose — with or without a smartphone.</p>
+      <a href="/blog/medicine-reminder-tips" class="blog-read-btn">Read Article →</a>
+    </div>
+  </div>
+
+  <!-- Coming Soon Cards -->
+  <div class="coming-soon-card">
+    <div class="icon">🏠</div>
+    <h3>Door Rehkar Bhi Parents Ka Khayal Kaise Rakhein</h3>
+    <p>Coming next week — practical guide for working adults caring for parents from a distance.</p>
+  </div>
+
+  <div class="coming-soon-card">
+    <div class="icon">❤️</div>
+    <h3>Ghar Par BP Kaise Check Karein — Sahi Tarika</h3>
+    <p>Coming soon — step-by-step guide to accurate home blood pressure monitoring.</p>
+  </div>
+
+  <div class="coming-soon-card">
+    <div class="icon">📱</div>
+    <h3>Best Health App for Parents India 2026</h3>
+    <p>Coming soon — honest comparison of top elderly care apps available in India.</p>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 साथी AI · Made with 💛 in India · <a href="https://saathiai.health">saathiai.health</a> · <a href="mailto:support@saathiai.health">support@saathiai.health</a></p>
+</footer>
+
+</body>
+</html>
