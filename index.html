@@ -820,6 +820,8 @@ function openApp(type, query) {
 window.openApp = openApp;
 
 function showMedAddFlow() {
+  var existing = document.getElementById('med-add-inline');
+  if (existing) { existing.remove(); }
   var hi = S.lang !== 'english';
   var wrap = document.getElementById('chatWrap');
   var prompt = hi ? 'दवाई का नाम और समय बताइए:' : 'Enter the medicine name and time:';
@@ -1002,7 +1004,7 @@ function callAPI(userMsg) {
   }).then(function(res){ return res.json(); }).then(function(data) {
     hideTyping();
     if(data.error) { addBubble('ai', 'Error: ' + data.error); return; }
-    var reply = data.reply || 'Maafi, kuch gadbad ho gayi. Try again.';
+    var reply = data.reply || (S.lang === 'english' ? 'Something went wrong. Please try again.' : 'कुछ गड़बड़ हो गई। दोबारा कोशिश करें।');
     var isEng2 = S.lang === 'english';
     if(parseCancelTag(reply)) {
       cancelAllReminders();
@@ -1144,7 +1146,7 @@ function checkDailyMeds() {
       S.medicines[i].reminded = true; changed = true;
       var hi = S.lang !== 'english';
       var msgText = hi
-        ? (S.name + ', ' + m.name + ' lene ka waqt ho gaya! 💊\nPaani zaroor pijiye. 🥛')
+        ? (S.name + ', ' + m.name + ' लेने का वक्त हो गया! 💊\nपानी ज़रूर पीजिए। 🥛')
         : (S.name + ', time to take ' + m.name + '! 💊\nDrink a glass of water too. 🥛');
       var btnId = 'med-remind-' + Date.now();
       var chipsHtml = '<div id="' + btnId + '" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
@@ -1154,7 +1156,7 @@ function checkDailyMeds() {
         + (hi ? '⏰ 10 min baad' : '⏰ Snooze 10 min') + '</button>'
         + '</div>';
       addBubble('ai', msgText, chipsHtml, 'reminder', true);
-      speakText(hi ? (S.name + ', ' + m.name + ' lene ka waqt ho gaya! Paani zaroor pijiye.') : (S.name + ', time to take ' + m.name + '. Drink water too.'));
+      speakText(hi ? (S.name + ', ' + m.name + ' लेने का वक्त हो गया! पानी ज़रूर पीजिए।') : (S.name + ', time to take ' + m.name + '. Drink water too.'));
     }
   });
   if(changed) save();
@@ -1162,20 +1164,20 @@ function checkDailyMeds() {
 window.medTaken = function(btnId, idx) {
   var el = document.getElementById(btnId); if(el) el.remove();
   var hi = S.lang !== 'english';
-  var msg = hi ? '✅ Bahut achha! ' + (S.medicines[idx]?S.medicines[idx].name:'Dawai') + ' le li. Sehatmand rahiye! 🙏' : '✅ Great! Medicine taken. Stay healthy! 🙏';
+  var msg = hi ? '✅ बहुत अच्छा! ' + (S.medicines[idx]?S.medicines[idx].name:'दवाई') + ' ले ली। सेहतमंद रहिए! 🙏' : '✅ Great! Medicine taken. Stay healthy! 🙏';
   addBubble('ai', msg, '', '', true); speakText(msg);
 };
 window.medSnooze = function(btnId, idx) {
   var el = document.getElementById(btnId); if(el) el.remove();
   var hi = S.lang !== 'english';
-  var msg = hi ? '⏰ Theek hai, 10 minute mein phir yaad dilaunga.' : '⏰ OK, I\'ll remind you again in 10 minutes.';
+  var msg = hi ? '⏰ ठीक है, 10 मिनट में फिर याद दिलाऊंगा।' : '⏰ OK, I\'ll remind you again in 10 minutes.';
   addBubble('ai', msg, '', '', true); speakText(msg);
   if(idx !== undefined && S.medicines[idx]) S.medicines[idx].reminded = false; save();
   setTimeout(function() {
     var m = S.medicines[idx];
     if(!m) return;
     var hi2 = S.lang !== 'english';
-    var snoozeMsg = hi2 ? (S.name + ', ab to ' + m.name + ' le lijiye! 💊') : (S.name + ', please take ' + m.name + ' now! 💊');
+    var snoozeMsg = hi2 ? (S.name + ', अब तो ' + m.name + ' ले लीजिए! 💊') : (S.name + ', please take ' + m.name + ' now! 💊');
     var btnId2 = 'med-remind-' + Date.now();
     var chipsHtml2 = '<div id="' + btnId2 + '" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
       + '<button class="app-link" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac" onclick="medTaken(\'' + btnId2 + '\',' + idx + ')">'
@@ -1188,9 +1190,14 @@ window.medSnooze = function(btnId, idx) {
     if(S.medicines[idx]) { S.medicines[idx].reminded = true; save(); }
   }, 10 * 60 * 1000);
 };
+var _lastMedResetDate = new Date().toDateString();
 setInterval(function() {
-  var n = new Date();
-  if(n.getHours()===0 && n.getMinutes()===0) { S.medicines.forEach(function(m){ m.reminded=false; }); save(); }
+  var today = new Date().toDateString();
+  if(today !== _lastMedResetDate) {
+    _lastMedResetDate = today;
+    S.medicines.forEach(function(m){ m.reminded=false; });
+    save();
+  }
 }, 60000);
 function renderMedList() {
   var el = document.getElementById('medList');
@@ -1570,6 +1577,7 @@ function prefillFromGoogleSession(user) {
   if (welcomeName) welcomeName.textContent = name ? name.split(' ')[0] : 'there';
 
   S.googleVerified = true;
+  save();
 }
 
 window.googleSignIn = async function() {
