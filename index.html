@@ -830,6 +830,8 @@ function showMedAddFlow() {
   div.id = 'med-add-inline';
   div.style.cssText = 'margin:6px 0 6px 38px';
   div.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:290px">'
+    + '<div style="font-size:.75rem;color:var(--muted);margin-bottom:2px">' + (hi ? '🎤 बोलें या नीचे टाइप करें:' : '🎤 Speak or type below:') + '</div>'
+    + '<button id="inline-med-mic" onclick="startMedVoice()" style="width:100%;padding:10px;background:rgba(245,158,11,.1);border:1px dashed var(--amber);border-radius:10px;color:var(--amber);font-family:\'Baloo 2\',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer">🎤 ' + (hi ? 'बोलकर जोड़ें' : 'Speak medicine name & time') + '</button>'
     + '<input id="inline-med-name" type="text" placeholder="' + (hi ? 'दवाई का नाम' : 'Medicine name') + '" style="background:rgba(245,158,11,.07);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:\'Baloo 2\',sans-serif;font-size:.88rem;outline:none;width:100%">'
     + '<input id="inline-med-time" type="time" style="background:rgba(245,158,11,.07);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:\'Baloo 2\',sans-serif;font-size:.88rem;outline:none;width:100%">'
     + '<div style="display:flex;gap:8px">'
@@ -841,6 +843,39 @@ function showMedAddFlow() {
   setTimeout(function(){ var el = document.getElementById('inline-med-name'); if(el) el.focus(); }, 200);
 }
 window.showMedAddFlow = showMedAddFlow;
+
+window.startMedVoice = function() {
+  var btn = document.getElementById('inline-med-mic');
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) { alert('Voice input works in Chrome only.'); return; }
+  var r = new SR();
+  r.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
+  r.interimResults = false;
+  r.onstart = function() { if(btn) { btn.textContent = '🔴 Listening...'; btn.style.borderColor='#ef4444'; btn.style.color='#ef4444'; } };
+  r.onend   = function() { if(btn) { btn.innerHTML = '🎤 ' + (S.lang==='english' ? 'Speak medicine name & time' : 'बोलकर जोड़ें'); btn.style.borderColor='var(--amber)'; btn.style.color='var(--amber)'; } };
+  r.onresult = function(e) {
+    var t = e.results[0][0].transcript.trim();
+    // Parse time from speech
+    var timeMatch = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|AM|PM)?/);
+    var medName = t.replace(/\s*(at|@|subah|sham|raat|morning|afternoon|evening|night|baje|बजे|सुबह|शाम|रात)\s*\d.*/i,'').replace(/\d.*$/,'').trim() || t;
+    var medTime = '';
+    if(timeMatch) {
+      var h = parseInt(timeMatch[1]), m2 = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+      var ap = (timeMatch[3]||'').toLowerCase();
+      if(/pm|evening|afternoon|night|sham|raat|शाम|रात/.test(t) && h < 12) h += 12;
+      if(/am|morning|subah|सुबह/.test(t) && h === 12) h = 0;
+      medTime = String(h).padStart(2,'0') + ':' + String(m2).padStart(2,'0');
+    }
+    var nameEl = document.getElementById('inline-med-name');
+    var timeEl = document.getElementById('inline-med-time');
+    if(nameEl && medName) nameEl.value = medName;
+    if(timeEl && medTime) timeEl.value = medTime;
+    // Auto-save if both captured
+    if(medName && medTime) { saveMedInline(); }
+  };
+  r.onerror = function() { if(btn) { btn.innerHTML = '🎤 ' + (S.lang==='english' ? 'Speak medicine name & time' : 'बोलकर जोड़ें'); btn.style.borderColor='var(--amber)'; btn.style.color='var(--amber)'; } };
+  r.start();
+};
 
 window.saveMedInline = function() {
   var nameEl = document.getElementById('inline-med-name');
