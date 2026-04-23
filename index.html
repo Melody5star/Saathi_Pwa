@@ -461,6 +461,16 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         </div>
       </div>
       <button class="ob-btn" id="saveSettingsBtn">💾 Save Settings</button>
+
+      <!-- Health Summary -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:4px">
+        <div style="font-size:.8rem;font-weight:700;color:var(--amber);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">📧 Health Summary Email</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px;line-height:1.5">Send medicines, notes &amp; prescription history to any email.</div>
+        <input id="summary-email" type="email" placeholder="Send to: family@email.com" style="width:100%;background:rgba(245,158,11,.08);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Baloo 2',sans-serif;font-size:.88rem;color:var(--text);outline:none;margin-bottom:10px">
+        <button id="sendSummaryBtn" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:12px;font-family:'Baloo 2',sans-serif;font-size:.9rem;font-weight:700;color:#fff;cursor:pointer">📧 Send Summary Now</button>
+        <div id="summary-status" style="font-size:.75rem;text-align:center;margin-top:8px;min-height:18px"></div>
+      </div>
+
       <div style="text-align:center;padding:8px 0 4px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
         <a href="/privacy.html" target="_blank" style="font-size:.75rem;color:rgba(254,243,199,0.4);text-decoration:none;">Privacy Policy</a>
         <a href="/terms.html" target="_blank" style="font-size:.75rem;color:rgba(254,243,199,0.4);text-decoration:none;">Terms of Service</a>
@@ -571,7 +581,15 @@ function trackUser(plan) {
   } catch(e) {}
 }
 
-function save() { try { localStorage.setItem('saathi_v1', JSON.stringify(S)); } catch(e){} }
+function save() {
+  try { localStorage.setItem('saathi_v1', JSON.stringify(S)); } catch(e){}
+  // Sync medicines to Supabase (fire-and-forget)
+  if(S.email && S.medicines && S.medicines.length) {
+    fetch('/api/supabase', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'saveMedicines', email:S.email, medicines:S.medicines })
+    }).catch(function(){});
+  }
+}
 
 // ── REMINDER ENGINE ──
 var activeReminders = [];
@@ -704,9 +722,17 @@ if(window.speechSynthesis) {
 function loadNotes() { try { return JSON.parse(localStorage.getItem('saathi_notes') || '[]'); } catch(e) { return []; } }
 function saveNotes(notes) { try { localStorage.setItem('saathi_notes', JSON.stringify(notes)); } catch(e){} }
 function saveNoteFromChat(text) {
+  var noteDate = new Date().toLocaleDateString('hi-IN',{day:'numeric',month:'short',year:'numeric'});
+  var noteTime = new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
   var notes = loadNotes();
-  notes.unshift({ text:text, date:new Date().toLocaleDateString('hi-IN',{day:'numeric',month:'short',year:'numeric'}), time:new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'}), id:Date.now() });
+  notes.unshift({ text:text, date:noteDate, time:noteTime, id:Date.now() });
   saveNotes(notes);
+  // Sync to Supabase (fire-and-forget)
+  if(S.email) {
+    fetch('/api/supabase', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'saveNote', email:S.email, text:text, note_date:noteDate, note_time:noteTime })
+    }).catch(function(){});
+  }
 }
 function renderNotes() {
   var el = document.getElementById('notesList'), notes = loadNotes();
@@ -1192,6 +1218,12 @@ function rxConfirmReminders(setReminders) {
     });
   });
   save();
+  // Sync prescription scan to Supabase (fire-and-forget)
+  if(S.email && rxExtractedMeds && rxExtractedMeds.length) {
+    fetch('/api/supabase', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'savePrescription', email:S.email, medicines:rxExtractedMeds })
+    }).catch(function(){});
+  }
   document.getElementById('rx-success-msg').textContent =
     (added.length ? added.map(function(a){return '• '+a;}).join('\n') : 'Medicines already saved thi.') +
     '\n\nSettings → Medicines mein dekh sakte ho.';
@@ -1604,6 +1636,29 @@ window.addEventListener('DOMContentLoaded', function() {
     save(); applyLangUI(); showScreen('screen-main');
     var msg = S.lang==='english'?'Settings saved!':'Settings save ho gayi!';
     setTimeout(function() { addBubble('ai', msg,'','',true); speakText(msg); }, 300);
+  });
+  document.getElementById('sendSummaryBtn').addEventListener('click', function() {
+    var recipientEmail = document.getElementById('summary-email').value.trim();
+    var statusEl = document.getElementById('summary-status');
+    if(!recipientEmail || !recipientEmail.includes('@')) {
+      statusEl.style.color = '#ef4444'; statusEl.textContent = 'Please enter a valid email address.'; return;
+    }
+    if(!S.email) {
+      statusEl.style.color = '#ef4444'; statusEl.textContent = 'Your account email not found. Please re-login.'; return;
+    }
+    statusEl.style.color = 'var(--muted)'; statusEl.textContent = 'Sending...';
+    fetch('/api/send-summary', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ userEmail: S.email, recipientEmail: recipientEmail, userName: S.name || 'Your Parent' })
+    }).then(function(r){ return r.json(); }).then(function(d) {
+      if(d.ok) {
+        statusEl.style.color = '#86efac'; statusEl.textContent = '✅ Summary sent to ' + recipientEmail;
+        speakText(S.lang === 'english' ? 'Health summary sent!' : 'Health summary bhej diya!');
+      } else {
+        statusEl.style.color = '#ef4444'; statusEl.textContent = 'Failed: ' + (d.error || 'Please try again.');
+      }
+    }).catch(function() {
+      statusEl.style.color = '#ef4444'; statusEl.textContent = 'Network error. Please try again.';
+    });
   });
   document.getElementById('t-voice').addEventListener('click', function() {
     this.classList.toggle('on'); isMuted = !this.classList.contains('on'); S.voiceOn = !isMuted; save();

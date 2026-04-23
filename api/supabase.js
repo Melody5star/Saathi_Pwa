@@ -125,5 +125,65 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── SAVE NOTE ──
+  if (action === 'saveNote' && req.method === 'POST') {
+    const { email, text, note_date, note_time } = req.body;
+    if (!email || !text) return res.status(400).json({ error: 'email and text required' });
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/notes`, {
+        method: 'POST',
+        headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ user_email: email, text, note_date: note_date||'', note_time: note_time||'' })
+      });
+      if (!r.ok) { const d = await r.json(); return res.status(400).json({ error: d }); }
+      return res.status(200).json({ ok: true });
+    } catch (e) { return res.status(500).json({ error: e.message }); }
+  }
+
+  // ── SAVE MEDICINES (upsert full array) ──
+  if (action === 'saveMedicines' && req.method === 'POST') {
+    const { email, medicines } = req.body;
+    if (!email) return res.status(400).json({ error: 'email required' });
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/medicines`, {
+        method: 'POST',
+        headers: { ...sbHeaders(), 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ user_email: email, medicines_json: medicines || [], synced_at: new Date().toISOString() })
+      });
+      if (!r.ok) { const d = await r.json(); return res.status(400).json({ error: d }); }
+      return res.status(200).json({ ok: true });
+    } catch (e) { return res.status(500).json({ error: e.message }); }
+  }
+
+  // ── SAVE PRESCRIPTION SCAN ──
+  if (action === 'savePrescription' && req.method === 'POST') {
+    const { email, medicines } = req.body;
+    if (!email || !medicines) return res.status(400).json({ error: 'email and medicines required' });
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/prescriptions`, {
+        method: 'POST',
+        headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ user_email: email, medicines_json: medicines, scanned_at: new Date().toISOString() })
+      });
+      if (!r.ok) { const d = await r.json(); return res.status(400).json({ error: d }); }
+      return res.status(200).json({ ok: true });
+    } catch (e) { return res.status(500).json({ error: e.message }); }
+  }
+
+  // ── GET SUMMARY DATA (for email) ──
+  if (action === 'getSummaryData' && req.method === 'POST') {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'email required' });
+    try {
+      const [notesR, medsR, rxR] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/notes?user_email=eq.${encodeURIComponent(email)}&order=created_at.desc&limit=10`, { headers: sbHeaders() }),
+        fetch(`${SUPABASE_URL}/rest/v1/medicines?user_email=eq.${encodeURIComponent(email)}&limit=1`, { headers: sbHeaders() }),
+        fetch(`${SUPABASE_URL}/rest/v1/prescriptions?user_email=eq.${encodeURIComponent(email)}&order=scanned_at.desc&limit=3`, { headers: sbHeaders() })
+      ]);
+      const [notes, meds, rx] = await Promise.all([notesR.json(), medsR.json(), rxR.json()]);
+      return res.status(200).json({ ok: true, notes: notes||[], medicines: meds[0]?.medicines_json||[], prescriptions: rx||[] });
+    } catch (e) { return res.status(500).json({ error: e.message }); }
+  }
+
   return res.status(400).json({ error: 'Unknown action' });
 }
