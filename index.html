@@ -23,6 +23,7 @@
 <title>साथी AI v22</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --amber:#F59E0B;--amber-d:#D97706;--amber-l:#FDE68A;
@@ -64,6 +65,14 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 .ob-btn:active{transform:scale(.97);opacity:.9}
 .ob-btn:disabled{opacity:.6;cursor:not-allowed}
 .ob-free-note{font-size:.75rem;color:var(--muted);text-align:center;margin-top:10px}
+.ob-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 16px;background:#fff;border:none;border-radius:14px;font-family:'Baloo 2',sans-serif;font-size:.95rem;font-weight:700;color:#1a1a1a;cursor:pointer;margin-bottom:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:all .2s}
+.ob-google-btn:hover{background:#f8f8f8;box-shadow:0 4px 16px rgba(0,0,0,.2);transform:translateY(-1px)}
+.ob-google-btn:active{transform:scale(.97)}
+.ob-google-btn svg{flex-shrink:0}
+.ob-google-btn:disabled{opacity:.6;cursor:not-allowed}
+.ob-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:.82rem}
+.ob-divider::before,.ob-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.ob-verified-badge{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;color:#22c55e;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:3px 10px;margin-top:5px}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .ob-skip{font-size:.8rem;color:var(--muted);margin-top:14px;cursor:pointer;text-decoration:underline;text-align:center}
 .ob-who-btn{width:100%;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);font-family:'Baloo 2',sans-serif;font-size:.9rem;color:var(--text);cursor:pointer;text-align:left;transition:all .2s}
@@ -256,6 +265,13 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         Free for 7 days, then ₹99 for 3 months
       </div>
       <div class="ob-form">
+        <!-- Google Sign-In -->
+        <button class="ob-google-btn" id="googleSignInBtn" type="button">
+          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.93 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+          Google se Sign In karo
+        </button>
+        <div class="ob-divider">ya apna email bharo</div>
+
         <div class="ob-field">
           <label class="ob-label">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -270,6 +286,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
             Email Address *
           </label>
           <input class="ob-input" id="ob-email" type="email" placeholder="your@email.com">
+          <div id="ob-email-verified" style="display:none" class="ob-verified-badge">✓ Google se verified</div>
           <div class="ob-err-msg" id="err-email"></div>
         </div>
         <div class="ob-field">
@@ -1408,8 +1425,82 @@ function obLivePhone(inp) {
 }
 window.obLivePhone = obLivePhone;
 
+// ── SUPABASE AUTH (Google Sign-In) ──
+var _sbClient = null;
+
+async function initSupabaseAuth() {
+  try {
+    var cfg = await fetch('/api/auth-config').then(function(r) { return r.json(); });
+    if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
+    _sbClient = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+    // Check if we just returned from a Google OAuth redirect
+    var { data: { session } } = await _sbClient.auth.getSession();
+    if (session && session.user) {
+      prefillFromGoogleSession(session.user);
+    }
+
+    // Listen for auth state changes (handles redirect callback automatically)
+    _sbClient.auth.onAuthStateChange(function(_event, session) {
+      if (session && session.user && !S.onboarded) {
+        prefillFromGoogleSession(session.user);
+      }
+    });
+  } catch(e) {
+    console.warn('Supabase auth init failed:', e.message);
+  }
+}
+
+function prefillFromGoogleSession(user) {
+  var emailEl = document.getElementById('ob-email');
+  var nameEl  = document.getElementById('ob-name');
+  var badgeEl = document.getElementById('ob-email-verified');
+  if (!emailEl) return;
+
+  var email = user.email || '';
+  var name  = user.user_metadata?.full_name || user.user_metadata?.name || '';
+
+  emailEl.value = email;
+  emailEl.readOnly = true;
+  emailEl.style.opacity = '0.75';
+  emailEl.style.cursor  = 'default';
+  if (badgeEl) badgeEl.style.display = 'inline-flex';
+
+  if (name && nameEl && !nameEl.value) {
+    nameEl.value = name;
+    markField('ob-name', 'success');
+  }
+
+  S.googleVerified = true;
+  markField('ob-email', 'success');
+  showErr('err-email', null);
+}
+
+window.googleSignIn = async function() {
+  var btn = document.getElementById('googleSignInBtn');
+  if (!_sbClient) {
+    await initSupabaseAuth();
+    if (!_sbClient) return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirect ho raha hai...'; }
+  try {
+    var redirectTo = window.location.origin + window.location.pathname;
+    await _sbClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: redirectTo }
+    });
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.93 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg> Google se Sign In karo'; }
+  }
+};
+
 // ── WIRE UP ALL BUTTONS ──
 window.addEventListener('DOMContentLoaded', function() {
+  initSupabaseAuth();
+
+  // Google Sign-In button
+  var gBtn = document.getElementById('googleSignInBtn');
+  if (gBtn) gBtn.addEventListener('click', window.googleSignIn);
 
   // 5-tap on logo = admin dashboard
   var _tapCount = 0, _tapTimer;
@@ -1481,7 +1572,10 @@ window.addEventListener('DOMContentLoaded', function() {
   // Start button
   document.getElementById('startBtn').addEventListener('click', function() {
     var nameOk  = obValidate(document.getElementById('ob-name'),  'ob-name',  'err-name',  function(v){return v.length>=2;}, 'Please enter your full name');
-    var emailOk = obValidate(document.getElementById('ob-email'), 'ob-email', 'err-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);}, 'Enter valid email — e.g. name@gmail.com');
+    // Skip email validation if already Google-verified
+    var emailOk = S.googleVerified
+      ? !!document.getElementById('ob-email').value.trim()
+      : obValidate(document.getElementById('ob-email'), 'ob-email', 'err-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);}, 'Enter valid email — e.g. name@gmail.com');
     var dobOk   = obValidate(document.getElementById('ob-dob'),   'ob-dob',   'err-dob',   function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;}, 'Enter a valid date of birth');
     var phoneOk = obValidate(document.getElementById('ob-phone'), 'ob-phone', 'err-phone', function(v){return /^[6-9]\d{9}$/.test(v);}, 'Enter 10-digit number starting with 6,7,8 or 9');
     if(!nameOk||!emailOk||!dobOk||!phoneOk) {
