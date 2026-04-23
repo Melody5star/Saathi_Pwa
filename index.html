@@ -268,11 +268,17 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <!-- Google Sign-In -->
         <button class="ob-google-btn" id="googleSignInBtn" type="button">
           <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.93 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
-          Google Sign In
+          Continue with Google
         </button>
         <div class="ob-divider">or fill in your details</div>
 
-        <div class="ob-field">
+        <!-- Google welcome banner — shown only after Google Sign In -->
+        <div id="ob-google-welcome" style="display:none;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center">
+          <div style="font-size:1.1rem;font-weight:700;color:#FEF3C7;margin-bottom:2px">Welcome, <span id="ob-welcome-name"></span>! 👋</div>
+          <div style="font-size:.78rem;color:rgba(254,243,199,.55)">Signed in with Google · Just add your phone to finish</div>
+        </div>
+
+        <div class="ob-field" id="ob-field-name">
           <label class="ob-label">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             Full Name *
@@ -280,7 +286,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
           <input class="ob-input" id="ob-name" type="text" placeholder="Your full name">
           <div class="ob-err-msg" id="err-name"></div>
         </div>
-        <div class="ob-field">
+        <div class="ob-field" id="ob-field-email">
           <label class="ob-label">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
             Email Address *
@@ -292,7 +298,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
         <div class="ob-field">
           <label class="ob-label">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
-            Date of Birth *
+            Date of Birth <span style="font-weight:400;opacity:.6;font-size:.82rem">(optional)</span>
           </label>
           <input class="ob-input" id="ob-dob" type="date">
           <div class="ob-err-msg" id="err-dob"></div>
@@ -303,6 +309,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
             Phone Number *
           </label>
           <input class="ob-input" id="ob-phone" type="tel" placeholder="10-digit mobile number" maxlength="10">
+          <div style="font-size:.75rem;color:rgba(254,243,199,.4);margin-top:5px">🆘 Used for emergency SOS alerts to your family</div>
           <div class="ob-err-msg" id="err-phone"></div>
         </div>
         <div class="ob-section-title">
@@ -1454,26 +1461,28 @@ async function initSupabaseAuth() {
 function prefillFromGoogleSession(user) {
   var emailEl = document.getElementById('ob-email');
   var nameEl  = document.getElementById('ob-name');
-  var badgeEl = document.getElementById('ob-email-verified');
   if (!emailEl) return;
 
   var email = user.email || '';
-  var name  = user.user_metadata?.full_name || user.user_metadata?.name || '';
+  var name  = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || '';
 
+  // Fill hidden fields
   emailEl.value = email;
-  emailEl.readOnly = true;
-  emailEl.style.opacity = '0.75';
-  emailEl.style.cursor  = 'default';
-  if (badgeEl) badgeEl.style.display = 'inline-flex';
+  if (name && nameEl) nameEl.value = name;
 
-  if (name && nameEl && !nameEl.value) {
-    nameEl.value = name;
-    markField('ob-name', 'success');
-  }
+  // Hide name + email fields — already known from Google
+  var fieldName  = document.getElementById('ob-field-name');
+  var fieldEmail = document.getElementById('ob-field-email');
+  if (fieldName)  fieldName.style.display  = 'none';
+  if (fieldEmail) fieldEmail.style.display = 'none';
+
+  // Show welcome banner
+  var welcome = document.getElementById('ob-google-welcome');
+  var welcomeName = document.getElementById('ob-welcome-name');
+  if (welcome) welcome.style.display = 'block';
+  if (welcomeName) welcomeName.textContent = name ? name.split(' ')[0] : 'there';
 
   S.googleVerified = true;
-  markField('ob-email', 'success');
-  showErr('err-email', null);
 }
 
 window.googleSignIn = async function() {
@@ -1534,14 +1543,14 @@ window.addEventListener('DOMContentLoaded', function() {
   var fields = [
     { id:'ob-name',  err:'err-name',  check:function(v){return v.length>=2;}, empty:'Name is required', invalid:'Please enter your full name (at least 2 characters)' },
     { id:'ob-email', err:'err-email', check:isValidEmail, empty:'Email address is required', invalid:'Please enter a valid email — e.g. name@gmail.com' },
-    { id:'ob-dob',   err:'err-dob',   check:isValidDOB,   empty:'Date of birth is required', invalid:'Please enter a valid date of birth' },
+    { id:'ob-dob',   err:'err-dob',   check:isValidDOB,   empty:'', invalid:'Please enter a valid date of birth' },
     { id:'ob-phone', err:'err-phone', check:isValidPhone, empty:'Phone number is required', invalid:'Enter a valid 10-digit number (starting with 6, 7, 8 or 9)' }
   ];
   fields.forEach(function(f) {
     var el = document.getElementById(f.id); if(!el) return;
     el.addEventListener('blur', function() {
       var val = this.value.trim();
-      if(!val) { markField(f.id,'error'); showErr(f.err,f.empty); return; }
+      if(!val) { markField(f.id, f.empty ? 'error' : ''); showErr(f.err, f.empty||null); return; }
       if(!f.check(val)) { markField(f.id,'error'); showErr(f.err,f.invalid); return; }
       markField(f.id,'success'); showErr(f.err,null);
     });
@@ -1571,14 +1580,11 @@ window.addEventListener('DOMContentLoaded', function() {
 
   // Start button
   document.getElementById('startBtn').addEventListener('click', function() {
-    var nameOk  = obValidate(document.getElementById('ob-name'),  'ob-name',  'err-name',  function(v){return v.length>=2;}, 'Please enter your full name');
-    // Skip email validation if already Google-verified
-    var emailOk = S.googleVerified
-      ? !!document.getElementById('ob-email').value.trim()
-      : obValidate(document.getElementById('ob-email'), 'ob-email', 'err-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);}, 'Enter valid email — e.g. name@gmail.com');
-    var dobOk   = obValidate(document.getElementById('ob-dob'),   'ob-dob',   'err-dob',   function(v){var d=new Date(v),a=(Date.now()-d)/31557600000;return !isNaN(a)&&a>=1&&a<=110;}, 'Enter a valid date of birth');
+    var nameOk  = S.googleVerified || obValidate(document.getElementById('ob-name'),  'ob-name',  'err-name',  function(v){return v.length>=2;}, 'Please enter your full name');
+    var emailOk = S.googleVerified || obValidate(document.getElementById('ob-email'), 'ob-email', 'err-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);}, 'Enter valid email — e.g. name@gmail.com');
+    var dobOk   = true; // DOB is optional
     var phoneOk = obValidate(document.getElementById('ob-phone'), 'ob-phone', 'err-phone', function(v){return /^[6-9]\d{9}$/.test(v);}, 'Enter 10-digit number starting with 6,7,8 or 9');
-    if(!nameOk||!emailOk||!dobOk||!phoneOk) {
+    if(!nameOk||!emailOk||!phoneOk) {
       var first = document.querySelector('.ob-input.ob-error');
       if(first) first.scrollIntoView({behavior:'smooth',block:'center'});
       return;

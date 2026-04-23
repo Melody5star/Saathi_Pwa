@@ -211,10 +211,8 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
       <div class="gate-sub" id="gateSubText">Enter your email to get early access to Saathi AI</div>
 
       <div id="gateFormWrap">
-        <input class="gate-input" type="text" id="gateName" placeholder="आपका नाम / Your name">
-        <input class="gate-input" type="email" id="gateEmail" placeholder="Email address" required>
-        <input class="gate-input" type="tel" id="gatePhone" placeholder="Phone (optional) +91...">
-        <button class="gate-btn" onclick="submitGate()">🚀 Try Saathi AI — Free</button>
+        <input class="gate-input" type="email" id="gateEmail" placeholder="Your email address" required>
+        <button class="gate-btn" onclick="submitGate()">Try Saathi AI Free →</button>
         <p class="gate-privacy">No spam. No credit card. Cancel anytime.</p>
         <p class="gate-skip">Already have access? <a onclick="skipGate()" style="cursor:pointer">Skip →</a></p>
       </div>
@@ -243,7 +241,7 @@ footer a{color:var(--amber);opacity:.6;text-decoration:none}
       <div class="feat-card">
         <div class="feat-icon">💊</div>
         <div class="feat-h">Medicine Reminders</div>
-        <p class="feat-p">Daily reminders by medicine name — warmly, in Hindi. "Maa, Metformin lene ka waqt ho gaya!"</p>
+        <p class="feat-p">Daily reminders by medicine name — warmly, in Hindi. Like a caring family member, always on time.</p>
         <div class="feat-badge">✓ Live</div>
       </div>
       <div class="feat-card">
@@ -510,36 +508,36 @@ function landingPay(plan) {
 var FORMSPREE_ID = 'YOUR_FORM_ID'; // ← Replace with your Formspree ID from formspree.io
 
 function submitGate() {
-  var name  = document.getElementById('gateName').value.trim();
   var email = document.getElementById('gateEmail').value.trim();
-  var phone = document.getElementById('gatePhone').value.trim();
+  var emailEl = document.getElementById('gateEmail');
   if(!email || !email.includes('@')) {
-    document.getElementById('gateEmail').focus();
-    document.getElementById('gateEmail').style.borderColor = '#ef4444';
+    emailEl.focus();
+    emailEl.style.borderColor = '#ef4444';
+    emailEl.style.outline = '2px solid rgba(239,68,68,.3)';
     return;
   }
+  emailEl.style.borderColor = '';
+  emailEl.style.outline = '';
   try {
     var leads = JSON.parse(localStorage.getItem('saathi_leads') || '[]');
-    leads.push({name:name, email:email, phone:phone, time:new Date().toISOString(), source:'landing'});
+    leads.push({email:email, time:new Date().toISOString(), source:'landing'});
     localStorage.setItem('saathi_leads', JSON.stringify(leads));
     localStorage.setItem('saathi_gated_email', email);
-    localStorage.setItem('saathi_gated_name', name);
   } catch(e){}
   if(FORMSPREE_ID !== 'YOUR_FORM_ID') {
     fetch('https://formspree.io/f/' + FORMSPREE_ID, {
       method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body: JSON.stringify({name:name, email:email, phone:phone, source:'landing-gate', time:new Date().toISOString()})
+      body: JSON.stringify({email:email, source:'landing-gate', time:new Date().toISOString()})
     }).catch(function(){});
   }
-  // GA4 event tracking
   if(typeof gtag !== 'undefined') { gtag('event', 'sign_up', {method: 'email_gate'}); }
-  showGateSuccess(name);
+  showGateSuccess();
 }
 
-function showGateSuccess(name) {
+function showGateSuccess() {
   document.getElementById('gateFormWrap').style.display = 'none';
   document.getElementById('gateSuccess').style.display = 'block';
-  setTimeout(function() { window.location.href = 'https://saathiai.health/app'; }, 2500);
+  setTimeout(function() { window.location.href = 'https://saathiai.health/app'; }, 2000);
 }
 
 function skipGate() {
