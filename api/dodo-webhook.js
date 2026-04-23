@@ -19,7 +19,7 @@ const PLAN_CONFIG = {
 
 // ── Verify Dodo webhook signature (Standard Webhooks spec) ──
 function verifySignature(rawBody, msgId, msgTimestamp, sigHeader) {
-  if(!DODO_SECRET) return true;
+  if(!DODO_SECRET) return false; // reject all webhooks if secret not configured
   try {
     const secret = DODO_SECRET.startsWith('whsec_')
       ? Buffer.from(DODO_SECRET.slice(6), 'base64')
@@ -140,7 +140,7 @@ support@saathiai.health`,
 
 // ── Main handler ──
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://saathiai.health');
   if(req.method === 'OPTIONS') return res.status(200).end();
   if(req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

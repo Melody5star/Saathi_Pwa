@@ -1377,27 +1377,8 @@ function onPaymentSuccess(plan, response) {
 
 // ── ACTIVATION ──
 function checkPaymentReturn() {
-  var params = new URLSearchParams(window.location.search);
-  var activateType = params.get('activate'), activateKey = params.get('key');
-  if(activateType && activateKey === 'SAATHI2024') {
-    var plan = getPlan() || {};
-    if(activateType === 'founding') {
-      plan.type='founding'; plan.paidAt=Date.now();
-      plan.foundingEnd=Date.now()+(100*24*60*60*1000);
-      plan.paymentId='manual_'+Date.now(); plan.activatedBy='owner';
-    } else if(activateType === 'pro') {
-      plan.type='pro'; plan.paidAt=Date.now();
-      plan.paymentId='manual_'+Date.now(); plan.activatedBy='owner';
-    } else if(activateType === 'trial_extend') {
-      plan.type='trial'; plan.trialEnd=Date.now()+(7*24*60*60*1000);
-    }
-    setPlan(plan); trackUser(plan);
-    window.history.replaceState({}, '', '/app');
-    alert('✅ Account activated! Welcome to Saathi AI.');
-    return;
-  }
-  // FIX: removed duplicate var params declaration
-  // URL-based plan activation removed — plan upgrades now handled via Dodo webhook only
+  // All plan activation handled via Dodo webhook → Supabase only
+  // No URL-based or key-based activation allowed
 }
 
 // ── ONBOARDING VALIDATION — global functions (FIX: exposed to window) ──

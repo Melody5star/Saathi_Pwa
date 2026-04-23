@@ -224,6 +224,6 @@ describe('CORS headers', () => {
     });
     const res = makeRes();
     await handler(makeReq({ messages: [{ role: 'user', content: 'hi' }] }), res);
-    expect(res._headers['Access-Control-Allow-Origin']).toBe('*');
+    expect(res._headers['Access-Control-Allow-Origin']).toBe('https://saathiai.health');
   });
 });
