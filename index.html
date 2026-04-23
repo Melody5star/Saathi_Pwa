@@ -286,7 +286,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
             Email Address *
           </label>
           <input class="ob-input" id="ob-email" type="email" placeholder="your@email.com">
-          <div id="ob-email-verified" style="display:none" class="ob-verified-badge">✓ Google se verified</div>
+          <div id="ob-email-verified" style="display:none" class="ob-verified-badge">✓ Verified by Google</div>
           <div class="ob-err-msg" id="err-email"></div>
         </div>
         <div class="ob-field">
@@ -1482,7 +1482,7 @@ window.googleSignIn = async function() {
     await initSupabaseAuth();
     if (!_sbClient) return;
   }
-  if (btn) { btn.disabled = true; btn.textContent = 'Redirect ho raha hai...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting...'; }
   try {
     var redirectTo = window.location.origin + window.location.pathname;
     await _sbClient.auth.signInWithOAuth({
