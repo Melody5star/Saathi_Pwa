@@ -766,6 +766,19 @@ function openApp(type, query) {
 }
 window.openApp = openApp;
 
+function showMedAddFlow() {
+  var hi = S.lang !== 'english';
+  var prompt = hi
+    ? 'दवाई का नाम और समय बोलिए। जैसे: मेटफॉर्मिन सुबह 8 बजे।'
+    : 'Say the medicine name and time. Example: Metformin at 8 AM.';
+  addBubble('ai', prompt, '', '', true);
+  speakText(prompt);
+  // trigger the medicine mic in settings — reuse existing recognition logic
+  var medMicBtn = document.getElementById('medMicBtn');
+  if(medMicBtn) { showScreen('screen-settings'); setTimeout(function(){ medMicBtn.click(); }, 400); }
+}
+window.showMedAddFlow = showMedAddFlow;
+
 // ── SEND ──
 function sendMsg() {
   var inp = document.getElementById('msgInput');
@@ -1466,6 +1479,40 @@ window.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.qa-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var action = this.getAttribute('data-action');
+      if(action === 'medicine') {
+        var hi = S.lang !== 'english';
+        var meds = S.medicines || [];
+        var wrap = document.getElementById('chatWrap');
+        var msg = '';
+        if(meds.length === 0) {
+          msg = hi
+            ? 'अभी कोई दवाई नहीं है। कौन सी दवाई जोड़नी है?'
+            : 'No medicines added yet. Which medicine would you like to add?';
+        } else {
+          var medList = meds.map(function(m) {
+            var t = m.time || '';
+            var label = '';
+            if(t) {
+              var h = parseInt(t.split(':')[0]);
+              if(h >= 5 && h < 12) label = hi ? 'सुबह' : 'Morning';
+              else if(h >= 12 && h < 17) label = hi ? 'दोपहर' : 'Afternoon';
+              else label = hi ? 'शाम' : 'Evening';
+            }
+            return (label ? label + ' — ' : '') + m.name + (t ? ' (' + t + ')' : '');
+          }).join(', ');
+          msg = hi
+            ? 'आपकी दवाइयाँ: ' + medList + '। क्या कोई नई दवाई जोड़नी है या समय बदलना है?'
+            : 'Your medicines: ' + medList + '. Want to add a new one or change a time?';
+        }
+        addBubble('ai', msg, '', '', true);
+        speakText(msg);
+        var div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 4px 38px';
+        div.innerHTML = '<button class="app-link" onclick="showMedAddFlow()">' + (hi ? '➕ नई दवाई जोड़ो' : '➕ Add Medicine') + '</button>'
+          + '<button class="app-link" onclick="showScreen(\'screen-settings\');document.getElementById(\'settingsBtn\').click()">' + (hi ? '✏️ दवाई बदलो' : '✏️ Edit Medicines') + '</button>'
+          + '<button class="app-link" onclick="this.parentNode.remove()">' + (hi ? '✅ सब ठीक है' : '✅ All Good') + '</button>';
+        wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight; return;
+      }
       if(action === 'youtube') {
         addBubble('ai','YouTube pe aaj kya dekhna chahte hain?','','',true);
         speakText('YouTube pe aaj kya dekhna chahte hain?');
