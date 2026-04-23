@@ -647,8 +647,11 @@ function scheduleOneTimeReminder(timeStr, task) {
   var ms = msUntilTime(timeStr);
   if(ms <= 0 || ms > 86400000) return;
   var tid = setTimeout(function() {
-    addBubble('ai', S.name + ', yaad dila doon!\n\n' + task, '', 'reminder', true);
-    speakText(S.name + ', yaad dila doon! ' + task);
+    var remMsg = S.lang === 'english'
+      ? S.name + ', time for your reminder!\n\n' + task
+      : S.name + ', याद दिला दूं!\n\n' + task;
+    addBubble('ai', remMsg, '', 'reminder', true);
+    speakText(remMsg.replace('\n\n',' '));
     var idx = activeReminders.indexOf(tid);
     if(idx > -1) activeReminders.splice(idx, 1);
   }, ms);
@@ -970,22 +973,34 @@ function callAPI(userMsg) {
     hideTyping();
     if(data.error) { addBubble('ai', 'Error: ' + data.error); return; }
     var reply = data.reply || 'Maafi, kuch gadbad ho gayi. Try again.';
+    var isEng2 = S.lang === 'english';
     if(parseCancelTag(reply)) {
       cancelAllReminders();
-      addBubble('ai', stripAllTags(reply) || 'Theek hai, yaad nahi dilaaunga.');
-      speakText(cleanForSpeech(stripAllTags(reply) || 'Theek hai'));
-      return;
+      var cancelMsg = stripAllTags(reply) || (isEng2 ? 'Done, reminder cancelled.' : 'ठीक है, याद नहीं दिलाऊंगा।');
+      addBubble('ai', cancelMsg); speakText(cleanForSpeech(cancelMsg)); return;
     }
     var noteText = parseNoteTag(reply);
     if(noteText) {
       saveNoteFromChat(noteText);
-      var cleanR = stripAllTags(reply) || 'Note save kar liya!';
+      var cleanR = stripAllTags(reply) || (isEng2 ? 'Got it, note saved!' : 'नोट सेव कर लिया!');
       addBubble('ai', cleanR); speakText(cleanForSpeech(cleanR)); return;
     }
     var rd = parseReminderTag(reply);
     if(rd && rd.time && rd.task) {
-      var cleanR2 = stripAllTags(reply) || 'Bilkul!';
-      var confirm = 'Theek hai! ' + fmt12(rd.time) + ' pe yaad dila dunga.';
+      var cleanR2 = stripAllTags(reply) || (isEng2 ? 'Sure!' : 'बिल्कुल!');
+      var confirm = isEng2
+        ? 'Done! I\'ll remind you at ' + fmt12(rd.time) + '.'
+        : 'ठीक है! ' + fmt12(rd.time) + ' पर याद दिला दूंगा।';
+      // If task sounds like a medicine, also save to S.medicines
+      var medKeywords = /medicine|tablet|pill|capsule|dose|दवाई|दवा|गोली/i;
+      if(medKeywords.test(rd.task)) {
+        var alreadyExists = S.medicines.some(function(m){ return m.name.toLowerCase() === rd.task.toLowerCase(); });
+        if(!alreadyExists) {
+          S.medicines.push({name: rd.task, time: rd.time, reminded: false});
+          save();
+          confirm += isEng2 ? ' Also saved to your medicine reminders.' : ' दवाई list में भी जोड़ दिया।';
+        }
+      }
       addBubble('ai', cleanR2 + '\n\n' + confirm);
       speakText(cleanForSpeech(cleanR2 + ' ' + confirm));
       scheduleOneTimeReminder(rd.time, rd.task); return;
@@ -999,7 +1014,7 @@ function callAPI(userMsg) {
     addBubble('ai', reply, extraHtml);
     speakText(reply);
     maybeShowFeedback();
-  }).catch(function() { hideTyping(); addBubble('ai', 'Network mein thodi problem. Try again.'); });
+  }).catch(function() { hideTyping(); addBubble('ai', S.lang === 'english' ? 'Network issue. Please try again.' : 'नेटवर्क में थोड़ी समस्या। फिर से कोशिश करें।'); });
 }
 
 // ── MIC ──
@@ -1007,7 +1022,7 @@ var recog = null, isRec = false;
 function toggleMic() {
   var btn = document.getElementById('micBtn');
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR) { addBubble('ai','Voice Chrome mein kaam karta hai. Chrome use karein.'); return; }
+  if(!SR) { addBubble('ai', S.lang === 'english' ? 'Voice input works in Chrome. Please use Chrome.' : 'Voice Chrome में काम करता है। Chrome उपयोग करें।'); return; }
   if(isRec) { if(recog) recog.stop(); return; }
   if(window.speechSynthesis) window.speechSynthesis.cancel();
   recog = new SR();
@@ -1274,7 +1289,7 @@ function rxRenderResults(medicines) {
   document.getElementById('rx-preview-wrap').style.display = 'block';
 }
 function rxConfirmReminders(setReminders) {
-  if(!setReminders) { showScreen('screen-main'); addBubble('ai','Theek hai! Prescription dekh li.','','',true); return; }
+  if(!setReminders) { showScreen('screen-main'); addBubble('ai', S.lang==='english' ? 'Got it! Prescription reviewed.' : 'ठीक है! Prescription देख ली।','','',true); return; }
   var added = [];
   rxExtractedMeds.forEach(function(med) {
     var times = med.times&&med.times.length ? med.times : ['08:00'];
