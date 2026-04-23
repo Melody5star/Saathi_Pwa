@@ -898,12 +898,6 @@ function sendMsg() {
 }
 
 var QA = {
-  medicine: function(){
-    var meds = S.medicines.map(function(m){return m.name;}).join(', ') || '';
-    return S.lang === 'english'
-      ? 'Did I take my medicines today? ' + meds
-      : 'आज मैंने अपनी दवाइयाँ ली हैं क्या? ' + meds;
-  },
   date: function(){
     return S.lang === 'english' ? 'What is today\'s date, day and time?' : 'आज की तारीख, दिन और समय क्या है?';
   },
@@ -1164,7 +1158,7 @@ setInterval(function() {
 }, 60000);
 function renderMedList() {
   var el = document.getElementById('medList');
-  if(!S.medicines.length) { el.innerHTML = '<div class="empty-med">Abhi koi medicine add nahi hai.</div>'; return; }
+  if(!S.medicines.length) { el.innerHTML = '<div class="empty-med">' + (S.lang==='english' ? 'No medicines added yet.' : 'अभी कोई दवाई नहीं जोड़ी।') + '</div>'; return; }
   el.innerHTML = S.medicines.map(function(m,i) {
     return '<div class="med-item"><span class="med-name">💊 '+m.name+'</span><span class="med-time">'+(m.time||'—')+'</span><button class="med-del" onclick="delMed('+i+')">✕</button></div>';
   }).join('');
@@ -1452,8 +1446,8 @@ function onPaymentSuccess(plan, response) {
   });
   document.getElementById('upgrade-overlay').classList.remove('show');
   updatePlanUI();
-  addBubble('ai', plan==='founding'?'Bahut shukriya! Aap ab Founding Member hain! 🎉':'Welcome to Saathi Pro! 🎉','','',true);
-  speakText('Bahut shukriya! Aap ab Saathi ke premium member hain.');
+  addBubble('ai', plan==='founding' ? 'Thank you so much! You are now a Founding Member! 🎉' : 'Welcome to Saathi Pro! 🎉','','',true);
+  speakText(plan==='founding' ? 'Thank you so much! You are now a Founding Member!' : 'Welcome to Saathi Pro!');
 }
 
 // ── ACTIVATION ──
@@ -1725,8 +1719,9 @@ window.addEventListener('DOMContentLoaded', function() {
         wrap.appendChild(div); wrap.scrollTop = wrap.scrollHeight; return;
       }
       if(action === 'youtube') {
-        addBubble('ai','YouTube pe aaj kya dekhna chahte hain?','','',true);
-        speakText('YouTube pe aaj kya dekhna chahte hain?');
+        var ytMsg = S.lang==='english' ? 'What would you like to watch on YouTube today?' : 'YouTube पर आज क्या देखना चाहते हैं?';
+        addBubble('ai', ytMsg,'','',true);
+        speakText(ytMsg);
         var wrap = document.getElementById('chatWrap'), div = document.createElement('div');
         div.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 4px 38px';
         div.innerHTML = '<a class="app-link" onclick="openApp(\'youtube\',\'bhajan hindi old\')">▶️ Bhajan</a>'
@@ -1839,7 +1834,7 @@ window.addEventListener('DOMContentLoaded', function() {
         save(); renderMedList();
         var msg = S.lang === 'english'
           ? medName + ' reminder set for ' + medTime + ' ✓'
-          : medName + ' की दवाई ' + medTime + ' बजे याद दिला दूंगा ✓';
+          : medName + ' की दवाई ' + fmt12(medTime) + ' पर याद दिला दूंगा ✓';
         speakText(msg);
       } else {
         // Partial — filled in the field, user can confirm manually
@@ -1912,7 +1907,7 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('familyBtn').addEventListener('click', function() {
     var status = getPlanStatus();
     if(status.type !== 'pro' && status.type !== 'founding') {
-      addBubble('ai', 'Family Dashboard sirf Pro Members ke liye available hai. Upgrade karein! 🌟', '', '', true);
+      addBubble('ai', S.lang==='english' ? 'Family Dashboard is available for Pro Members only. Upgrade to access it! 🌟' : 'Family Dashboard सिर्फ Pro Members के लिए है। Upgrade करें! 🌟', '', '', true);
       return;
     }
     renderFamilyDash();
