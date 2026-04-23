@@ -1397,15 +1397,7 @@ function checkPaymentReturn() {
     return;
   }
   // FIX: removed duplicate var params declaration
-  var payment = params.get('payment'), planParam = params.get('plan'), paymentId = params.get('payment_id');
-  if(payment === 'success' && planParam) {
-    if(paymentId) {
-      fetch('/api/payment', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'verify', paymentId:paymentId}) })
-        .then(function(r){return r.json();}).then(function(d){ if(d.verified) onPaymentSuccess(planParam, {payment_id:paymentId}); })
-        .catch(function(){ onPaymentSuccess(planParam, {}); });
-    } else { onPaymentSuccess(planParam, {}); }
-    window.history.replaceState({}, '', '/');
-  }
+  // URL-based plan activation removed — plan upgrades now handled via Dodo webhook only
 }
 
 // ── ONBOARDING VALIDATION — global functions (FIX: exposed to window) ──
