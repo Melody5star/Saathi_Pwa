@@ -1486,8 +1486,8 @@ window.addEventListener('DOMContentLoaded', function() {
         var msg = '';
         if(meds.length === 0) {
           msg = hi
-            ? 'अभी कोई दवाई नहीं है। कौन सी दवाई जोड़नी है?'
-            : 'No medicines added yet. Which medicine would you like to add?';
+            ? 'अभी आपकी कोई दवाई reminder में नहीं है। क्या आप कोई नई दवाई जोड़ना चाहते हैं?'
+            : 'Currently no medicine exists in your reminder. Would you like to add one?';
         } else {
           var medList = meds.map(function(m) {
             var t = m.time || '';
