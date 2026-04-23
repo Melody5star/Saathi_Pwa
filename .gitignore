@@ -19,10 +19,15 @@ Thumbs.db
 .vscode/
 .idea/
 
-# TWA / Play Store — NEVER commit keystore
+# TWA / Play Store — NEVER commit keystore or APK binaries
 *.jks
 *.keystore
+*.apk
+*.aab
+*.idsig
 twa/build/
 twa/.gradle/
 twa/app/build/
 twa/gradle/
+twa/gradlew
+twa/gradlew.bat
