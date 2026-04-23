@@ -1005,12 +1005,52 @@ function checkDailyMeds() {
     var parts = m.time.split(':').map(Number);
     if(parts[0]===hr && parts[1]===min && !m.reminded) {
       S.medicines[i].reminded = true; changed = true;
-      addBubble('ai', S.name + ', ' + m.name + ' lene ka waqt ho gaya!\nPaani zaroor pijiye.', '', '', true);
-      speakText(S.name + ', ' + m.name + ' lene ka waqt ho gaya! Paani zaroor pijiye.');
+      var hi = S.lang !== 'english';
+      var msgText = hi
+        ? (S.name + ', ' + m.name + ' lene ka waqt ho gaya! 💊\nPaani zaroor pijiye. 🥛')
+        : (S.name + ', time to take ' + m.name + '! 💊\nDrink a glass of water too. 🥛');
+      var btnId = 'med-remind-' + Date.now();
+      var chipsHtml = '<div id="' + btnId + '" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
+        + '<button class="app-link" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac" onclick="medTaken(\'' + btnId + '\',' + i + ')">'
+        + (hi ? '✅ Li li' : '✅ Taken') + '</button>'
+        + '<button class="app-link" onclick="medSnooze(\'' + btnId + '\',' + i + ')">'
+        + (hi ? '⏰ 10 min baad' : '⏰ Snooze 10 min') + '</button>'
+        + '</div>';
+      addBubble('ai', msgText, chipsHtml, 'reminder', true);
+      speakText(hi ? (S.name + ', ' + m.name + ' lene ka waqt ho gaya! Paani zaroor pijiye.') : (S.name + ', time to take ' + m.name + '. Drink water too.'));
     }
   });
   if(changed) save();
 }
+window.medTaken = function(btnId, idx) {
+  var el = document.getElementById(btnId); if(el) el.remove();
+  var hi = S.lang !== 'english';
+  var msg = hi ? '✅ Bahut achha! ' + (S.medicines[idx]?S.medicines[idx].name:'Dawai') + ' le li. Sehatmand rahiye! 🙏' : '✅ Great! Medicine taken. Stay healthy! 🙏';
+  addBubble('ai', msg, '', '', true); speakText(msg);
+};
+window.medSnooze = function(btnId, idx) {
+  var el = document.getElementById(btnId); if(el) el.remove();
+  var hi = S.lang !== 'english';
+  var msg = hi ? '⏰ Theek hai, 10 minute mein phir yaad dilaunga.' : '⏰ OK, I\'ll remind you again in 10 minutes.';
+  addBubble('ai', msg, '', '', true); speakText(msg);
+  if(idx !== undefined && S.medicines[idx]) S.medicines[idx].reminded = false; save();
+  setTimeout(function() {
+    var m = S.medicines[idx];
+    if(!m) return;
+    var hi2 = S.lang !== 'english';
+    var snoozeMsg = hi2 ? (S.name + ', ab to ' + m.name + ' le lijiye! 💊') : (S.name + ', please take ' + m.name + ' now! 💊');
+    var btnId2 = 'med-remind-' + Date.now();
+    var chipsHtml2 = '<div id="' + btnId2 + '" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
+      + '<button class="app-link" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac" onclick="medTaken(\'' + btnId2 + '\',' + idx + ')">'
+      + (hi2 ? '✅ Li li' : '✅ Taken') + '</button>'
+      + '<button class="app-link" onclick="medSnooze(\'' + btnId2 + '\',' + idx + ')">'
+      + (hi2 ? '⏰ 10 min aur' : '⏰ Snooze again') + '</button>'
+      + '</div>';
+    addBubble('ai', snoozeMsg, chipsHtml2, 'reminder', true);
+    speakText(snoozeMsg);
+    if(S.medicines[idx]) { S.medicines[idx].reminded = true; save(); }
+  }, 10 * 60 * 1000);
+};
 setInterval(function() {
   var n = new Date();
   if(n.getHours()===0 && n.getMinutes()===0) { S.medicines.forEach(function(m){ m.reminded=false; }); save(); }
@@ -1111,10 +1151,19 @@ function rxParseResponse(text) {
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function rxUpdateTime(input,medIdx,timeIdx) { if(rxExtractedMeds[medIdx]&&rxExtractedMeds[medIdx].times) rxExtractedMeds[medIdx].times[timeIdx]=input.value; }
 window.rxUpdateTime = rxUpdateTime;
+function rxDefaultTimes(med) {
+  if(med.times && med.times.length) return med.times;
+  var freq = (med.frequency||'').toLowerCase();
+  if(/four|qid|4\s*time/i.test(freq)) return ['08:30','13:00','20:30','22:00'];
+  if(/three|tds|tid|3\s*time/i.test(freq)) return ['08:30','13:00','20:30'];
+  if(/twice|bd|bid|2\s*time/i.test(freq)) return ['08:30','20:30'];
+  return ['08:30'];
+}
 function rxRenderResults(medicines) {
   var c = document.getElementById('rx-med-list'); c.innerHTML = '';
   medicines.forEach(function(med,idx) {
-    var times = med.times&&med.times.length ? med.times : ['08:00'];
+    var times = rxDefaultTimes(med);
+    med.times = times;
     var card = document.createElement('div');
     card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px';
     var subInfo = [med.frequency||'',med.duration||'',med.meal||''].filter(Boolean).join(' · ');
