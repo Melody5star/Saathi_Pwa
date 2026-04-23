@@ -2170,7 +2170,7 @@ function submitFeedback() {
     body: JSON.stringify({ rating: selectedFeedback, message: text, user: user, email: email })
   }).catch(function(){});
   closeFeedback();
-  setTimeout(function() { addBubble('ai', 'Shukriya! Aapka feedback sun ke bahut achha laga. 🙏', '', '', true); }, 400);
+  setTimeout(function() { addBubble('ai', S.lang === 'english' ? 'Thank you for your feedback! It means a lot. 🙏' : 'शुक्रिया! आपका feedback सुनकर बहुत अच्छा लगा। 🙏', '', '', true); }, 400);
 }
 
 // ── SERVICE WORKER ── (OUTSIDE IIFE closing bracket — this is correct)
