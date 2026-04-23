@@ -40,7 +40,7 @@ export default async function handler(req, res) {
           name: name || null,
           phone: phone || null,
           dob: dob || null,
-          language: language || 'hindi',
+          language: language || 'english',
           user_type: userType || 'self',
           family_name: familyName || null,
           family_phone: familyPhone || null,

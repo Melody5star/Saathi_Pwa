@@ -583,7 +583,7 @@ body{font-family:'Baloo 2','Noto Sans Devanagari',sans-serif;color:var(--text);o
 // ── STATE ──
 var S = {
   name:'', family:'', phone:'',
-  lang:'hindi', voiceOn:true, voiceSpeed:0.82,
+  lang:'english', voiceOn:true, voiceSpeed:0.82,
   medicines:[], onboarded:false, msgs:[],
   userType:'family-setup'
 };
@@ -818,16 +818,58 @@ window.openApp = openApp;
 
 function showMedAddFlow() {
   var hi = S.lang !== 'english';
-  var prompt = hi
-    ? 'दवाई का नाम और समय बोलिए। जैसे: मेटफॉर्मिन सुबह 8 बजे।'
-    : 'Say the medicine name and time. Example: Metformin at 8 AM.';
+  var wrap = document.getElementById('chatWrap');
+  var prompt = hi ? 'दवाई का नाम और समय बताइए:' : 'Enter the medicine name and time:';
   addBubble('ai', prompt, '', '', true);
   speakText(prompt);
-  // trigger the medicine mic in settings — reuse existing recognition logic
-  var medMicBtn = document.getElementById('medMicBtn');
-  if(medMicBtn) { showScreen('screen-settings'); setTimeout(function(){ medMicBtn.click(); }, 400); }
+
+  var div = document.createElement('div');
+  div.id = 'med-add-inline';
+  div.style.cssText = 'margin:6px 0 6px 38px';
+  div.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:290px">'
+    + '<input id="inline-med-name" type="text" placeholder="' + (hi ? 'दवाई का नाम' : 'Medicine name') + '" style="background:rgba(245,158,11,.07);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:\'Baloo 2\',sans-serif;font-size:.88rem;outline:none;width:100%">'
+    + '<input id="inline-med-time" type="time" style="background:rgba(245,158,11,.07);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:\'Baloo 2\',sans-serif;font-size:.88rem;outline:none;width:100%">'
+    + '<div style="display:flex;gap:8px">'
+    + '<button onclick="saveMedInline()" style="flex:1;padding:9px;background:linear-gradient(135deg,var(--amber),var(--saffron));border:none;border-radius:10px;color:#fff;font-family:\'Baloo 2\',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer">💊 ' + (hi ? 'सेव करें' : 'Save') + '</button>'
+    + '<button onclick="document.getElementById(\'med-add-inline\').remove()" style="padding:9px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:\'Baloo 2\',sans-serif;font-size:.88rem;cursor:pointer">' + (hi ? 'रद्द' : 'Cancel') + '</button>'
+    + '</div></div>';
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  setTimeout(function(){ var el = document.getElementById('inline-med-name'); if(el) el.focus(); }, 200);
 }
 window.showMedAddFlow = showMedAddFlow;
+
+window.saveMedInline = function() {
+  var nameEl = document.getElementById('inline-med-name');
+  var timeEl = document.getElementById('inline-med-time');
+  var n = nameEl ? nameEl.value.trim() : '';
+  var t = timeEl ? timeEl.value : '';
+  var hi = S.lang !== 'english';
+  if(!n) { if(nameEl) nameEl.style.borderColor='#ef4444'; return; }
+  if(!t) { if(timeEl) timeEl.style.borderColor='#ef4444'; speakText(hi ? 'कृपया समय भी चुनें।' : 'Please also set a time.'); return; }
+  S.medicines.push({name:n, time:t, reminded:false});
+  save();
+  var inline = document.getElementById('med-add-inline');
+  if(inline) inline.remove();
+  var msg = hi
+    ? n + ' की दवाई ' + fmt12(t) + ' पर याद दिला दूंगा। 💊'
+    : n + ' reminder set for ' + fmt12(t) + '. 💊';
+  addBubble('ai', msg, '', '', true);
+  speakText(msg);
+  // Show updated medicine list
+  var allMeds = S.medicines;
+  var listMsg = hi
+    ? 'आपकी सभी दवाइयाँ:\n' + allMeds.map(function(m,i){ return (i+1)+'. '+m.name+' — '+fmt12(m.time); }).join('\n')
+    : 'Your saved medicines:\n' + allMeds.map(function(m,i){ return (i+1)+'. '+m.name+' — '+fmt12(m.time); }).join('\n');
+  addBubble('ai', listMsg, '', '', false);
+  var wrap = document.getElementById('chatWrap');
+  var chipsDiv = document.createElement('div');
+  chipsDiv.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 4px 38px';
+  chipsDiv.innerHTML = '<button class="app-link" onclick="showMedAddFlow()">➕ ' + (hi ? 'और जोड़ो' : 'Add another') + '</button>'
+    + '<button class="app-link" onclick="this.parentNode.remove()">✅ ' + (hi ? 'सब ठीक है' : 'Done') + '</button>';
+  wrap.appendChild(chipsDiv);
+  wrap.scrollTop = wrap.scrollHeight;
+};
 
 // ── SEND ──
 function sendMsg() {
@@ -1792,8 +1834,14 @@ window.addEventListener('DOMContentLoaded', function() {
     medRecog.onstart = function() { medRec = true; btn.style.background = 'rgba(239,68,68,.2)'; btn.style.border = '1px solid #ef4444'; btn.textContent = '🔴'; };
     medRecog.onend = function() { medRec = false; btn.style.background = 'var(--card)'; btn.style.border = '1px solid var(--border)'; btn.textContent = '🎤'; };
     medRecog.onerror = function() { medRec = false; btn.style.background = 'var(--card)'; btn.style.border = '1px solid var(--border)'; btn.textContent = '🎤'; };
-    medRecog.start();
-    speakText(S.lang === 'english' ? 'Say the medicine name and time. For example: Metformin at 8 AM.' : 'दवाई का नाम और समय बोलिए। जैसे: मेटफॉर्मिन सुबह 8 बजे।');
+    // Speak instruction first, then start recognition after speech ends
+    var instr = S.lang === 'english' ? 'Say the medicine name and time. For example: Metformin at 8 AM.' : 'दवाई का नाम और समय बोलिए। जैसे: मेटफॉर्मिन सुबह 8 बजे।';
+    if(window.speechSynthesis && window.speechSynthesis.speaking) { window.speechSynthesis.cancel(); }
+    var utt = new SpeechSynthesisUtterance(instr);
+    utt.lang = S.lang === 'english' ? 'en-IN' : 'hi-IN';
+    utt.rate = S.voiceSpeed || 0.9;
+    utt.onend = function() { medRecog.start(); };
+    window.speechSynthesis.speak(utt);
   });
 
   // Prescription
