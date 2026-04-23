@@ -955,7 +955,8 @@ function callAPI(userMsg) {
     + 'REACT NATURALLY:\n' + reactExamples + '\nCONVERSATION STYLE:\n' + convExamples + '\n'
     + 'VOICE: Short sentences. NO: ** ## bullet points. Max 1 emoji per reply.\n'
     + (isEng ? 'NOTES: "note this down" → [NOTE:text]\n' : 'NOTES: "note kar lo" → [NOTE:text]\n')
-    + 'REMINDER: [REMINDER:{"time":"HH:MM","task":"..."}]. Cancel: [CANCEL_REMINDER]\n'
+    + 'REMINDER: For one-time reminders only (e.g. call doctor, drink water) → [REMINDER:{"time":"HH:MM","task":"..."}]. Cancel: [CANCEL_REMINDER]\n'
+    + (isEng ? 'MEDICINES: You CANNOT save medicines. If user asks to add a medicine reminder, say: "Tap the 💊 Meds button above to add it — I\'ll remind you daily!"\n' : 'MEDICINES: दवाइयाँ आप save नहीं कर सकते। अगर user दवाई जोड़ना चाहे तो कहें: "ऊपर 💊 दवाई बटन दबाएं — मैं रोज़ याद दिलाऊंगा!"\n')
     + 'LENGTH: 2-3 short lines only.';
 
   var history = S.msgs.slice(-8).map(function(m){ return {role:m.role==='ai'?'assistant':'user', content:m.text}; });
